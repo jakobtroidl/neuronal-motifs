@@ -24,3 +24,5 @@ uvicorn main:app --reload
 ```
 
 ### Neuprint Access Token
+
+Find your personal access token [here](https://neuprint.janelia.org/account). Add yor token to the access_token.json.

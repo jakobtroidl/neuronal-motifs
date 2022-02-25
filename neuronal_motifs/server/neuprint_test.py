@@ -1,6 +1,7 @@
+from utils.authentication import get_access_token
 from neuprint import Client
 
-c = Client('neuprint.janelia.org', dataset='hemibrain:v1.2.1')
+c = Client('neuprint.janelia.org', dataset='hemibrain:v1.2.1', token=get_access_token('neuprint'))
 c.fetch_version()
 
 ## This query will return all neurons in the ROI ‘AB’
