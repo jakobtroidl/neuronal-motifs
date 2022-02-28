@@ -5,6 +5,11 @@
 
 ### Installation
 
+**ARM Mac only**: install native pyqt5 (may need to uninstall existing versions first)
+```
+arch -arm64 brew install pyqt@5         
+```
+
 Create a conda environment.
 
 ```python
