@@ -5,6 +5,7 @@ import navis.interfaces.neuprint as neu
 import navis
 import tempfile
 from pathlib import Path
+import re
 
 
 def get_swc():
@@ -50,6 +51,6 @@ def get_swc():
     fp = tempfile.NamedTemporaryFile(suffix='.swc')
     skeleton.to_swc(Path(fp.name))
     fp.seek(0)
-    swc_string = fp.read().decode('UTF-8')
+    swc_string = fp.read()
     fp.close()
     return swc_string
