@@ -6,10 +6,6 @@ from starlette.middleware.cors import CORSMiddleware
 from services import data_service
 import uvicorn
 
-
-
-
-
 app = FastAPI()
 
 origins = [
@@ -27,7 +23,6 @@ app.add_middleware(
 )
 
 
-
 @app.get("/helloworld")
 def read_root():
     return {"Hello": "World"}
@@ -41,6 +36,7 @@ def read_item(item_id: int, q: Optional[str] = None):
 @app.get("/get_swc")
 def get_swc():
     return {'swc': data_service.get_swc()}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5050, log_level="info")

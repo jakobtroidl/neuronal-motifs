@@ -17,8 +17,6 @@ function Viewer() {
                 let parsedSwc = swcParser(res.data.swc);
                 viewer.loadNeuron('test', '#ff0000', parsedSwc);
             })
-
-
     })
 
     return (
