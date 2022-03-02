@@ -3,10 +3,14 @@ import networkx as nx
 from neuronal_motifs.server.utils.authentication import *
 import navis.interfaces.neuprint as neu
 import navis
+import io
+import tempfile
+import shutil
+from pathlib import Path
+
 
 
 import plotly.express as px
-
 
 client = neu.Client(get_data_server(), dataset=get_data_version(), token=get_access_token('neuprint'))
 
@@ -29,7 +33,6 @@ x = synapses.loc[synapses.index[0], 'x_post']
 y = synapses.loc[synapses.index[0], 'y_post']
 z = synapses.loc[synapses.index[0], 'z_post']
 
-
 for index, row in connectors.iterrows():
     conn_x = row['x']
     conn_y = row['y']
@@ -48,7 +51,6 @@ print(nodes)
 
 shortest_path = nodes[nodes['node_id'].isin(path)]
 
-
 # 697: 21482.00000, 28204.00000, 16440.00000
 # 1072: 15914.00000, 31676.00000, 12424.00000
 
@@ -56,15 +58,18 @@ shortest_path = nodes[nodes['node_id'].isin(path)]
 d = {'x': [21482, 15914], 'y': [28204, 31676], 'z': [16440, 12424]}
 df = pd.DataFrame(data=d)
 
-#df = px.data.iris()
-
-print(df)
-fig = skeleton.plot3d(backend='plotly', connectors=False)
-fig.add_trace(px.scatter_3d(df, x='x', y='y', z='z').data[0])
-#fig.add_trace(px.scatter_3d(shortest_path, x='x', y='y', z='z').data[0])
-fig.show()
-
-
+# df = px.data.iris()
+fp = tempfile.NamedTemporaryFile(suffix='.swc')
+skeleton.to_swc(Path(fp.name))
+fp.seek(0)
+swc_string = fp.read()
+fp.close()
+#
+# print(df)
+# fig = skeleton.plot3d(backend='plotly', connectors=False)
+# fig.add_trace(px.scatter_3d(df, x='x', y='y', z='z').data[0])
+# #fig.add_trace(px.scatter_3d(shortest_path, x='x', y='y', z='z').data[0])
+# fig.show()
 
 
 print('Fetched neuron')
