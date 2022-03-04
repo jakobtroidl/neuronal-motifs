@@ -8,18 +8,24 @@ class DataAccess:
     def __init__(self):
         neu.Client(get_data_server(), dataset=get_data_version(), token=get_access_token('neuprint'))
 
-    def get_neuron_data(self, body_ids):
+    def get_neurons(self, body_ids):
         """
         @param body_ids: array of neuron body ids
-        @return: array of Neuron objects
+        @return: dict of Neuron objects
         """
 
         skeletons = neu.fetch_skeletons(x=body_ids, with_synapses=True, parallel=True)
-        neurons = []
+        neurons = {}
         for i in range(0, len(body_ids)):
             neuron = Neuron(id=body_ids[i], skeleton=skeletons[i])
-            neurons.append(neuron)
+            neurons[neuron.id] = neuron
         return neurons
 
-    def get_synapses(self, from_neuron, to_neuron):
-        return neu.fetch_synapse_connections([from_neuron], [to_neuron])
+    def get_synapses(self, from_neuron, to_neighbors):
+        """
+        Returns synapses of all the neighbors of a given neuron
+        @param from_neuron: neuron id of which the neighbours are looked at
+        @param to_neighbors: list of neighbor ids for which the synapses should be downloaded
+        @return: list of synapses
+        """
+        return neu.fetch_synapse_connections([from_neuron], to_neighbors)

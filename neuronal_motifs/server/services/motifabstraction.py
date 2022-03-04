@@ -7,7 +7,7 @@ from neuronal_motifs.server.services.data_access import *
 
 class MotifAbstraction:
     def __init__(self):
-        self.data_access = DataAccess()
+        print("Start motif Abstraction")
 
     def example_motif_data(self):
         """
@@ -16,10 +16,8 @@ class MotifAbstraction:
         @return: Motif object
         """
         body_ids = [1003474104, 5813091420, 1001453586]
-        neurons = self.data_access.get_neuron_data(body_ids)
-        neu_dict = {d.id: d for d in neurons} # convert neuron list into dict
-        motif_graph = nx.DiGraph([(1003474104, 1003474104), (1003474104, 1001453586), (1001453586, 1003474104)])
-        return Motif(neu_dict, motif_graph)
+        motif_graph = nx.DiGraph([(1003474104, 5813091420), (5813091420, 1001453586), (1001453586, 1003474104)])
+        return Motif(body_ids, motif_graph)
 
     def prepare_motif_abstraction(self, motif):
         # compute motif path
@@ -33,10 +31,10 @@ class MotifAbstraction:
         """
         Determines the nodes/edges for each neuron that define the motif path
         """
+        motif.compute_motif_paths()
 
-        neurons = motif.neurons
 
-          # convert motif graph to adjacency matrix
+
 
         print("Debug")
 
@@ -95,25 +93,3 @@ class MotifAbstraction:
 # fig.show()
 #
 # print('Fetched neuron')
-
-
-def skeleton_2_nx_graph(skeleton, undirected=False):
-    """
-    @param skeleton: Navis TreeNeuron to be converted into a networkx graph
-    @param undirected: if true a undirected graph is generated, if false the graph is directed
-    @return: networkx graph
-    """
-    graph = navis.neuron2nx(skeleton)
-    if undirected:
-        graph = graph.to_undirected()
-    return graph
-
-
-def shortest_path(graph, start_node, end_node):
-    """
-    @param graph: networkx graph
-    @param start_node: node id in the graph to start the shortest path search from
-    @param end_node: node id in the graph to end the shortest path search
-    @return: list of graph node ids that are part of the shorest path between @start_node and @end_node
-    """
-    return nx.shortest_path(graph, source=start_node, target=end_node)
