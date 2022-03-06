@@ -33,6 +33,21 @@ def read_item(item_id: int, q: Optional[str] = None):
     return {"item_id": item_id, "q": q}
 
 
+# testing
+@app.get("/todo", tags=["todos"])
+async def get_todos() -> dict:
+    return { "data": [
+    {
+        "id": "1",
+        "item": "Read a book."
+    },
+    {
+        "id": "2",
+        "item": "Cycle around town."
+    }
+] }
+
+
 @app.get("/get_swc")
 def get_swc():
     return {'swc': data_service.get_swc()}

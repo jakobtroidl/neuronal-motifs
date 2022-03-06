@@ -7,8 +7,8 @@ import './App.css';
 function App() {
     return (
         <div>
-            <Viewer/>
             <MotifPanel />
+            <Viewer/>
         </div>
     );
 }
