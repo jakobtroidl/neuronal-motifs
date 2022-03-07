@@ -11,7 +11,7 @@ class Motif:
     def as_json(self):
         """
         Export the motif, including skeleton labels as a json string
-        @return:
+        @return: json string
         """
 
     def compute_motif_paths(self):
