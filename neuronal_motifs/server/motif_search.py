@@ -26,13 +26,13 @@ from services.data_access import *
 # def search_hemibrain_motif(motif):
 #     E = NeuPrintExecutor(host='https://neuprint.janelia.org/', dataset='hemibrain:v1.2.1', token=get_access_token('neuprint'))
 #     return E.find(motif, limit=2)
-
-def main():
-    motif_abstraction = MotifAbstraction()
-    example_motif = motif_abstraction.example_motif_data()
-    motif_abstraction.prepare_motif_abstraction(example_motif)
-
-
-
-if __name__ == "__main__":
-    main()
+#
+# def main():
+#     motif_abstraction = MotifAbstraction()
+#     example_motif = motif_abstraction.example_motif_data()
+#     motif_abstraction.prepare_motif_abstraction(example_motif)
+#
+#
+#
+# if __name__ == "__main__":
+#     main()

@@ -1,5 +1,3 @@
-import networkx as nx
-
 from neuronal_motifs.server.services.data_access import DataAccess
 
 
@@ -10,15 +8,25 @@ class Motif:
         self.neurons = self.data_access.get_neurons(neuron_ids)
         self.download_synapses()
 
+    def as_json(self):
+        """
+        Export the motif, including skeleton labels as a json string
+        @return:
+        """
+
     def compute_motif_paths(self):
+        """
+        For each neuron in the motif, matches synapses with closest skeleton connector,
+        finds the motif path and labels all neuron skeletons based on distance to motif path
+        @return:
+        """
         for id, neuron in self.neurons.items():
             nodes = neuron.get_nodes_of_motif_synapses()
             neuron.compute_skeleton_labels(nodes)
 
     def download_synapses(self):
         """
-        TODO
-        @return:
+        Downloads all relevant synapses for the neurons in that given motif and safes them in each neuron object
         """
         adjacency = self.get_undirected_adjacency()
         for neuron_id in adjacency:  # download relevant synapses
@@ -28,16 +36,14 @@ class Motif:
 
     def get_undirected_adjacency(self):
         """
-        TODO
-        @return:
+        @return: Computes adjacent nodes for each node in the undirected motif graph
         """
         undirected_graph = self.graph.to_undirected()
         return self.get_adjacencies(undirected_graph)
 
     def get_adjacencies(self, graph):
         """
-        Returns adjacent nodes for each node in the motif
-        @return: adjacent nodes for each node
+        @return: Returns adjacent nodes for each node in the motif
         """
 
         adjacency = {}
@@ -46,19 +52,3 @@ class Motif:
             adjacency[neuron_id] = neighbors
 
         return adjacency
-
-    # def are_adjacent_in_motif(self, from_neuron, to_neuron):
-    #     """
-    #     @param from_neuron: body ID from start motif node
-    #     @param to_neuron: body ID from end motif node
-    #     @return: boolean value whether these two nodes are connected in the motif
-    #     """
-    #     return to_neuron in self.graph.neighbors(from_neuron)
-    #
-    # def get_adjacency_matrix(self):
-    #     """
-    #     Return the adjacency matrix of the motif graph as a numpy array
-    #     @return: motif graph adjacency matrix as np array
-    #     """
-    #     matrix = nx.adjacency_matrix(self.graph)
-    #     return matrix.toarray()
