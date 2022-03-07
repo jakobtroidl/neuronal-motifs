@@ -5,10 +5,11 @@ dependencies:
   - python=3.9
   - fastapi
   - h5py
+  - pandas
   - uvicorn
-#  - pip
-#  - pip:
-#      - PyQt5==5.15.6
-#      - dotmotif
-#      - navis
-#      - neuprint-python
+  - pip
+  - pip:
+      - PyQt5==5.15.6
+      - dotmotif
+      - navis
+      - neuprint-python
