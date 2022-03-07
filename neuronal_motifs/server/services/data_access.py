@@ -1,15 +1,8 @@
-from neuronal_motifs.server.utils.authentication import *
 import navis.interfaces.neuprint as neu
-import navis
-import io
-import tempfile
-import shutil
-from pathlib import Path
 
 from neuronal_motifs.server.models.neuron import Neuron
+from neuronal_motifs.server.utils.authentication import *
 
-
-import plotly.express as px
 
 class DataAccess:
     def __init__(self):

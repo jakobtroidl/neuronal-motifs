@@ -3,6 +3,12 @@ import networkx as nx
 from neuronal_motifs.server.models.motif import Motif
 
 
+def get_example_motif():
+    motif = example_motif_data()
+    motif.compute_motif_paths()
+    return motif.as_json()
+
+
 def example_motif_data():
     """
     Returns neuron body IDs of an example motif.
