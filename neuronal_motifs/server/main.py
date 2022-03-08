@@ -4,6 +4,7 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
 from services import data_service
+from services import motifabstraction
 import uvicorn
 
 app = FastAPI()
@@ -12,6 +13,7 @@ origins = [
     "http://localhost",
     "http://localhost:8080",
     "http://localhost:3000",
+    "http://localhost:3001",
 ]
 
 app.add_middleware(
@@ -31,6 +33,11 @@ def read_root():
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: Optional[str] = None):
     return {"item_id": item_id, "q": q}
+
+
+@app.get("/get_test_motif")
+def get_test_motif():
+    return motifabstraction.get_example_motif()
 
 
 @app.get("/get_swc")
