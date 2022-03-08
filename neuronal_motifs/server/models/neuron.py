@@ -1,6 +1,10 @@
+import json
+
 import navis
 import networkx as nx
 import numpy as np
+
+from neuronal_motifs.server.utils import data_conversion as conversion
 
 
 def skeleton_2_nx_graph(skeleton, undirected=False):
@@ -56,6 +60,20 @@ class Neuron:
         self.mesh = mesh
         self.synapses = synapses
         self.skeleton_label = skeleton_labels
+
+    def as_json(self):
+        """
+        Converts Neuron object into a json object
+        @return: json object
+        """
+        neuron = {
+            'id': self.id,
+            'mesh': 'TODO',
+            'synapses': 'TODO',
+            'skeleton_swc': conversion.neuron_to_swc_string(self.skeleton),
+            'skeleton_labels': json.dumps(self.skeleton_label.tolist())
+        }
+        return json.dumps(neuron)
 
     def set_mesh(self, mesh):
         """

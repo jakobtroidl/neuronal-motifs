@@ -1,3 +1,7 @@
+import json
+
+from networkx.readwrite import json_graph
+
 from neuronal_motifs.server.services.data_access import DataAccess
 
 
@@ -13,6 +17,18 @@ class Motif:
         Export the motif, including skeleton labels as a json string
         @return: json string
         """
+
+        neuron_json = []
+        for id, neuron in self.neurons.items():
+            neuron_json.append(neuron.as_json())
+
+        motif = {
+            'graph': json.dumps(json_graph.node_link_data(self.graph)),
+            'neurons': json.dumps(neuron_json)
+        }
+
+        return json.dumps(motif)
+
 
     def compute_motif_paths(self):
         """
