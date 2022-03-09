@@ -5,7 +5,7 @@ from networkx.readwrite import json_graph
 from neuronal_motifs.server.services.data_access import DataAccess
 
 
-class Motif:
+class MyMotif:
     def __init__(self, neuron_ids, graph):
         self.data_access = DataAccess()
         self.graph = graph  # networkx graph of the motif

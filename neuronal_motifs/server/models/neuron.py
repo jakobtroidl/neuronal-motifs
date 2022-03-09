@@ -31,7 +31,7 @@ def shortest_path(graph, start_node, end_node):
 
 def multiple_shortest_paths(graph, start_node, end_node_list):
     """
-    Returns a list of all nodes that are on the shortest paths between a start nodes and a list of end nodes
+    Returns a list of all nodes that are on the shortest paths between a start node and a list of end nodes
     @param graph: graph to compute the shortest paths on
     @param start_node: index of the start node of the shortest paths
     @param end_node_list: list indices where the shortest path should end
