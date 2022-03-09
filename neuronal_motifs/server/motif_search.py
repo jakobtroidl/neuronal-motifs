@@ -22,10 +22,10 @@ from services.data_access import *
 #         print(row['C'])
 #
 #
-# # TODO: replace hardcoded token and read from text file
-# def search_hemibrain_motif(motif):
-#     E = NeuPrintExecutor(host='https://neuprint.janelia.org/', dataset='hemibrain:v1.2.1', token=get_access_token('neuprint'))
-#     return E.find(motif, limit=2)
+# TODO: replace hardcoded token and read from text file
+def search_hemibrain_motif(motif):
+    E = NeuPrintExecutor(host='https://neuprint.janelia.org/', dataset='hemibrain:v1.2.1', token=get_access_token('neuprint'))
+    return E.find(motif, limit=2) # returns list of ids, specify # motifs to have to print
 #
 # def main():
 #     motif_abstraction = MotifAbstraction()

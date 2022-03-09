@@ -7,10 +7,6 @@ import axios from "axios";
 /* think about using d3 with react for the grab components */
 /* or, for draggable components, https://github.com/react-grid-layout/react-draggable */
 
-// const TodosContext = React.createContext({
-//     todos: [], fetchTodos: () => {}
-//   })
-
 function MotifPanel() {
     const [motif, setMotif] = useState('');
     const [searchedMotifs, setSearchedMotifs] = useState({});
@@ -31,8 +27,10 @@ function MotifPanel() {
         }
     }
 
+    console.log(motif)
+
     const fetchMotifs = async () => {
-        const res = await axios(`http://0.0.0.0:5050/search/${motif}`)
+        const res = await axios(`http://localhost:5050/search/${motif}`)
         const motifs = await res.json()
 
         console.log(motifs)
