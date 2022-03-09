@@ -1,6 +1,6 @@
 import networkx as nx
 
-from neuronal_motifs.server.models.motif import Motif
+from neuronal_motifs.server.models.motif import MyMotif
 
 
 def get_example_motif():
@@ -17,7 +17,7 @@ def example_motif_data():
     """
     body_ids = [1003474104, 5813091420, 1001453586]
     motif_graph = nx.DiGraph([(1003474104, 5813091420), (5813091420, 1001453586), (1001453586, 1003474104)])
-    return Motif(body_ids, motif_graph)
+    return MyMotif(body_ids, motif_graph)
 
 
 def compute_motif_path(motif):
