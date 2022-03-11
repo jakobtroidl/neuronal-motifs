@@ -23,11 +23,11 @@ class MyMotif:
             neuron_json.append(neuron.as_json())
 
         motif = {
-            'graph': json.dumps(json_graph.node_link_data(self.graph)),
-            'neurons': json.dumps(neuron_json)
+            'graph': json_graph.node_link_data(self.graph),
+            'neurons': neuron_json
         }
 
-        return json.dumps(motif)
+        return motif
 
 
     def compute_motif_paths(self):

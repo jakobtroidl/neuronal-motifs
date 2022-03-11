@@ -71,9 +71,9 @@ class Neuron:
             'mesh': 'TODO',
             'synapses': 'TODO',
             'skeleton_swc': conversion.neuron_to_swc_string(self.skeleton),
-            'skeleton_labels': json.dumps(self.skeleton_label.tolist())
+            'skeleton_labels': self.skeleton_label.tolist()
         }
-        return json.dumps(neuron)
+        return neuron
 
     def set_mesh(self, mesh):
         """
@@ -126,8 +126,19 @@ class Neuron:
             non_labeled_elements = np.count_nonzero(node_labels < 0)  # update number of not labeled nodes
             label += 1  # increase node label by one
 
-        self.skeleton_label = node_labels  # add labeled nodes to the neuron objet
+        self.skeleton_label = node_labels  # add labeled nodes to the neuron object
 
+        # Add Categories
+        # self.skeleton.nodes['type'] = self.skeleton.nodes['type'].cat.add_categories(['in_path', 'not_in_path'])
+        # self.skeleton.prune_by_strahler(to_prune=-1, inplace=True)
+        path_labels = np.argwhere(node_labels == 0).flatten()
+        # x = navis.cut_skeleton(self.skeleton, path_labels, ret='proximal')[0]
+        test = ''
+
+        label_categories = ['in_path' if label == 0 else 'not_in_path' for label in self.skeleton_label]
+
+        # self.skeleton.nodes['type'] = label_categories
+    #
     def get_nodes_of_motif_synapses(self):
         """
         computes the nodes of the skeleton that are closest to the synapses that participate in a motif
