@@ -10,9 +10,12 @@ def neuron_to_swc_string(neuron_skeleton):
     @return: swc string
     """
     fp = tempfile.NamedTemporaryFile(suffix='.swc', delete=False)
-    neuron_skeleton.to_swc(Path(fp.name))
+    map_old_to_new = neuron_skeleton.to_swc(Path(fp.name), write_meta=True, return_node_map=True)
     fp.seek(0)
     swc_string = fp.read()
     fp.close()
     os.unlink(fp.name)
-    return swc_string.decode("utf-8")
+    out = swc_string.decode("utf-8")
+    map_new_to_old = {int(x): int(y) for x, y in map_old_to_new.items()}
+
+    return {'swc': out, 'map': map_new_to_old}

@@ -29,7 +29,6 @@ class MyMotif:
 
         return motif
 
-
     def compute_motif_paths(self):
         """
         For each neuron in the motif, matches synapses with closest skeleton connector,
@@ -37,6 +36,7 @@ class MyMotif:
         @return:
         """
         for id, neuron in self.neurons.items():
+            # neuron = self.neurons[1001453586]
             nodes = neuron.get_nodes_of_motif_synapses()
             neuron.compute_skeleton_labels(nodes)
 

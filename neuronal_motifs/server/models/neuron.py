@@ -66,13 +66,22 @@ class Neuron:
         Converts Neuron object into a json object
         @return: json object
         """
+
+        label = []
+        if self.skeleton_label is not None:
+            label = self.skeleton_label.tolist()
+
+        swc_object = conversion.neuron_to_swc_string(self.skeleton),
+
         neuron = {
             'id': self.id,
             'mesh': 'TODO',
             'synapses': 'TODO',
-            'skeleton_swc': conversion.neuron_to_swc_string(self.skeleton),
-            'skeleton_labels': self.skeleton_label.tolist()
+            'skeleton_swc': swc_object[0]['swc'],
+            'node_map': swc_object[0]['map'],
+            'skeleton_labels': label
         }
+
         return neuron
 
     def set_mesh(self, mesh):
@@ -101,43 +110,49 @@ class Neuron:
         Stores the labels in self.skeleton_label np array
         @param motif_synapse_nodes: skeleton node ids that matching the synapses forming a motif
         """
-        number_skeleton_nodes = len(self.skeleton.nodes.index)  # get the number of nodes of the neuron skeleton
+
+        self.skeleton = navis.heal_skeleton(self.skeleton)  # heal to skeleton such that all components are connected
+        number_skeleton_nodes = self.skeleton.nodes['node_id'].max()  # get the number of nodes of the neuron skeleton
+        motif_synapse_nodes = np.asarray(motif_synapse_nodes)
         node_labels = np.array([-1] * number_skeleton_nodes)  # initialize an array with label values -1 (means no
         # label yet computed)
-        self.skeleton = navis.heal_skeleton(self.skeleton)  # heal to skeleton such that all components are connected
         skeleton_graph = skeleton_2_nx_graph(self.skeleton, undirected=True)  # convert skeleton to an
         # undirected networkx graph
         motif_nodes = multiple_shortest_paths(skeleton_graph, motif_synapse_nodes[0], motif_synapse_nodes[1:])
         # compute the shortest path between all synapse nodes which is equivalent to the motif path
+
         node_labels[motif_nodes] = 0  # label all motif nodes in the skeleton with 0
+        node_labels[motif_synapse_nodes[0]] = 1
+        node_labels[motif_synapse_nodes[1]] = 1
 
-        label = 1  # specifies node labels, start with distance to motif path is 1
-        non_labeled_elements = np.count_nonzero(node_labels < 0)  # count number of nodes that have not been labeled yet
-        while non_labeled_elements > 0:  # repeat until all nodes are labeled
-            for edge in self.skeleton.edges:  # look at all edges of the neuron skeleton
-                x = edge[0] - 1  # first node index of an edge
-                y = edge[1] - 1  # second node index of an edge
-                if node_labels[x] >= 0 and node_labels[y] == -1:  # if x is labeled yet and x isn't, then add current
-                    # label to node
-                    node_labels[y] = label
-                elif node_labels[y] >= 0 and node_labels[x] == -1:  # if y is labeled yet and x isn't, then add current
-                    # label to node
-                    node_labels[x] = label
-            non_labeled_elements = np.count_nonzero(node_labels < 0)  # update number of not labeled nodes
-            label += 1  # increase node label by one
 
-        self.skeleton_label = node_labels  # add labeled nodes to the neuron object
+        # label = 2  # specifies node labels, start with distance to motif path is 1
+        # non_labeled_elements = np.count_nonzero(node_labels < 0)  # count number of nodes that have not been labeled yet
+        # while non_labeled_elements > 0:  # repeat until all nodes are labeled
+        #     for edge in self.skeleton.edges:  # look at all edges of the neuron skeleton
+        #         x = edge[0] - 1  # first node index of an edge
+        #         y = edge[1] - 1  # second node index of an edge
+        #         if node_labels[x] >= 0 and node_labels[y] == -1:  # if x is labeled yet and x isn't, then add current
+        #             # label to node
+        #             node_labels[y] = label
+        #         elif node_labels[y] >= 0 and node_labels[x] == -1:  # if y is labeled yet and x isn't, then add current
+        #             # label to node
+        #             node_labels[x] = label
+        #     non_labeled_elements = np.count_nonzero(node_labels < 0)  # update number of not labeled nodes
+        #     label += 1  # increase node label by one
+
+        # self.skeleton_label = node_labels  # add labeled nodes to the neuron object
 
         # Add Categories
         # self.skeleton.nodes['type'] = self.skeleton.nodes['type'].cat.add_categories(['in_path', 'not_in_path'])
         # self.skeleton.prune_by_strahler(to_prune=-1, inplace=True)
-        path_labels = np.argwhere(node_labels == 0).flatten()
+        # path_labels = np.argwhere(node_labels == 0).flatten()
         # x = navis.cut_skeleton(self.skeleton, path_labels, ret='proximal')[0]
         test = ''
 
-        label_categories = ['in_path' if label == 0 else 'not_in_path' for label in self.skeleton_label]
+        # label_categories = ['in_path' if label == 0 else 'not_in_path' for label in self.skeleton_label]
 
-        # self.skeleton.nodes['type'] = label_categories
+        self.skeleton_label = node_labels
     #
     def get_nodes_of_motif_synapses(self):
         """
