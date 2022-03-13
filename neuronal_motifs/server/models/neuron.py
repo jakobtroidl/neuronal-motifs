@@ -71,14 +71,14 @@ class Neuron:
         if self.skeleton_label is not None:
             label = self.skeleton_label.tolist()
 
-        swc_object = conversion.neuron_to_swc_string(self.skeleton),
+        swc_object = conversion.neuron_to_swc_string(self.skeleton)
 
         neuron = {
             'id': self.id,
             'mesh': 'TODO',
             'synapses': 'TODO',
-            'skeleton_swc': swc_object[0]['swc'],
-            'node_map': swc_object[0]['map'],
+            'skeleton_swc': swc_object['swc'],
+            'node_map': swc_object['map'],
             'skeleton_labels': label
         }
 
