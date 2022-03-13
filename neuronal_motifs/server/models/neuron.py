@@ -122,38 +122,33 @@ class Neuron:
         # compute the shortest path between all synapse nodes which is equivalent to the motif path
 
         node_labels[motif_nodes] = 0  # label all motif nodes in the skeleton with 0
-        node_labels[motif_synapse_nodes[0]] = 1
-        node_labels[motif_synapse_nodes[1]] = 1
+        node_labels[motif_synapse_nodes] = 1  # nodes corresponding to synapses are now labeled with 1
 
+        label = 2  # specifies node labels, start with distance to motif path is 1
+        non_labeled_elements = np.count_nonzero(node_labels < 0)  # count number of nodes that have not been labeled yet
+        while non_labeled_elements > 0:  # repeat until all nodes are labeled
+            for edge in self.skeleton.edges:  # look at all edges of the neuron skeleton
+                x = edge[0] - 1  # first node index of an edge
+                y = edge[1] - 1  # second node index of an edge
+                if node_labels[x] >= 0 and node_labels[y] == -1:  # if x is labeled yet and x isn't, then add current
+                    # label to node
+                    node_labels[y] = label
+                elif node_labels[y] >= 0 and node_labels[x] == -1:  # if y is labeled yet and x isn't, then add current
+                    # label to node
+                    node_labels[x] = label
+            non_labeled_elements = np.count_nonzero(node_labels < 0)  # update number of not labeled nodes
+            label += 1  # increase node label by one
 
-        # label = 2  # specifies node labels, start with distance to motif path is 1
-        # non_labeled_elements = np.count_nonzero(node_labels < 0)  # count number of nodes that have not been labeled yet
-        # while non_labeled_elements > 0:  # repeat until all nodes are labeled
-        #     for edge in self.skeleton.edges:  # look at all edges of the neuron skeleton
-        #         x = edge[0] - 1  # first node index of an edge
-        #         y = edge[1] - 1  # second node index of an edge
-        #         if node_labels[x] >= 0 and node_labels[y] == -1:  # if x is labeled yet and x isn't, then add current
-        #             # label to node
-        #             node_labels[y] = label
-        #         elif node_labels[y] >= 0 and node_labels[x] == -1:  # if y is labeled yet and x isn't, then add current
-        #             # label to node
-        #             node_labels[x] = label
-        #     non_labeled_elements = np.count_nonzero(node_labels < 0)  # update number of not labeled nodes
-        #     label += 1  # increase node label by one
+        self.skeleton_label = node_labels  # add labeled nodes to the neuron object
 
-        # self.skeleton_label = node_labels  # add labeled nodes to the neuron object
-
+        # DEBUG simon
         # Add Categories
         # self.skeleton.nodes['type'] = self.skeleton.nodes['type'].cat.add_categories(['in_path', 'not_in_path'])
         # self.skeleton.prune_by_strahler(to_prune=-1, inplace=True)
         # path_labels = np.argwhere(node_labels == 0).flatten()
         # x = navis.cut_skeleton(self.skeleton, path_labels, ret='proximal')[0]
-        test = ''
-
         # label_categories = ['in_path' if label == 0 else 'not_in_path' for label in self.skeleton_label]
 
-        self.skeleton_label = node_labels
-    #
     def get_nodes_of_motif_synapses(self):
         """
         computes the nodes of the skeleton that are closest to the synapses that participate in a motif

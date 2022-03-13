@@ -29,14 +29,13 @@ function Viewer() {
                 viewer.animate();
                 let motif = res.data;
                 let neurons = motif.neurons;
-
+                //let n = neurons[2]
                 neurons.forEach(n => {
                     let parsedSwc = swcParser(n.skeleton_swc)
                     // Iterate over our labels, assigning 0 = in_path, else not_in_path
                     for (let i = 1; i <= n.skeleton_labels.length; i++) {
                         let label = n.skeleton_labels[i]
                         let new_id = n.node_map[i]
-                        //console.log("old id: ", i, ". new id: ", new_id)
                         if (label === 0) {
                             parsedSwc[new_id].type = 0
                         } else if (label === 1) {
