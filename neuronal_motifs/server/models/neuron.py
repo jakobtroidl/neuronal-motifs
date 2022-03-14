@@ -4,6 +4,11 @@ import navis
 import networkx as nx
 import numpy as np
 
+import pandas as pd
+
+import plotly
+import plotly.express as px
+
 from neuronal_motifs.server.utils import data_conversion as conversion
 
 
@@ -72,11 +77,12 @@ class Neuron:
             label = self.skeleton_label.tolist()
 
         swc_object = conversion.neuron_to_swc_string(self.skeleton)
+        syn_export = conversion.synapse_array_to_object(self.synapses)
 
         neuron = {
             'id': self.id,
             'mesh': 'TODO',
-            'synapses': 'TODO',
+            'synapses': syn_export,
             'skeleton_swc': swc_object['swc'],
             'node_map': swc_object['map'],
             'skeleton_labels': label
@@ -111,11 +117,18 @@ class Neuron:
         @param motif_synapse_nodes: skeleton node ids that matching the synapses forming a motif
         """
 
+        # TODO DEBUG Jakob remove later
+        neuron_id = -1
+        if self.id == 5813091420:
+            neuron_id = -2
+        elif self.id == 1001453586:
+            neuron_id = - 3
+
         self.skeleton = navis.heal_skeleton(self.skeleton)  # heal to skeleton such that all components are connected
         number_skeleton_nodes = self.skeleton.nodes['node_id'].max()  # get the number of nodes of the neuron skeleton
         motif_synapse_nodes = np.asarray(motif_synapse_nodes)
-        node_labels = np.array([-1] * number_skeleton_nodes)  # initialize an array with label values -1 (means no
-        # label yet computed)
+        node_labels = np.array([neuron_id] * number_skeleton_nodes)  # initialize an array with label values -1 (
+        # means no label yet computed)
         skeleton_graph = skeleton_2_nx_graph(self.skeleton, undirected=True)  # convert skeleton to an
         # undirected networkx graph
         motif_nodes = multiple_shortest_paths(skeleton_graph, motif_synapse_nodes[0], motif_synapse_nodes[1:])
@@ -124,21 +137,21 @@ class Neuron:
         node_labels[motif_nodes] = 0  # label all motif nodes in the skeleton with 0
         node_labels[motif_synapse_nodes] = 1  # nodes corresponding to synapses are now labeled with 1
 
-        label = 2  # specifies node labels, start with distance to motif path is 1
-        non_labeled_elements = np.count_nonzero(node_labels < 0)  # count number of nodes that have not been labeled yet
-        while non_labeled_elements > 0:  # repeat until all nodes are labeled
-            for edge in self.skeleton.edges:  # look at all edges of the neuron skeleton
-                x = edge[0] - 1  # first node index of an edge
-                y = edge[1] - 1  # second node index of an edge
-                if node_labels[x] >= 0 and node_labels[y] == -1:  # if x is labeled yet and x isn't, then add current
-                    # label to node
-                    node_labels[y] = label
-                elif node_labels[y] >= 0 and node_labels[x] == -1:  # if y is labeled yet and x isn't, then add current
-                    # label to node
-                    node_labels[x] = label
-            non_labeled_elements = np.count_nonzero(node_labels < 0)  # update number of not labeled nodes
-            label += 1  # increase node label by one
-
+        # label = 2  # specifies node labels, start with distance to motif path is 1
+        # non_labeled_elements = np.count_nonzero(node_labels < 0)  # count number of nodes that have not been labeled yet
+        # while non_labeled_elements > 0:  # repeat until all nodes are labeled
+        #     for edge in self.skeleton.edges:  # look at all edges of the neuron skeleton
+        #         x = edge[0] - 1  # first node index of an edge
+        #         y = edge[1] - 1  # second node index of an edge
+        #         if node_labels[x] >= 0 and node_labels[y] == -1:  # if x is labeled yet and x isn't, then add current
+        #             # label to node
+        #             node_labels[y] = label
+        #         elif node_labels[y] >= 0 and node_labels[x] == -1:  # if y is labeled yet and x isn't, then add current
+        #             # label to node
+        #             node_labels[x] = label
+        #     non_labeled_elements = np.count_nonzero(node_labels < 0)  # update number of not labeled nodes
+        #     label += 1  # increase node label by one
+        #
         self.skeleton_label = node_labels  # add labeled nodes to the neuron object
 
         # DEBUG simon
@@ -149,26 +162,54 @@ class Neuron:
         # x = navis.cut_skeleton(self.skeleton, path_labels, ret='proximal')[0]
         # label_categories = ['in_path' if label == 0 else 'not_in_path' for label in self.skeleton_label]
 
+    def get_closest_connector(self, x, y, z):
+        """
+        Gets the skeleton node id of the closest connector (synapse) to a given position
+        @param x: x coordinate of position
+        @param y: y coordinate of position
+        @param z: z coordinate of position
+        @return: skeleton node ID closest to position
+        """
+        [connector_id, distance] = self.skeleton.snap([x, y, z], to='connectors')  # snap the current
+        # synapse location to the closest connector
+        connectors = self.skeleton.connectors  # get all connectors of the skeleton
+        conn = connectors.iloc[connector_id]
+        return conn['node_id']  # get skeleton node id from connector id
+
     def get_nodes_of_motif_synapses(self):
         """
         computes the nodes of the skeleton that are closest to the synapses that participate in a motif
         @return: list of node indices
         """
+        # JAKOB Debug visualization
+        # x = self.synapses['x_pre'].to_numpy()
+        # y = self.synapses['y_pre'].to_numpy()
+        # z = self.synapses['z_pre'].to_numpy()
+        #
+        # d = {'x': x, 'y': y, 'z': z}
+        # df = pd.DataFrame(data=d)
+        #
+        # fig = self.skeleton.plot3d(backend='plotly', connectors=True)
+        # fig.add_trace(px.scatter_3d(df, x='x', y='y', z='z').data[0])
+        # # fig.add_trace(px.scatter_3d(shortest_path, x='x', y='y', z='z').data[0])
+        # fig.show()
+
         nodes = []  # node ids close to synapses
-        connectors = self.skeleton.connectors  # get all connectors of the skeleton
         for id, synapse in self.synapses.iterrows():  # iterate over all synapses that this neuron has with neurons
-            # of a motif
-            x_pre = synapse['x_pre']  # x location pre synapse
-            y_pre = synapse['y_pre']  # y location pre synapse
-            z_pre = synapse['z_pre']  # z location pre synapse
+            if self.id == synapse.loc['bodyId_pre']:
+                x_pre = synapse['x_pre']  # x location pre synapse
+                y_pre = synapse['y_pre']  # y location pre synapse
+                z_pre = synapse['z_pre']  # z location pre synapse
 
-            # x_post = synapse['x_post']
-            # y_post = synapse['y_post']
-            # z_post = synapse['z_post']
+                node_id = self.get_closest_connector(x_pre, y_pre, z_pre)
+                nodes.append(node_id)
 
-            [connector_id, distance] = self.skeleton.snap([x_pre, y_pre, z_pre], to='connectors')  # snap the current
-            # synapse location to the closest connector
-            node_id = connectors.loc[connector_id, 'node_id']  # get skeleton node id from connector id
-            nodes.append(node_id)  # add connector node it to list of "synapse skeleton nodes"
+            elif self.id == synapse.loc['bodyId_post']:
+                x_post = synapse['x_post']
+                y_post = synapse['y_post']
+                z_post = synapse['z_post']
+
+                node_id = self.get_closest_connector(x_post, y_post, z_post)
+                nodes.append(node_id)
 
         return nodes

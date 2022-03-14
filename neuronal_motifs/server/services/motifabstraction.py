@@ -1,7 +1,4 @@
-import os
-
 import networkx as nx
-
 import pickle as pkl
 
 from neuronal_motifs.server.models.motif import MyMotif
@@ -20,9 +17,7 @@ def get_example_motif():
         motif = pkl.load(f)
         f.close()
         motif.compute_motif_paths()
-        json = motif.as_json()
-
-        return json
+        return motif.as_json()
 
 
 def example_motif_data():

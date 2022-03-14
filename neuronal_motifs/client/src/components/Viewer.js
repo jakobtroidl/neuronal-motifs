@@ -14,34 +14,42 @@ function Viewer() {
             .then(res => {
                 const metadata = [{"label": "in_path", "type": 0},
                     {"label": "synapse", "type": 1},
-                    {"label": "not_in_path", "type": 2}];
-                //const annotation = [{'x': 15934, 'y': 31645, 'z': 12408}]
-                //const annotation_color = '#ff9a00'
+                    {"label": "neuron 1", "type": 2},
+                    {"label": "neuron 2", "type": 3},
+                    {"label": "neuron 3", "type": 4}];
 
                 let colors = [
                     '#ff9a00',
                     '#ff0000',
-                    '#646464',
+                    '#010fff',
+                    '#00ff17',
+                    '#dd01ff',
                 ]
 
                 const viewer = new SharkViewer({dom_element: id, metadata: metadata, colors: colors});
                 viewer.init();
                 viewer.animate();
+
                 let motif = res.data;
                 let neurons = motif.neurons;
-                //let n = neurons[2]
+
                 neurons.forEach(n => {
                     let parsedSwc = swcParser(n.skeleton_swc)
                     // Iterate over our labels, assigning 0 = in_path, else not_in_path
                     for (let i = 1; i <= n.skeleton_labels.length; i++) {
                         let label = n.skeleton_labels[i]
-                        let new_id = n.node_map[i]
+                        let new_id = n.node_map[i]  // remap original id to new id.
+                        // Necessary due to some data shuffling in swc export
                         if (label === 0) {
                             parsedSwc[new_id].type = 0
                         } else if (label === 1) {
                             parsedSwc[new_id].type = 1
-                        } else {
+                        } else if (label === -1) {
                             parsedSwc[new_id].type = 2
+                        } else if (label === -2) {
+                            parsedSwc[new_id].type = 3
+                        } else if (label === -3) {
+                            parsedSwc[new_id].type = 4
                         }
                     }
 
