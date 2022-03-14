@@ -21,14 +21,14 @@ class DataAccess:
             neurons[neuron.id] = neuron
         return neurons
 
-    def get_synapses(self, from_neuron, to_neighbors):
+    def get_synapses(self, from_neurons, to_neighbors):
         """
         Returns synapses of all the neighbors of a given neuron
-        @param from_neuron: neuron id of which the neighbours are looked at
+        @param from_neurons: neuron ids of which the neighbours are looked at
         @param to_neighbors: list of neighbor ids for which the synapses should be downloaded
         @return: list of synapses
         """
-        return neu.fetch_synapse_connections([from_neuron], to_neighbors)
+        return neu.fetch_synapse_connections(from_neurons, to_neighbors)
 
 # synapses = neu.fetch_synapse_connections([1001453586], [1003474104])
 #

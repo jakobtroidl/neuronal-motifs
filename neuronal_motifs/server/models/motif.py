@@ -1,5 +1,5 @@
 import json
-
+import pandas as pd
 from networkx.readwrite import json_graph
 
 from neuronal_motifs.server.services.data_access import DataAccess
@@ -23,12 +23,11 @@ class MyMotif:
             neuron_json.append(neuron.as_json())
 
         motif = {
-            'graph': json.dumps(json_graph.node_link_data(self.graph)),
-            'neurons': json.dumps(neuron_json)
+            'graph': json_graph.node_link_data(self.graph),
+            'neurons': neuron_json
         }
 
-        return json.dumps(motif)
-
+        return motif
 
     def compute_motif_paths(self):
         """
@@ -44,18 +43,23 @@ class MyMotif:
         """
         Downloads all relevant synapses for the neurons in that given motif and safes them in each neuron object
         """
-        adjacency = self.get_undirected_adjacency()
+        adjacency = self.get_adjacency(undirected=True)
         for neuron_id in adjacency:  # download relevant synapses
             neuron = self.neurons[neuron_id]
-            synapses = self.data_access.get_synapses(neuron_id, adjacency[neuron_id])
+            outgoing_synapses = self.data_access.get_synapses([neuron_id], adjacency[neuron_id])
+            incoming_synapses = self.data_access.get_synapses(adjacency[neuron_id], [neuron_id])
+            synapses = pd.concat([outgoing_synapses, incoming_synapses], ignore_index=True, sort=False)
             neuron.set_synapses(synapses)
 
-    def get_undirected_adjacency(self):
+    def get_adjacency(self, undirected=True):
         """
-        @return: Computes adjacent nodes for each node in the undirected motif graph
+        @param undirected: determines whether to return directed or undirected adjacency of the undirected graph
+        @return: adjacent nodes for each node in the motif graph
         """
-        undirected_graph = self.graph.to_undirected()
-        return self.get_adjacencies(undirected_graph)
+        graph = self.graph
+        if undirected:
+            graph = self.graph.to_undirected()
+        return self.get_adjacencies(graph)
 
     def get_adjacencies(self, graph):
         """

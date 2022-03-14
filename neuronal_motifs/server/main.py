@@ -14,6 +14,8 @@ origins = [
     "http://localhost:8080",
     "http://localhost:3000",
     "http://localhost:3001",
+    "http://localhost:3002",
+    "http://localhost:3003",
 ]
 
 app.add_middleware(
@@ -38,6 +40,11 @@ def read_item(item_id: int, q: Optional[str] = None):
 @app.get("/get_test_motif")
 def get_test_motif():
     return motifabstraction.get_example_motif()
+
+
+@app.get("/download_test_motif")
+def download_test_motif():
+    return motifabstraction.example_motif_data()
 
 
 @app.get("/get_swc")
