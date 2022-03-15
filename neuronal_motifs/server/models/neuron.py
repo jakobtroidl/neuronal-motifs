@@ -215,16 +215,18 @@ class Neuron:
 
     def prune_to_motif_path(self, factor):
         """
-        TODO add factor
         Prunes the given skeleton to the motif path
         @param factor: float [0, 1]. 0 -> full skeleton is returned. 1 -> only motif path is returned
         @return: pruned skeleton
         """
         skel = self.skeleton
         labels = self.skeleton_labels
+        max_label = float(max(list(labels.values())))
+        threshold = int(max_label * (1.0 - factor))  # convert scale factor to pruning threshold
+
         nodes_to_remove = []
         for index, row in skel.nodes.iterrows():
             node_id = row['node_id']
-            if labels[row['node_id']] > 1:
+            if labels[row['node_id']] > threshold:
                 nodes_to_remove.append(node_id)
         return navis.remove_nodes(skel, nodes_to_remove)
