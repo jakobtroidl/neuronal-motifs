@@ -25,7 +25,7 @@ conda activate neuronal-motifs
 From this folder, start the server with
 
 ```python
-uvicorn main:app --reload
+python main.py
 ```
 
 ### Neuprint Access Token
