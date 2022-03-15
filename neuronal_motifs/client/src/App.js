@@ -7,7 +7,7 @@ import './App.css';
 
 
 function App() {
-
+    // Wrap things in context that can use global context
     return (
         <ContextWrapper>
             <div>

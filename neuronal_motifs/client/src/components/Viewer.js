@@ -1,6 +1,5 @@
 import React, {useState, useEffect, useContext} from 'react';
 import SharkViewer, {swcParser} from '@janelia/sharkviewer';
-
 import {AppContext} from "../contexts/AbstractionLevelContext";
 import {getRandomColor} from '../utils/rendering';
 import './Viewer.css'
@@ -9,9 +8,9 @@ import axios from "axios";
 function Viewer() {
     const [motif, setMotif] = React.useState()
     const [sharkViewerInstance, setSharkViewerInstance] = useState();
-
     const id = "my_shark_viewer";
     const className = 'shark_viewer';
+    // Global context holds abstraction state
     const context = useContext(AppContext);
     let viewer;
     const metadata = [{"label": "in_path", "type": 0},
@@ -26,18 +25,20 @@ function Viewer() {
         '#00ff17',
         '#dd01ff',
     ]
+    // Instantiates the viewer, will only run once on init
     useEffect(() => {
         setSharkViewerInstance(
             new SharkViewer({dom_element: id, metadata: metadata, colors: colors})
         )
     }, [])
+    // Inits the viewer once it is created
     useEffect(() => {
         if (sharkViewerInstance) {
             sharkViewerInstance.init();
             sharkViewerInstance.animate();
         }
     }, [sharkViewerInstance])
-    // Similar to componentDidMount and componentDidUpdate:
+    // Fetches the data, only runs on init
     useEffect(async () => {
         if (!motif) {
             // Update the document title using the browser API
@@ -45,6 +46,7 @@ function Viewer() {
             setMotif(res.data);
         }
     }, []);
+    // Updates the motifs, runs when data, viewer, or abstraction state change
     useEffect(() => {
         if (motif && sharkViewerInstance) {
             console.log(context.store.abstractionLevel);

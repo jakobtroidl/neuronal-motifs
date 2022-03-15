@@ -10,16 +10,12 @@ import './AbstractionSlider.css'
 function AbstractionSlider() {
 
 
-    // Similar to componentDidMount and componentDidUpdate:
-    useEffect(() => {
-
-    });
-
     function valueLabelFormat(value) {
         return `Level ${value}`
     }
-
+    // Global context holds abstraction state
     const context = useContext(AppContext);
+    // Updates the state when it changes
     const handleChange = (event, val) => {
         if (val !== context.store.abstractionLevel) {
             context.actions.changeAbstractionLevel(val);
@@ -27,8 +23,8 @@ function AbstractionSlider() {
     }
 
     return (
-
         <div id='drag-div'>
+            {/*Drag Handler*/}
             <div className="handle">
                 <FontAwesomeIcon icon={faUpDownLeftRight}/>
             </div>
