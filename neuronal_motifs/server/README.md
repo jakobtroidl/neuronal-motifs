@@ -28,6 +28,6 @@ From this folder, start the server with
 python main.py
 ```
 
-### Neuprint Access Token
+### Neuprint Auth Token
 
-Find your personal access token [here](https://neuprint.janelia.org/account). Add yor token to the access_token.json.
+Find your personal authentication token [here](https://neuprint.janelia.org/account). Add yor token to the access_token.json.
