@@ -17,6 +17,8 @@ def get_example_motif():
         motif = pkl.load(f)
         f.close()
         motif.compute_motif_paths()
+
+        motif.simplify(factor=0.7)
         return motif.as_json()
 
 
@@ -36,8 +38,5 @@ def example_motif_data():
         pkl.dump(motif, f)
 
 
-def compute_motif_path(motif):
-    """
-    Determines the nodes/edges for each neuron that define the motif path
-    """
-    motif.compute_motif_paths()
+def get_simplified_test_motif(factor):
+    mo

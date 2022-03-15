@@ -29,6 +29,10 @@ class MyMotif:
 
         return motif
 
+    def simplify(self, factor):
+        for id, neuron in self.neurons.items():
+            neuron.simplify_skeleton(factor)
+
     def compute_motif_paths(self):
         """
         For each neuron in the motif, matches synapses with closest skeleton connector,

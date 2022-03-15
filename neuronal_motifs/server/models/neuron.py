@@ -213,3 +213,17 @@ class Neuron:
                 nodes.append(node_id)
 
         return nodes
+
+    def simplify_skeleton(self, factor):
+        """
+        TODO
+        @param factor:
+        @return:
+        """
+        skel = self.skeleton
+        labels = np.asarray(self.skeleton_label)
+        motif_indices = np.where(labels == 0)
+        idx = motif_indices[0] + 1
+        simplified_neuron = skel.prune_distal_to(idx)
+
+        return simplified_neuron
