@@ -36,7 +36,3 @@ def example_motif_data():
     filename = "cache/test_motif.pkl"
     with open(filename, "wb") as f:
         pkl.dump(motif, f)
-
-
-def get_simplified_test_motif(factor):
-    mo

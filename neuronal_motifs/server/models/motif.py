@@ -30,8 +30,14 @@ class MyMotif:
         return motif
 
     def simplify(self, factor):
+        """
+        TODO
+        @param factor:
+        @return:
+        """
         for id, neuron in self.neurons.items():
-            neuron.simplify_skeleton(factor)
+            simplified = neuron.prune_to_motif_path(factor)
+            neuron.skeleton = simplified
 
     def compute_motif_paths(self):
         """
