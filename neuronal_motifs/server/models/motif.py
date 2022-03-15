@@ -6,7 +6,7 @@ from neuronal_motifs.server.services.data_access import DataAccess
 
 
 class MyMotif:
-    def __init__(self, neuron_ids, graph):
+    def __init__(self, neuron_ids=None, graph=None):
         self.data_access = DataAccess()
         self.graph = graph  # networkx graph of the motif
         self.neurons = self.data_access.get_neurons(neuron_ids)

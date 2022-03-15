@@ -3,6 +3,8 @@ import pickle as pkl
 
 from neuronal_motifs.server.models.motif import MyMotif
 
+motif = MyMotif()
+
 
 def get_example_motif():
     filepath = "cache/test_motif.pkl"
@@ -17,9 +19,13 @@ def get_example_motif():
         motif = pkl.load(f)
         f.close()
         motif.compute_motif_paths()
-
-        motif.simplify(factor=0.7)
+        # motif.simplify(factor=0.7)
         return motif.as_json()
+
+
+def get_pruned_motif(factor):
+    motif.simplify(factor=factor)
+    return motif.as_json()
 
 
 def example_motif_data():
