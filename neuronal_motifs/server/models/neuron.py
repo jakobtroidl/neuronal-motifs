@@ -142,11 +142,11 @@ class Neuron:
 
         for node_id in motif_nodes:  # TODO optimize
             labels[node_id] = 0  # label all motif nodes in the skeleton with 0
-        for node_id in motif_synapse_nodes:
-            labels[node_id] = 1  # nodes corresponding to synapses are now labeled with 1
+        #for node_id in motif_synapse_nodes:
+        #    labels[node_id] = 1  # nodes corresponding to synapses are now labeled with 1
 
         num_unlabeled_nodes = len([labels for l in labels.values() if l < 0])
-        label = 2  # specifies node labels, start with distance to motif path is 1
+        label = 1  # specifies node labels, start with distance to motif path is 1
         while num_unlabeled_nodes > 0:  # repeat until all nodes are labeled
             for edge in self.skeleton.edges:  # look at all edges of the neuron skeleton
                 x = edge[0]  # first node index of an edge
@@ -233,7 +233,6 @@ class Neuron:
             skel_abstractions[i] = self.prune_to_motif_path(levels[i])
         return skel_abstractions
 
-    @profile
     def prune_to_motif_path(self, factor):
         """
         Prunes the given skeleton to the motif path
