@@ -4,6 +4,8 @@ import navis
 import networkx as nx
 import numpy as np
 
+from line_profiler_pycharm import profile
+
 import pandas as pd
 
 import plotly
@@ -60,6 +62,7 @@ class Neuron:
         @param synapses: selected set synapse that connect to other neurons
         @param skeleton_labels: labels of skeleton nodes that specify the distance of the node to a motif path
         """
+        self.skeleton_abstractions = None
         self.id = id
         self.skeleton = skeleton
         self.mesh = mesh
@@ -71,8 +74,9 @@ class Neuron:
         Converts Neuron object into a json object
         @return: json object
         """
-        swc_object = conversion.neuron_to_swc_string(self.skeleton)
+        swc_object = conversion.treeneuron_to_swc_string(self.skeleton)
         syn_export = conversion.synapse_array_to_object(self.synapses)
+        abstraction_export = conversion.treeneuron_list_to_swc_string_list(self.skeleton_abstractions)
 
         neuron = {
             'id': self.id,
@@ -80,7 +84,8 @@ class Neuron:
             'synapses': syn_export,
             'skeleton_swc': swc_object['swc'],
             'node_map': swc_object['map'],
-            'skeleton_labels': self.skeleton_labels
+            'skeleton_labels': self.skeleton_labels,
+            'skeleton_abstractions': abstraction_export
         }
 
         return neuron
@@ -102,6 +107,9 @@ class Neuron:
         @param synapses: set synapse data to neuron object
         """
         self.synapses = synapses
+
+    def set_skeleton_abstractions(self, num_of_levels):
+        self.skeleton_abstractions = self.compute_abstraction_levels(num_of_levels)
 
     def compute_skeleton_labels(self, motif_synapse_nodes):
         """
@@ -213,20 +221,30 @@ class Neuron:
 
         return nodes
 
+    def compute_abstraction_levels(self, num_of_levels):
+        """
+        TODO
+        @param num_of_levels:
+        @return:
+        """
+        skel_abstractions = [None] * num_of_levels
+        levels = np.linspace(0, 1, num_of_levels, endpoint=True)
+        for i in range(0, levels.size):
+            skel_abstractions[i] = self.prune_to_motif_path(levels[i])
+        return skel_abstractions
+
+    @profile
     def prune_to_motif_path(self, factor):
         """
         Prunes the given skeleton to the motif path
         @param factor: float [0, 1]. 0 -> full skeleton is returned. 1 -> only motif path is returned
         @return: pruned skeleton
         """
-        skel = self.skeleton
-        labels = self.skeleton_labels
-        max_label = float(max(list(labels.values())))
-        threshold = int(max_label * (1.0 - factor))  # convert scale factor to pruning threshold
+        node_ids = np.fromiter(self.skeleton_labels.keys(), dtype=int)
+        labels = np.fromiter(self.skeleton_labels.values(), dtype=int)
 
-        nodes_to_remove = []
-        for index, row in skel.nodes.iterrows():
-            node_id = row['node_id']
-            if labels[row['node_id']] > threshold:
-                nodes_to_remove.append(node_id)
-        return navis.remove_nodes(skel, nodes_to_remove)
+        max_label = np.max(labels)
+        threshold = int(max_label * (1.0 - factor))  # convert scale factor to pruning threshold
+        mask = labels > threshold
+
+        return navis.remove_nodes(self.skeleton, node_ids[mask])

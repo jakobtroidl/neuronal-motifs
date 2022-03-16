@@ -43,4 +43,4 @@ def get_swc():
     #
     # d = {'x': [21482, 15914], 'y': [28204, 31676], 'z': [16440, 12424]}
 
-    return conversion.neuron_to_swc_string(skeleton)
+    return conversion.treeneuron_to_swc_string(skeleton)

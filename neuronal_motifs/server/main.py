@@ -42,9 +42,9 @@ def get_test_motif():
     return motifabstraction.get_example_motif()
 
 
-@app.get("/get_pruned_test_motif/{pruning_factor}")
-def get_pruned_test_motif(pruning_factor: float):
-    return motifabstraction.get_pruned_motif(pruning_factor)
+# @app.get("/get_pruned_test_motif/{pruning_factor}")
+# def get_pruned_test_motif(pruning_factor: float):
+#     return motifabstraction.get_pruned_motif(pruning_factor)
 
 
 @app.get("/download_test_motif")
