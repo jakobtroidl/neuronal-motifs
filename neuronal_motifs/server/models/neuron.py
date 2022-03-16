@@ -122,10 +122,10 @@ class Neuron:
 
         # TODO DEBUG Jakob remove later
         neuron_id = -1
-        if self.id == 5813091420:
-            neuron_id = -2
-        elif self.id == 1001453586:
-            neuron_id = - 3
+        # if self.id == 5813091420:
+        #     neuron_id = -2
+        # elif self.id == 1001453586:
+        #     neuron_id = - 3
 
         self.skeleton = navis.heal_skeleton(self.skeleton)  # heal to skeleton such that all components are connected
         number_skeleton_nodes = self.skeleton.nodes['node_id'].max()  # get the number of nodes of the neuron skeleton
