@@ -58,7 +58,8 @@ function Viewer() {
             let neurons = motif.neurons;
             let i = 0;
             neurons.forEach(n => {
-                let level = context.store.abstractionLevel
+                let slider_value = context.store.abstractionLevel
+                let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value)
                 let abstr = n.skeleton_abstractions[level]
                 let parsedSwc = swcParser(abstr.swc)
                 // Iterate over our labels, assigning 0 = in_path, else not_in_path
