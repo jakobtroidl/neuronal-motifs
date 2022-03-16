@@ -48,7 +48,7 @@ class MyMotif:
         for id, neuron in self.neurons.items():
             nodes = neuron.get_nodes_of_motif_synapses()
             neuron.compute_skeleton_labels(nodes)
-            neuron.set_skeleton_abstractions(10)
+            neuron.set_skeleton_abstractions(50)
 
     def download_synapses(self):
         """
