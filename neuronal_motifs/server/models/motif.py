@@ -19,7 +19,7 @@ class MyMotif:
         """
 
         neuron_json = []
-        for id, neuron in self.neurons.items():
+        for neuron in self.neurons:
             neuron_json.append(neuron.as_json())
 
         motif = {
@@ -29,36 +29,28 @@ class MyMotif:
 
         return motif
 
-    def simplify(self, factor):
-        """
-        TODO
-        @param factor:
-        @return:
-        """
-        for id, neuron in self.neurons.items():
-            simplified = neuron.prune_to_motif_path(factor)
-            neuron.skeleton = simplified
-
     def compute_motif_paths(self):
         """
         For each neuron in the motif, matches synapses with closest skeleton connector,
         finds the motif path and labels all neuron skeletons based on distance to motif path
         @return:
         """
-        for id, neuron in self.neurons.items():
+        for neuron in self.neurons:
+            print("Compute Motif Abstraction for Neuron {}".format(neuron.id))
             nodes = neuron.get_nodes_of_motif_synapses()
             neuron.compute_skeleton_labels(nodes)
-            neuron.set_skeleton_abstractions(50)
+            # neuron.set_skeleton_abstractions(5)
 
     def download_synapses(self):
         """
         Downloads all relevant synapses for the neurons in that given motif and safes them in each neuron object
         """
+        print('Download Synapses')
+
         adjacency = self.get_adjacency(undirected=True)
-        for neuron_id in adjacency:  # download relevant synapses
-            neuron = self.neurons[neuron_id]
-            outgoing_synapses = self.data_access.get_synapses([neuron_id], adjacency[neuron_id])
-            incoming_synapses = self.data_access.get_synapses(adjacency[neuron_id], [neuron_id])
+        for neuron in self.neurons:  # download relevant synapses
+            outgoing_synapses = self.data_access.get_synapses([neuron.id], adjacency[neuron.id])
+            incoming_synapses = self.data_access.get_synapses(adjacency[neuron.id], [neuron.id])
             synapses = pd.concat([outgoing_synapses, incoming_synapses], ignore_index=True, sort=False)
             neuron.set_synapses(synapses)
 
@@ -76,10 +68,8 @@ class MyMotif:
         """
         @return: Returns adjacent nodes for each node in the motif
         """
-
         adjacency = {}
-        for neuron_id in self.neurons:
-            neighbors = [n for n in graph.neighbors(neuron_id)]
-            adjacency[neuron_id] = neighbors
-
+        for neuron in self.neurons:
+            neighbors = [n for n in graph.neighbors(neuron.id)]
+            adjacency[neuron.id] = neighbors
         return adjacency

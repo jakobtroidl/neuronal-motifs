@@ -3,7 +3,7 @@ import json
 import navis
 import networkx as nx
 import numpy as np
-
+from tqdm import tqdm
 from line_profiler_pycharm import profile
 
 import pandas as pd
@@ -76,7 +76,7 @@ class Neuron:
         """
         swc_object = conversion.treeneuron_to_swc_string(self.skeleton)
         syn_export = conversion.synapse_array_to_object(self.synapses)
-        abstraction_export = conversion.treeneuron_list_to_swc_string_list(self.skeleton_abstractions)
+        # abstraction_export = conversion.treeneuron_list_to_swc_string_list(self.skeleton_abstractions)
 
         neuron = {
             'id': self.id,
@@ -85,7 +85,7 @@ class Neuron:
             'skeleton_swc': swc_object['swc'],
             'node_map': swc_object['map'],
             'skeleton_labels': self.skeleton_labels,
-            'skeleton_abstractions': abstraction_export
+            # 'skeleton_abstractions': abstraction_export
         }
 
         return neuron
@@ -117,16 +117,9 @@ class Neuron:
         Label 0: node is on the motif path
         Label > 0: distance of the node to the motif path
         Stores the labels in self.skeleton_label np array
-        @param motif_synapse_nodes: skeleton node ids that matching the synapses forming a motif
+        @param motif_synapse_nodes: skeleton node ids that matching relevant synapses
         """
-
-        # TODO DEBUG Jakob remove later
-        neuron_id = -1
-        # if self.id == 5813091420:
-        #     neuron_id = -2
-        # elif self.id == 1001453586:
-        #     neuron_id = - 3
-
+        neuron_id = -1  # unlabeled nodes have this id
         self.skeleton = navis.heal_skeleton(self.skeleton)  # heal to skeleton such that all components are connected
         number_skeleton_nodes = self.skeleton.nodes['node_id'].max()  # get the number of nodes of the neuron skeleton
         motif_synapse_nodes = np.asarray(motif_synapse_nodes)
@@ -140,34 +133,26 @@ class Neuron:
         motif_nodes = multiple_shortest_paths(skeleton_graph, motif_synapse_nodes[0], motif_synapse_nodes[1:])
         # compute the shortest path between all synapse nodes which is equivalent to the motif path
 
-        for node_id in motif_nodes:  # TODO optimize
+        for node_id in motif_nodes:
             labels[node_id] = 0  # label all motif nodes in the skeleton with 0
-        #for node_id in motif_synapse_nodes:
-        #    labels[node_id] = 1  # nodes corresponding to synapses are now labeled with 1
+        for node_id in motif_synapse_nodes:
+            labels[node_id] = 1  # nodes corresponding to synapses are now labeled with 1
 
-        num_unlabeled_nodes = len([labels for l in labels.values() if l < 0])
-        label = 1  # specifies node labels, start with distance to motif path is 1
-        while num_unlabeled_nodes > 0:  # repeat until all nodes are labeled
-            for edge in self.skeleton.edges:  # look at all edges of the neuron skeleton
-                x = edge[0]  # first node index of an edge
-                y = edge[1]  # second node index of an edge
-                if labels[x] >= 0 and labels[y] < 0:  # if x is labeled yet and x isn't, then add current
-                    # label to node
-                    labels[y] = label
-                elif labels[y] >= 0 and labels[x] < 0:  # if y is labeled yet and x isn't, then add current
-                    # label to node
-                    labels[x] = label
-            num_unlabeled_nodes = len([labels for l in labels.values() if l < 0])
-            label += 1  # increase node label by one
+        # num_unlabeled_nodes = len([l for l in labels.values() if l < 0])
+        # label = 2  # specifies node labels, start with distance to motif path is 1
+        # while num_unlabeled_nodes > 0:  # repeat until all nodes are labeled
+        #     for edge in self.skeleton.edges:  # look at all edges of the neuron skeleton
+        #         x = edge[0]  # first node index of an edge
+        #         y = edge[1]  # second node index of an edge
+        #         if labels[x] >= 0 and labels[y] < 0:  # if x is labeled yet and x isn't, then add current
+        #             # label to node
+        #             labels[y] = label
+        #         elif labels[y] >= 0 and labels[x] < 0:  # if y is labeled yet and x isn't, then add current
+        #             # label to node
+        #             labels[x] = label
+        #     num_unlabeled_nodes = len([l for l in labels.values() if l < 0])
+        #     label += 1  # increase node label by one
         self.skeleton_labels = labels  # add labeled nodes to the neuron object
-
-        # DEBUG simon
-        # Add Categories
-        # self.skeleton.nodes['type'] = self.skeleton.nodes['type'].cat.add_categories(['in_path', 'not_in_path'])
-        # self.skeleton.prune_by_strahler(to_prune=-1, inplace=True)
-        # path_labels = np.argwhere(node_labels == 0).flatten()
-        # x = navis.cut_skeleton(self.skeleton, path_labels, ret='proximal')[0]
-        # label_categories = ['in_path' if label == 0 else 'not_in_path' for label in self.skeleton_label]
 
     def get_closest_connector(self, x, y, z):
         """
@@ -189,9 +174,11 @@ class Neuron:
         @return: list of node indices
         """
         # JAKOB Debug visualization
-        # x = self.synapses['x_pre'].to_numpy()
-        # y = self.synapses['y_pre'].to_numpy()
-        # z = self.synapses['z_pre'].to_numpy()
+        # x = self.synapses['x_post'].to_numpy()
+        # y = self.synapses['y_post'].to_numpy()
+        # z = self.synapses['z_post'].to_numpy()
+        #
+        # print(x, ", ", y, ", ", z, "\n")
         #
         # d = {'x': x, 'y': y, 'z': z}
         # df = pd.DataFrame(data=d)
@@ -229,10 +216,11 @@ class Neuron:
         """
         skel_abstractions = [None] * num_of_levels
         levels = np.linspace(0, 1, num_of_levels, endpoint=True)
-        for i in range(0, levels.size):
+        for i in tqdm(range(0, levels.size)):
             skel_abstractions[i] = self.prune_to_motif_path(levels[i])
         return skel_abstractions
 
+    @profile
     def prune_to_motif_path(self, factor):
         """
         Prunes the given skeleton to the motif path

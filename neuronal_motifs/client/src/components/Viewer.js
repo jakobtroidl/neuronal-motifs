@@ -10,32 +10,45 @@ function Viewer() {
     const [sharkViewerInstance, setSharkViewerInstance] = useState();
     const [initialized, setInitialized] = useState()  // track whether scene was initialized or not. e.g., used for camera updates
     const [colors, setColors] = useState()  // store motif colors
+    const [loadedNeurons, setLoadedNeurons] = useState()
     const id = "my_shark_viewer";
     const className = 'shark_viewer';
     // Global context holds abstraction state
     const context = useContext(AppContext);
-    const metadata = [{"label": "in_path", "type": 0},
-        {"label": "synapse", "type": 1},
-        {"label": "neuron 1", "type": 2},
-        {"label": "neuron 2", "type": 3},
-        {"label": "neuron 3", "type": 4}];
+
 
     // Instantiates the viewer, will only run once on init
     useEffect(() => {
+        const metadata = [{"label": "in_path", "type": 0},
+            {"label": "synapse", "type": 1}, {"label": "off_path", "type": 2}, {"label": "unlabeled", "type": 3}];
+        setColors(
+            [
+                '#ff9a00',
+                '#000000'
+                //getRandomColor(),
+                //getRandomColor(),
+                //getRandomColor()
+            ]
+        )
+
+        let col = ['#ff9a00', '#ff0000', '#000000', '#f6ff00']
+
         setSharkViewerInstance(
-            new SharkViewer({dom_element: id, metadata: metadata, colors: colors})
+            new SharkViewer({dom_element: id, metadata: metadata, colors: col})
         )
         setInitialized(
             false
         )
 
-        setColors(
-            [
-                getRandomColor(),
-                getRandomColor(),
-                getRandomColor()
-            ]
+
+
+        setLoadedNeurons(
+            [0,
+                1000,
+                2000]
         )
+
+
     }, [])
     // Inits the viewer once it is created
     useEffect(() => {
@@ -49,48 +62,64 @@ function Viewer() {
         if (!motif) {
             // Update the document title using the browser API
             let res = await axios.get(`http://localhost:5050/get_test_motif`);
+
+
             setMotif(res.data);
         }
     }, []);
     // Updates the motifs, runs when data, viewer, or abstraction state change
-    useEffect( () => {
+    useEffect(() => {
         if (motif && sharkViewerInstance) {
             let neurons = motif.neurons;
             let i = 0;
+
+            console.log(neurons)
             neurons.forEach(n => {
-                let slider_value = context.store.abstractionLevel
-                let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value)
-                let abstr = n.skeleton_abstractions[level]
-                let parsedSwc = swcParser(abstr.swc)
-                // Iterate over our labels, assigning 0 = in_path, else not_in_path
-                // for (let i = 1; i <= n.skeleton_labels.length; i++) {
-                //     let label = n.skeleton_labels[i]
-                //     let new_id = n.node_map[i]  // remap original id to new id.
-                //     // Necessary due to some data shuffling in swc export
-                //     if (label === 0) {
-                //         parsedSwc[new_id].type = 0
-                //     } else if (label === 1) {
-                //         parsedSwc[new_id].type = 1
-                //     } else if (label === -1) {
-                //         parsedSwc[new_id].type = 2
-                //     } else if (label === -2) {
-                //         parsedSwc[new_id].type = 3
-                //     } else if (label === -3) {
-                //         parsedSwc[new_id].type = 4
-                //     }
-                // }
-                sharkViewerInstance.unloadNeuron(n.id);
+                //if(i===1) {
+                    let slider_value = context.store.abstractionLevel
+                    //let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value)
+                    //let abstr = n.skeleton_abstractions[level]
+                    let parsedSwc = swcParser(n.skeleton_swc)
+                    // Iterate over our labels, assigning 0 = in_path, else not_in_path
+                    //console.log(n.skeleton_labels)
+                    for (let i in n.skeleton_labels) {
+                        let label = n.skeleton_labels[i]
+                        let new_id = n.node_map[i]  // remap original id to new id.
+                        // Necessary due to some data shuffling in swc export
+                        if (label === 0) {
+                            parsedSwc[new_id].type = 0
+                        }
+                        if (label === 1) {
+                            parsedSwc[new_id].type = 1
+                        }
+                        if (label > 2) {
+                            parsedSwc[new_id].type = 2
+                        }
+                        if (label < 0) {
+                            parsedSwc[new_id].type = 3
+                        }
+                    }
+
+                    //console.log(parsedSwc)
+
+                    //let id = i * 1000 + level
+
+                    //console.log(loadedNeurons)
+
+                    if (!initialized) {
+                        sharkViewerInstance.loadNeuron(n.id, null, parsedSwc);
+                        setInitialized(true)
+                    } else {
+                        sharkViewerInstance.unloadNeuron(n.id);
+                        sharkViewerInstance.loadNeuron(n.id, null, parsedSwc, false);
+                    }
 
 
-                if (!initialized)
-                {
-                    sharkViewerInstance.loadNeuron(n.id, colors[i], parsedSwc);
-                    setInitialized(true)
-                }
-                else {
-                    sharkViewerInstance.loadNeuron(n.id, colors[i], parsedSwc, false);
-                }
-                i+=1
+                    // let tmp = loadedNeurons
+                    // tmp[i] = id
+                    // setLoadedNeurons(tmp)
+                //}
+                i += 1
 
             })
         }
