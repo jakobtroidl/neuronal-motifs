@@ -16,6 +16,6 @@ def search_hemibrain_motif(body_id, lim):
     C -> A
     """)
 
-    results = E.find(body_id, limit=lim)
+    results = E.find(motif, limit=lim)
 
     return results
