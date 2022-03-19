@@ -28,11 +28,16 @@ function MotifPanel() {
 
     const displaySearch = () => {
         if (searchedMotifs.length !== undefined) {
-            return (
-                searchedMotifs.map((item) => (
-                    <li>{item}</li>
-                    ))
-            )
+            var list = document.getElementById('returned_value');
+            var heading = document.createElement('h5')
+            heading.appendChild(document.createTextNode("Returned Motifs"));
+            list.appendChild(heading);
+            for(let i = 0; i < searchedMotifs.length; i++){
+                var entry = document.createElement('li');
+                entry.appendChild(document.createTextNode(searchedMotifs[i]));
+                list.appendChild(entry);
+            }
+
         }
         else {
             return (
@@ -47,7 +52,7 @@ function MotifPanel() {
                 <div>
                     <label>
                     Motif BodyID: 
-                    <input type="text" onChange={event => setMotif(event.target.value)} />
+                    <textarea type="text" onChange={event => setMotif(event.target.value)} />
                     </label>
                 </div>
 
@@ -62,6 +67,7 @@ function MotifPanel() {
 
                 <input type="submit" value="Search" />
             </form>
+            <ul id="returned_value"></ul>
             
             {/* {displaySearch} */}
             <script>
