@@ -26,20 +26,20 @@ function MotifPanel() {
         setSearchedMotifs(motifs.data)
     }
 
-    // const displaySearch = () => {
-    //     if (searchedMotifs) {
-    //         return (
-    //             searchedMotifs.map((item) => (
-    //                 <li>{item}</li>
-    //                 ))
-    //         )
-    //     }
-    //     else {
-    //         return (
-    //             <div>No motifs found</div>
-    //         )
-    //     }
-    // }
+    const displaySearch = () => {
+        if (searchedMotifs.length !== undefined) {
+            return (
+                searchedMotifs.map((item) => (
+                    <li>{item}</li>
+                    ))
+            )
+        }
+        else {
+            return (
+                <div>No motifs found</div>
+            )
+        }
+    }
 
     return (
         <div>
@@ -55,7 +55,7 @@ function MotifPanel() {
                     <label>Number: 
                     <input 
                         type="number"
-                        value="1"
+                        defaultValue="1"
                         onChange={event => setNumber(event.target.value)} />
                     </label>
                 </div>
@@ -64,6 +64,9 @@ function MotifPanel() {
             </form>
             
             {/* {displaySearch} */}
+            <script>
+             {displaySearch()}
+            </script>
         </div>
     )
 }
