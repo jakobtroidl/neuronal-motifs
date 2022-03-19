@@ -9,27 +9,8 @@ import axios from "axios";
 
 function MotifPanel() {
     const [motif, setMotif] = useState('');
+    const [number, setNumber] = useState(0);
     const [searchedMotifs, setSearchedMotifs] = useState({});
-
-
-    // useEffect(() => {
-    //     // Don't search if the motif string is null
-    //         if(motif){
-    //             fetchMotifs()
-    //         }        
-    //     }, [])
-
-    // const handleSubmit = async () => {
-    //     try {
-    //         await fetchMotifs()
-    //     } catch (err) {
-    //         if (err.response.status === 404) {
-    //             console.log('Resource could not be found!');
-    //         } else {
-    //             console.log(err.message);
-    //         }
-    //     }
-    // }
     
     const handleSubmit = (e) => {
         console.log(e)
@@ -39,35 +20,50 @@ function MotifPanel() {
 
     const fetchMotifs = async () => {
         console.log(motif, typeof(motif))
-        const res = await axios(`http://localhost:5050/search/${motif}`)
-        //const res = await axios(`http://localhost:5050/helloworld`)
-        //const motifs = await res.json()
+        const res = await axios(`http://localhost:5050/search/motif=${motif}&lim=${number}`)
         const motifs = res
         console.log(motifs)
         setSearchedMotifs(motifs.data)
-      }
+    }
+
+    // const displaySearch = () => {
+    //     if (searchedMotifs) {
+    //         return (
+    //             searchedMotifs.map((item) => (
+    //                 <li>{item}</li>
+    //                 ))
+    //         )
+    //     }
+    //     else {
+    //         return (
+    //             <div>No motifs found</div>
+    //         )
+    //     }
+    // }
 
     return (
         <div>
             <form onSubmit={(event) => handleSubmit(event)}>
-                <label>
-                Motif:  
-                <input type="text" onChange={event => setMotif(event.target.value)} />
-                </label>
-                <input type="submit" value="Submit" />
+                <div>
+                    <label>
+                    Motif BodyID: 
+                    <input type="text" onChange={event => setMotif(event.target.value)} />
+                    </label>
+                </div>
+
+                <div>
+                    <label>Number: 
+                    <input 
+                        type="number"
+                        value="1"
+                        onChange={event => setNumber(event.target.value)} />
+                    </label>
+                </div>
+
+                <input type="submit" value="Search" />
             </form>
             
-            {/* <div>
-                {searchedMotifs.map((item) => (
-                <li>{item}</li>
-                ))}
-            </div> */}
-            <script>
-                if(searchedMotifs.length !== 0){
-                    console.log(motif.length, searchedMotifs, "cool")
-                    //console.log(motif.length)
-                }
-            </script>
+            {/* {displaySearch} */}
         </div>
     )
 }

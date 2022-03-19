@@ -41,14 +41,10 @@ def get_test_motif():
     return motifabstraction.get_example_motif()
 
 
-@app.get("/search/{q}")
-def search_motif(q: str): # search one motif at a time
-    # call dotmotif search function here
-    #if len(q) == 0:
-    return "hi"
-    #results = motif_search.search_hemibrain_motif(q)
-    #return results
-    #return {'q': q, 'results': {results} } # return whatever search returns; formatting rn might be weird
+@app.get("/search/motif={q}&lim={n}")
+def search_motif(q: str, n: int): # search one motif at a time
+    results = motif_search.search_hemibrain_motif(q, n)
+    return results
 
 
 @app.get("/get_swc")
