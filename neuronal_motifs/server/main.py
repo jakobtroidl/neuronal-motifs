@@ -5,7 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from services import data_service
 from services import motifabstraction
-from services import motif_search
+import motif_search
 import uvicorn
 
 app = FastAPI()
@@ -44,8 +44,11 @@ def get_test_motif():
 @app.get("/search/{q}")
 def search_motif(q: str): # search one motif at a time
     # call dotmotif search function here
-    results = motif_search.search_hemibrain_motif(q)
-    return {'q': q, 'results': {results} } # return whatever search returns; formatting rn might be weird
+    #if len(q) == 0:
+    return "hi"
+    #results = motif_search.search_hemibrain_motif(q)
+    #return results
+    #return {'q': q, 'results': {results} } # return whatever search returns; formatting rn might be weird
 
 
 @app.get("/get_swc")
