@@ -23,29 +23,23 @@ function Viewer() {
             {"label": "synapse", "type": 1}, {"label": "off_path", "type": 2}, {"label": "unlabeled", "type": 3}];
         setColors(
             [
-                '#ff9a00',
-                '#000000'
-                //getRandomColor(),
-                //getRandomColor(),
-                //getRandomColor()
+                getRandomColor(),
+                getRandomColor(),
+                getRandomColor()
             ]
         )
 
         let col = ['#ff9a00', '#ff0000', '#000000', '#f6ff00']
 
         setSharkViewerInstance(
-            new SharkViewer({dom_element: id, metadata: metadata, colors: col})
+            new SharkViewer({dom_element: id, colors: col, metadata: metadata})
         )
         setInitialized(
             false
         )
 
-
-
         setLoadedNeurons(
-            [0,
-                1000,
-                2000]
+            [0, 1000, 2000]
         )
 
 
@@ -71,34 +65,34 @@ function Viewer() {
     useEffect(() => {
         if (motif && sharkViewerInstance) {
             let neurons = motif.neurons;
-            let i = 0;
+            let j = 0;
 
             console.log(neurons)
             neurons.forEach(n => {
-                //if(i===1) {
+                // if(j===2) {
                     let slider_value = context.store.abstractionLevel
-                    //let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value)
-                    //let abstr = n.skeleton_abstractions[level]
-                    let parsedSwc = swcParser(n.skeleton_swc)
+                    let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value)
+                    let abstr = n.skeleton_abstractions[level]
+                    let parsedSwc = swcParser(abstr.swc)
                     // Iterate over our labels, assigning 0 = in_path, else not_in_path
-                    //console.log(n.skeleton_labels)
-                    for (let i in n.skeleton_labels) {
-                        let label = n.skeleton_labels[i]
-                        let new_id = n.node_map[i]  // remap original id to new id.
-                        // Necessary due to some data shuffling in swc export
-                        if (label === 0) {
-                            parsedSwc[new_id].type = 0
-                        }
-                        if (label === 1) {
-                            parsedSwc[new_id].type = 1
-                        }
-                        if (label > 2) {
-                            parsedSwc[new_id].type = 2
-                        }
-                        if (label < 0) {
-                            parsedSwc[new_id].type = 3
-                        }
-                    }
+                    // console.log(abstr)
+                    // for (let i in n.skeleton_labels) {
+                    //     let label = n.skeleton_labels[i]
+                    //     let new_id = n.node_map[i]  // remap original id to new id.
+                    //     // Necessary due to some data shuffling in swc export
+                    //     if (label === 0) {
+                    //         parsedSwc[new_id].type = 0
+                    //     }
+                    //     else if (label === 1) {
+                    //         parsedSwc[new_id].type = 1
+                    //     }
+                    //     else if (label >= 2) {
+                    //         parsedSwc[new_id].type = 2
+                    //     }
+                    //     else if (label < 0) {
+                    //         parsedSwc[new_id].type = 3
+                    //     }
+                    // }
 
                     //console.log(parsedSwc)
 
@@ -107,11 +101,11 @@ function Viewer() {
                     //console.log(loadedNeurons)
 
                     if (!initialized) {
-                        sharkViewerInstance.loadNeuron(n.id, null, parsedSwc);
+                        sharkViewerInstance.loadNeuron(n.id, colors[j], parsedSwc);
                         setInitialized(true)
                     } else {
                         sharkViewerInstance.unloadNeuron(n.id);
-                        sharkViewerInstance.loadNeuron(n.id, null, parsedSwc, false);
+                        sharkViewerInstance.loadNeuron(n.id, colors[j], parsedSwc, false);
                     }
 
 
@@ -119,7 +113,7 @@ function Viewer() {
                     // tmp[i] = id
                     // setLoadedNeurons(tmp)
                 //}
-                i += 1
+                j += 1
 
             })
         }

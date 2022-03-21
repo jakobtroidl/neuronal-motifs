@@ -39,7 +39,7 @@ class MyMotif:
             print("Compute Motif Abstraction for Neuron {}".format(neuron.id))
             nodes = neuron.get_nodes_of_motif_synapses()
             neuron.compute_skeleton_labels(nodes)
-            # neuron.set_skeleton_abstractions(5)
+            neuron.set_skeleton_abstractions(15)
 
     def download_synapses(self):
         """
