@@ -127,8 +127,7 @@ class Neuron:
         motif_synapse_nodes = np.asarray(motif_synapse_nodes)
 
         nodes = range(1, number_skeleton_nodes + 1, 1)  # list of node ids
-        start_labels = [
-                           unlabeled_node_id] * number_skeleton_nodes  # labels indicating that node has node been labeled yet (
+        start_labels = [unlabeled_node_id] * number_skeleton_nodes  # labels indicating that node has node been labeled yet (
         # neuron_id)
         labels = dict(zip(nodes, start_labels))
         skeleton_graph = skeleton_2_nx_graph(self.skeleton, undirected=True)  # convert skeleton to an
@@ -141,7 +140,6 @@ class Neuron:
         # for node_id in motif_synapse_nodes:
         #     labels[node_id] = 1  # nodes corresponding to synapses are now labeled with 1
 
-        # num_of_zero_nodes_before = countOf(labels.values(), 0)
         num_unlabeled_nodes = countOf(labels.values(), unlabeled_node_id)
         label = 1  # specifies node labels, start with distance to motif path is 1
         while num_unlabeled_nodes > 0:  # repeat until all nodes are labeled
@@ -159,8 +157,6 @@ class Neuron:
                 labels[node_id] = label
             num_unlabeled_nodes = countOf(labels.values(), unlabeled_node_id)
             label += 1  # increase node label by one
-
-        # num_of_zero_nodes_after = countOf(labels.values(), 0)
         self.skeleton_labels = labels  # add labeled nodes to the neuron object
 
     def get_closest_connector(self, x, y, z):
@@ -219,9 +215,9 @@ class Neuron:
 
     def compute_abstraction_levels(self, num_of_levels):
         """
-        TODO
-        @param num_of_levels:
-        @return:
+        Generates [num_of_levels] abstractions of this neuron, by pruning branches of a certain distance to the motif path
+        @param num_of_levels: number of abstraction levels
+        @return: list of abstracted TreeNeurons
         """
         skel_abstractions = [None] * num_of_levels
         levels = np.linspace(0, 1, num_of_levels, endpoint=True)
@@ -242,7 +238,5 @@ class Neuron:
         max_label = np.max(labels)
         threshold = int(max_label * (1.0 - factor))  # convert scale factor to pruning threshold
         mask = labels > threshold
-
-        print("Number of nodes removed: {}".format(mask.sum()))
 
         return navis.remove_nodes(self.skeleton, node_ids[mask])
