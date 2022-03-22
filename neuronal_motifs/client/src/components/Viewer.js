@@ -8,9 +8,9 @@ import axios from "axios";
 function Viewer() {
     const [motif, setMotif] = React.useState()
     const [sharkViewerInstance, setSharkViewerInstance] = useState();
-    const [initialized, setInitialized] = useState()  // track whether scene was initialized or not. e.g., used for camera updates
     const [colors, setColors] = useState()  // store motif colors
     const [loadedNeurons, setLoadedNeurons] = useState()
+    const [prevSliderValue, setPrevSliderValue] = useState()
     const id = "my_shark_viewer";
     const className = 'shark_viewer';
     // Global context holds abstraction state
@@ -19,8 +19,6 @@ function Viewer() {
 
     // Instantiates the viewer, will only run once on init
     useEffect(() => {
-        const metadata = [{"label": "in_path", "type": 0},
-            {"label": "synapse", "type": 1}, {"label": "off_path", "type": 2}, {"label": "unlabeled", "type": 3}];
         setColors(
             [
                 getRandomColor(),
@@ -29,13 +27,8 @@ function Viewer() {
             ]
         )
 
-        let col = ['#ff9a00', '#ff0000', '#000000', '#f6ff00']
-
         setSharkViewerInstance(
-            new SharkViewer({dom_element: id, colors: col, metadata: metadata})
-        )
-        setInitialized(
-            false
+            new SharkViewer({dom_element: id})
         )
 
         setLoadedNeurons(
@@ -50,83 +43,63 @@ function Viewer() {
             sharkViewerInstance.init();
             sharkViewerInstance.animate();
         }
+
+        setPrevSliderValue(0)
     }, [sharkViewerInstance])
     // Fetches the data, only runs on init
     useEffect(async () => {
         if (!motif) {
             // Update the document title using the browser API
             let res = await axios.get(`http://localhost:5050/get_test_motif`);
-
-
             setMotif(res.data);
         }
     }, []);
+
+    useEffect(() => {
+        if (motif && sharkViewerInstance) {
+            let i = 0
+            motif.neurons.forEach(n => {
+                let j = 0
+                n.skeleton_abstractions.forEach(abstraction => {
+                    let parsedSwc = swcParser(abstraction.swc)
+                    let id = i * 1000 + j
+
+                    if (j === 0) {
+                        sharkViewerInstance.loadNeuron(id, colors[i], parsedSwc, true);
+                        sharkViewerInstance.setNeuronVisible(id, true)
+                    } else {
+                        sharkViewerInstance.loadNeuron(id, colors[i], parsedSwc, false);
+                        sharkViewerInstance.setNeuronVisible(id, false)
+                    }
+                    j++
+                })
+                i += 1
+            })
+        }
+    }, [motif, sharkViewerInstance])
     // Updates the motifs, runs when data, viewer, or abstraction state change
     useEffect(() => {
         if (motif && sharkViewerInstance) {
             let neurons = motif.neurons;
             let j = 0;
-
-            console.log(neurons)
             neurons.forEach(n => {
-                // if(j===2) {
-                    let slider_value = context.store.abstractionLevel
-                    let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value)
-                    let abstr = n.skeleton_abstractions[level]
-                    let parsedSwc = swcParser(abstr.swc)
-                    // Iterate over our labels, assigning 0 = in_path, else not_in_path
-                    // console.log(abstr)
-                    // for (let i in n.skeleton_labels) {
-                    //     let label = n.skeleton_labels[i]
-                    //     let new_id = n.node_map[i]  // remap original id to new id.
-                    //     // Necessary due to some data shuffling in swc export
-                    //     if (label === 0) {
-                    //         parsedSwc[new_id].type = 0
-                    //     }
-                    //     else if (label === 1) {
-                    //         parsedSwc[new_id].type = 1
-                    //     }
-                    //     else if (label >= 2) {
-                    //         parsedSwc[new_id].type = 2
-                    //     }
-                    //     else if (label < 0) {
-                    //         parsedSwc[new_id].type = 3
-                    //     }
-                    // }
+                let slider_value = context.store.abstractionLevel;
 
-                    //console.log(parsedSwc)
+                let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value);
+                let load_id = loadedNeurons[j] + level;
+                let unload_id = loadedNeurons[j] + prevSliderValue;
 
-                    //let id = i * 1000 + level
-
-                    //console.log(loadedNeurons)
-
-                    if (!initialized) {
-                        sharkViewerInstance.loadNeuron(n.id, colors[j], parsedSwc);
-                        setInitialized(true)
-                    } else {
-                        sharkViewerInstance.unloadNeuron(n.id);
-                        sharkViewerInstance.loadNeuron(n.id, colors[j], parsedSwc, false);
-                    }
-
-
-                    // let tmp = loadedNeurons
-                    // tmp[i] = id
-                    // setLoadedNeurons(tmp)
-                //}
-                j += 1
-
+                if (load_id !== unload_id) {
+                    // console.log('load -> ', load_id);
+                    // console.log('unload -> ', unload_id);
+                    sharkViewerInstance.setNeuronVisible(load_id, true)//, colors[j], parsedSwc, false);
+                    sharkViewerInstance.setNeuronVisible(unload_id, false);
+                }
+                setPrevSliderValue(level);
+                j += 1;
             })
         }
-
-    }, [motif, sharkViewerInstance, context.store.abstractionLevel])
-
-    // useEffect(async() => {
-    //     console.log(context.store.abstractionLevel);
-    //     // let factor = context.store.abstractionLevel / 10.0
-    //     // let res = await axios.get(`http://localhost:5050/get_pruned_test_motif/` + factor);
-    //     // setMotif(res.data)
-    //
-    // }, [context.store.abstractionLevel])
+    }, [context.store.abstractionLevel])
 
     return (
         <div id={id} className={className}></div>
