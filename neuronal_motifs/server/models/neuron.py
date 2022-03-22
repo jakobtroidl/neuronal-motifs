@@ -6,6 +6,9 @@ import numpy as np
 from tqdm import tqdm
 from line_profiler_pycharm import profile
 
+from joblib import Parallel, delayed
+import time
+
 from operator import *
 
 import pandas as pd
@@ -127,7 +130,8 @@ class Neuron:
         motif_synapse_nodes = np.asarray(motif_synapse_nodes)
 
         nodes = range(1, number_skeleton_nodes + 1, 1)  # list of node ids
-        start_labels = [unlabeled_node_id] * number_skeleton_nodes  # labels indicating that node has node been labeled yet (
+        start_labels = [
+                           unlabeled_node_id] * number_skeleton_nodes  # labels indicating that node has node been labeled yet (
         # neuron_id)
         labels = dict(zip(nodes, start_labels))
         skeleton_graph = skeleton_2_nx_graph(self.skeleton, undirected=True)  # convert skeleton to an
@@ -219,11 +223,14 @@ class Neuron:
         @param num_of_levels: number of abstraction levels
         @return: list of abstracted TreeNeurons
         """
-        skel_abstractions = [None] * num_of_levels
         levels = np.linspace(0, 1, num_of_levels, endpoint=True)
-        for i in tqdm(range(0, levels.size)):
-            skel_abstractions[i] = self.prune_to_motif_path(levels[i])
-        return skel_abstractions
+        t = time.time()
+        results = Parallel(n_jobs=8)(delayed(self.prune_to_motif_path)(levels[i]) for i in range(levels.size))
+        results = sorted(results, key=lambda x: x[0])  # sort based on abstraction level
+        print('Took {} sec'.format(time.time() - t))
+        return list(map(itemgetter(1), results))  # only return TreeNeuron
+
+
 
     @profile
     def prune_to_motif_path(self, factor):
@@ -239,4 +246,4 @@ class Neuron:
         threshold = int(max_label * (1.0 - factor))  # convert scale factor to pruning threshold
         mask = labels > threshold
 
-        return navis.remove_nodes(self.skeleton, node_ids[mask])
+        return [factor, navis.remove_nodes(self.skeleton, node_ids[mask])]
