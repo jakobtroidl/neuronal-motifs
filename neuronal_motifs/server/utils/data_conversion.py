@@ -3,7 +3,15 @@ from pathlib import Path
 import os
 
 
-def neuron_to_swc_string(neuron_skeleton):
+def treeneuron_list_to_swc_string_list(skeletons):
+    out = [None] * len(skeletons)
+    for i in range(len(skeletons)):
+        skl = skeletons[i]
+        out[i] = treeneuron_to_swc_string(skl)
+    return out
+
+
+def treeneuron_to_swc_string(neuron_skeleton):
     """
     Takes a TreeNeuron skeleton and returns its swc formatted data string
     @param neuron_skeleton: TreeNeuron object
