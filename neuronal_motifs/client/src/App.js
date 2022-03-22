@@ -13,7 +13,6 @@ function App() {
             <div>
                 <Viewer/>
                 <DraggableView/>
-                <MotifPanel/>
             </div>
         </ContextWrapper>
     );

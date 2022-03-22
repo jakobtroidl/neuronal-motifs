@@ -53,4 +53,3 @@ def example_motif_data():
         print('Write Motif to cache ...')
         pkl.dump(motif, f)
     print('Done Write Motif to cache ...')
-

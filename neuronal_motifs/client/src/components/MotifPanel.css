@@ -1,0 +1,18 @@
+#motif-panel-div {
+    position: absolute;
+    top: -99vh;
+    left: 1vw;
+    padding: 5px;
+    background-color: rgba(255, 255, 255, 0.75);
+    margin: 20px;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+#motif-panel-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 5px 30px 0 30px;
+
+}
