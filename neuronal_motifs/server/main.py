@@ -3,7 +3,9 @@ from fastapi import FastAPI
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
+from services import data_service
 from services import motifabstraction
+import motif_search
 import uvicorn
 
 app = FastAPI()
@@ -13,8 +15,6 @@ origins = [
     "http://localhost:8080",
     "http://localhost:3000",
     "http://localhost:3001",
-    "http://localhost:3002",
-    "http://localhost:3003",
 ]
 
 app.add_middleware(
@@ -41,9 +41,15 @@ def get_test_motif():
     return motifabstraction.get_example_motif()
 
 
-@app.get("/download_test_motif")
-def download_test_motif():
-    return motifabstraction.example_motif_data()
+@app.get("/search/motif={q}&lim={n}")
+def search_motif(q: str, n: int): # search one motif at a time
+    results = motif_search.search_hemibrain_motif(q, n)
+    return results
+
+
+@app.get("/get_swc")
+def get_swc():
+    return {'swc': data_service.get_swc()}
 
 
 if __name__ == "__main__":
