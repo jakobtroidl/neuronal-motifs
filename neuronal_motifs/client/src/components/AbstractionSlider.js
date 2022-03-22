@@ -8,7 +8,7 @@ import './AbstractionSlider.css'
 
 
 function AbstractionSlider() {
-
+    const abstractionSliderId = 'abstraction-slider-div'
 
     function valueLabelFormat(value) {
         return `Level ${value}`
@@ -23,12 +23,12 @@ function AbstractionSlider() {
     }
 
     return (
-        <div id='drag-div'>
+        <div id={abstractionSliderId}>
             {/*Drag Handler*/}
             <div className="handle">
                 <FontAwesomeIcon icon={faUpDownLeftRight}/>
             </div>
-            <div id='drag-wrapper'>
+            <div id='abstraction-slider-wrapper'>
                 <div className='item title-wrapper'>
                     <span>Abstraction Level</span>
                 </div>

@@ -21,7 +21,7 @@ function DraggableView() {
                     <AbstractionSlider/>
                 </div>
             </Draggable>
-            <Draggable>
+            <Draggable handle=".handle">
                 <div className='drag-overlay'>
                     <MotifPanel/>
                 </div>

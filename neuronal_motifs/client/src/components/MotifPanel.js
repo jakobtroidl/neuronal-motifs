@@ -1,5 +1,8 @@
 import React, {useState, useEffect} from 'react';
 import axios from "axios";
+import './MotifPanel.css'
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faUpDownLeftRight} from "@fortawesome/free-solid-svg-icons";
 /* fetches a list of motifs from backend/janelia and displays them here */
 /* motif sketching panel sends a list of text to the backend, backend returns list of ids */
 
@@ -52,32 +55,37 @@ function MotifPanel() {
 
     return (
         <div id={motifPanelId}>
-            <form onSubmit={(event) => handleSubmit(event)}>
-                <div>
-                    <label>
-                        Motif BodyID:
-                        <textarea type="text" onChange={event => setMotif(event.target.value)}/>
-                    </label>
-                </div>
+            <div className="handle">
+                <FontAwesomeIcon icon={faUpDownLeftRight}/>
+            </div>
+            <div id='motif-panel-wrapper'>
+                <form onSubmit={(event) => handleSubmit(event)}>
+                    <div>
+                        <label>
+                            Motif BodyID:
+                            <textarea type="text" onChange={event => setMotif(event.target.value)}/>
+                        </label>
+                    </div>
 
-                <div>
-                    <label>Number:
-                        <input
-                            type="number"
-                            defaultValue="1"
-                            onChange={event => setNumber(event.target.value)}/>
-                    </label>
-                </div>
+                    <div>
+                        <label>Number:
+                            <input
+                                type="number"
+                                defaultValue="1"
+                                onChange={event => setNumber(event.target.value)}/>
+                        </label>
+                    </div>
 
-                <input type="submit" value="Search"/>
-            </form>
-            <ul id="returned_value"></ul>
+                    <input type="submit" value="Search"/>
+                </form>
+                <ul id="returned_value"></ul>
 
 
-            {/* {displaySearch} */}
-            <script>
-                {displaySearch()}
-            </script>
+                {/* {displaySearch} */}
+                <script>
+                    {displaySearch()}
+                </script>
+            </div>
         </div>
     )
 }
