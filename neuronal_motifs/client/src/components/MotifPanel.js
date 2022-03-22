@@ -3,6 +3,7 @@ import axios from "axios";
 import './MotifPanel.css'
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faUpDownLeftRight} from "@fortawesome/free-solid-svg-icons";
+import SearchButton from "./Button";
 /* fetches a list of motifs from backend/janelia and displays them here */
 /* motif sketching panel sends a list of text to the backend, backend returns list of ids */
 
@@ -76,7 +77,7 @@ function MotifPanel() {
                                 onChange={event => setNumber(event.target.value)}/>
                         </label>
                     </div>
-
+                    <SearchButton/>
                     <input type="submit" value="Search"/>
                 </form>
                 <ul id="returned_value"></ul>

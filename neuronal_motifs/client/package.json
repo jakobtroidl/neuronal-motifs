@@ -10,6 +10,7 @@
     "@fortawesome/react-fontawesome": "^0.1.17",
     "@janelia/sharkviewer": "^1.7.10",
     "@janelia/three-orbit-unlimited-controls": "^1.0.3",
+    "@mui/icons-material": "^5.5.1",
     "@mui/material": "^5.5.1",
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.3",
