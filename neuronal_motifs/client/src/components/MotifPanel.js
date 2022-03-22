@@ -13,7 +13,7 @@ import {faUpDownLeftRight} from "@fortawesome/free-solid-svg-icons";
 
 function MotifPanel() {
     const [motif, setMotif] = useState('');
-    const [number, setNumber] = useState(0);
+    const [number, setNumber] = useState(1);
     const [searchedMotifs, setSearchedMotifs] = useState({});
     const motifPanelId = 'motif-panel-div'
 
@@ -25,7 +25,8 @@ function MotifPanel() {
 
     const fetchMotifs = async () => {
         console.log(motif, typeof (motif))
-        const res = await axios(`http://localhost:5050/search/motif=${motif}&lim=${number}`)
+        const encodedMotif = encodeURIComponent(motif);
+        const res = await axios(`http://localhost:5050/search/motif=${encodedMotif}&lim=${number}`)
         const motifs = res
         console.log(motifs)
         setSearchedMotifs(motifs.data)
