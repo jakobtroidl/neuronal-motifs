@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
-from services import data_service
 from services import motifabstraction
 import uvicorn
 
@@ -45,11 +44,6 @@ def get_test_motif():
 @app.get("/download_test_motif")
 def download_test_motif():
     return motifabstraction.example_motif_data()
-
-
-@app.get("/get_swc")
-def get_swc():
-    return {'swc': data_service.get_swc()}
 
 
 if __name__ == "__main__":

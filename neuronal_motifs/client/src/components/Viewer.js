@@ -57,23 +57,23 @@ function Viewer() {
 
     useEffect(() => {
         if (motif && sharkViewerInstance) {
-            let i = 0
+            let neuron_number = 0
             motif.neurons.forEach(n => {
-                let j = 0
+                let abstraction_level = 0
                 n.skeleton_abstractions.forEach(abstraction => {
                     let parsedSwc = swcParser(abstraction.swc)
-                    let id = i * 1000 + j
+                    let id = loadedNeurons[neuron_number] + abstraction_level
 
-                    if (j === 0) {
-                        sharkViewerInstance.loadNeuron(id, colors[i], parsedSwc, true);
+                    if (abstraction_level === 0) {  // initialize view instance
+                        sharkViewerInstance.loadNeuron(id, colors[neuron_number], parsedSwc, true);
                         sharkViewerInstance.setNeuronVisible(id, true)
-                    } else {
-                        sharkViewerInstance.loadNeuron(id, colors[i], parsedSwc, false);
+                    } else {  // load all neurons but set the all to invisible
+                        sharkViewerInstance.loadNeuron(id, colors[neuron_number], parsedSwc, false);
                         sharkViewerInstance.setNeuronVisible(id, false)
                     }
-                    j++
+                    abstraction_level += 1
                 })
-                i += 1
+                neuron_number += 1
             })
         }
     }, [motif, sharkViewerInstance])
@@ -81,22 +81,21 @@ function Viewer() {
     useEffect(() => {
         if (motif && sharkViewerInstance) {
             let neurons = motif.neurons;
-            let j = 0;
+            let neuron_number = 0;
             neurons.forEach(n => {
                 let slider_value = context.store.abstractionLevel;
-
                 let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value);
-                let load_id = loadedNeurons[j] + level;
-                let unload_id = loadedNeurons[j] + prevSliderValue;
+                let load_id = loadedNeurons[neuron_number] + level;
+                let unload_id = loadedNeurons[neuron_number] + prevSliderValue;
 
                 if (load_id !== unload_id) {
                     // console.log('load -> ', load_id);
                     // console.log('unload -> ', unload_id);
-                    sharkViewerInstance.setNeuronVisible(load_id, true)//, colors[j], parsedSwc, false);
+                    sharkViewerInstance.setNeuronVisible(load_id, true);
                     sharkViewerInstance.setNeuronVisible(unload_id, false);
                 }
                 setPrevSliderValue(level);
-                j += 1;
+                neuron_number += 1;
             })
         }
     }, [context.store.abstractionLevel])
