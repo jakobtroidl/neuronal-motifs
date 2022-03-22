@@ -30,12 +30,15 @@ function MotifPanel() {
         if (searchedMotifs.length !== undefined) {
             var list = document.getElementById('returned_value');
             var heading = document.createElement('h5')
-            heading.appendChild(document.createTextNode("Returned Motifs"));
+            heading.appendChild(document.createTextNode("Returned Neuron Ids"));
             list.appendChild(heading);
+            console.log(searchedMotifs[0].length)
             for(let i = 0; i < searchedMotifs.length; i++){
-                var entry = document.createElement('li');
-                entry.appendChild(document.createTextNode(searchedMotifs[i]));
-                list.appendChild(entry);
+                for(let j = 0; j < searchedMotifs[i].length; j++){
+                    var entry = document.createElement('li');
+                    entry.appendChild(document.createTextNode(searchedMotifs[i][j]));
+                    list.appendChild(entry);
+                }
             }
 
         }
@@ -68,6 +71,7 @@ function MotifPanel() {
                 <input type="submit" value="Search" />
             </form>
             <ul id="returned_value"></ul>
+
             
             {/* {displaySearch} */}
             <script>
