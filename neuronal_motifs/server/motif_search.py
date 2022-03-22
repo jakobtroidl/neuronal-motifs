@@ -8,6 +8,7 @@ from services.motifabstraction import *
 
 from services.data_access import *
 
+
 def search_hemibrain_motif(motif_specs, lim):
     E = NeuPrintExecutor(host='https://neuprint.janelia.org/', dataset='hemibrain:v1.2.1',
                          token=get_access_token('neuprint'))
