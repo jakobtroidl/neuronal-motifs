@@ -3,6 +3,7 @@ import SharkViewer, {swcParser} from '@janelia/sharkviewer';
 import {AppContext} from "../contexts/AbstractionLevelContext";
 import {getRandomColor} from '../utils/rendering';
 import './Viewer.css'
+import * as THREE from 'three';
 import axios from "axios";
 
 function Viewer() {
@@ -99,6 +100,30 @@ function Viewer() {
             })
         }
     }, [context.store.abstractionLevel])
+
+    useEffect(() => {
+        if (motif && sharkViewerInstance) {
+            let neurons = motif.neurons;
+            const orange = new THREE.Color("rgb(255,154,0)");
+
+            neurons.forEach(neuron => {
+                let synapses = neuron.synapses;
+                let scene = sharkViewerInstance.scene;
+                synapses.forEach(syn => {
+                    // create a sphere shape
+                    let geometry = new THREE.SphereGeometry(90, 16, 16);
+                    let material = new THREE.MeshBasicMaterial({color: orange});
+                    let mesh = new THREE.Mesh(geometry, material);
+
+                    mesh.position.x = syn.x;
+                    mesh.position.y = syn.y;
+                    mesh.position.z = syn.z;
+
+                    scene.add(mesh);
+                })
+            })
+        }
+    }, [motif, sharkViewerInstance])
 
     return (
         <div id={id} className={className}></div>
