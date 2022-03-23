@@ -2,7 +2,11 @@
 canvas {
     height: 300px;
     width: 300px;
+    border-radius: 6px;
+    border: thin solid #b9b7b7;
+    cursor: crosshair;
 }
+
 
 .eraser {
     position: absolute;
