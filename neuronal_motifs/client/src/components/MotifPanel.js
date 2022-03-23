@@ -1,8 +1,10 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import axios from "axios";
 import './MotifPanel.css'
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faUpDownLeftRight} from "@fortawesome/free-solid-svg-icons";
+import {AppContext} from "../contexts/AbstractionLevelContext";
+import SketchPanel from "./SketchPanel";
 /* fetches a list of motifs from backend/janelia and displays them here */
 /* motif sketching panel sends a list of text to the backend, backend returns list of ids */
 
@@ -16,6 +18,8 @@ function MotifPanel() {
     const [number, setNumber] = useState(1);
     const [searchedMotifs, setSearchedMotifs] = useState({});
     const motifPanelId = 'motif-panel-div'
+    const context = useContext(AppContext);
+
 
     const handleSubmit = (e) => {
         console.log(e)
@@ -24,8 +28,7 @@ function MotifPanel() {
     }
 
     const fetchMotifs = async () => {
-        console.log(motif, typeof (motif))
-        const encodedMotif = encodeURIComponent(motif);
+        const encodedMotif = encodeURIComponent(Object.keys(context.store.motifQuery).join('\n'));
         const res = await axios(`http://localhost:5050/search/motif=${encodedMotif}&lim=${number}`)
         const motifs = res
         console.log(motifs)
@@ -60,14 +63,8 @@ function MotifPanel() {
                 <FontAwesomeIcon icon={faUpDownLeftRight}/>
             </div>
             <div id='motif-panel-wrapper'>
+                <SketchPanel/>
                 <form onSubmit={(event) => handleSubmit(event)}>
-                    <div>
-                        <label>
-                            Motif BodyID:
-                            <textarea type="text" onChange={event => setMotif(event.target.value)}/>
-                        </label>
-                    </div>
-
                     <div>
                         <label>Number:
                             <input
