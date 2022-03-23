@@ -6,6 +6,41 @@ import paper from 'paper'
 import {std, mean, distance} from 'mathjs'
 import {AppContext} from "../contexts/AbstractionLevelContext";
 
+function Arrow(mouseDownPoint) {
+    this.start = mouseDownPoint;
+    this.headLength = 10;
+    this.tailLength = 9;
+    this.headAngle = 35;
+    this.tailAngle = 110
+}
+
+Arrow.prototype.draw = function (point) {
+    var end = point;
+    var arrowVec = this.start.subtract(end);
+
+    // parameterize {headLength: 20, tailLength: 6, headAngle: 35, tailAngle: 110}
+    // construct the arrow
+    var arrowHead = arrowVec.normalize(this.headLength);
+    var arrowTail = arrowHead.normalize(this.tailLength);
+
+    var p3 = end;                  // arrow point
+
+    var p2 = end.add(arrowHead.rotate(-this.headAngle));   // leading arrow edge angle
+    var p4 = end.add(arrowHead.rotate(this.headAngle));    // ditto, other side
+
+    var p1 = p2.add(arrowTail.rotate(this.tailAngle));     // trailing arrow edge angle
+    var p5 = p4.add(arrowTail.rotate(-this.tailAngle));    // ditto
+
+    // specify all but the last segment, closed does that
+    this.path = new paper.Path(this.start, p1, p2, p3, p4, p5);
+    this.path.closed = true;
+
+    this.path.strokeWidth = 1
+    this.path.strokColor = 'black'
+    this.path.fillColor = 'black'
+
+    return this.path
+}
 
 function SketchPanel() {
 
@@ -47,7 +82,12 @@ function SketchPanel() {
             let circle = new paper.Path.Circle(pointMean, distancesMean)
             circle.strokeColor = 'black';
             circle.fillColor = getColor(numNodes);
-            let label = new paper.PointText(pointMean);
+            let textPoint = [pointMean[0], pointMean[1] - distancesMean - 3]
+            let label = new paper.PointText({
+                point: textPoint,
+                justification: 'center',
+                fontSize: 20
+            });
 
             let labelLetter = String.fromCharCode(65 + (numNodes))
             setNodes(nodes => [...nodes, circle]);
@@ -79,12 +119,17 @@ function SketchPanel() {
         let distanceToCircleB = distance([circleB.position._x, circleB.position._y], startingPoint)
         // Start at A, going to B
         let edge;
+        let start, end;
         let circleAChar = String.fromCharCode(65 + intersectingIndices[0])
         let circleBChar = String.fromCharCode(65 + intersectingIndices[1])
         if (distanceToCircleA < distanceToCircleB) {
             edge = `${circleAChar} -> ${circleBChar}`
+            start = circleA
+            end = circleB
         } else { // Start at B going to A
             edge = `${circleAChar} -> ${circleBChar}`
+            start = circleA
+            end = circleB
         }
 
         if (edges[edge]) {
@@ -92,8 +137,10 @@ function SketchPanel() {
             return false;
         }
         // Draw the edge
-        let line = new paper.Path.Line([circleA.position._x, circleA.position._y], [circleB.position._x, circleB.position._y]);
-        line.strokeColor = 'black';
+        // let line = new paper.Path.Line([circleA.position._x, circleA.position._y], [circleB.position._x, circleB.position._y]);
+        // line.strokeColor = 'black';
+        let arrow = new Arrow(new paper.Point([start.position._x, start.position._y]))
+        arrow.draw(new paper.Point([end.position._x, end.position._y]))
 
         // Update our local track of edges, which will in turn update global
         setEdges({
