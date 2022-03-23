@@ -34,8 +34,18 @@ def get_example_motif():
 #         motif.simplify(factor=factor)
 #         return motif.as_json()
 
-def get_motif_data(body_ids, motif):
-    pass
+def compute_motif_data(body_ids, motif):
+    adjacency = dict(zip(body_ids, motif))
+    motif_graph = nx.DiGraph(adjacency)
+
+    motif = MyMotif(body_ids, motif_graph)
+    motif.compute_motif_paths()
+
+    filename = "cache/new_motif.pkl"
+    with open(filename, "wb") as f:
+        print('Write Motif to cache ...')
+        pkl.dump(motif, f)
+    print('Done Write Motif to cache ...')
 
 
 def example_motif_data():
