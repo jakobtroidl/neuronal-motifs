@@ -50,6 +50,7 @@ function SketchPanel() {
 
     let [nodes, setNodes] = useState([])
     let [edges, setEdges] = useState({});
+    let [myEdges, setMyEdges] = useState([])
 
     // We track the overall motif in the global context
     const context = useContext(AppContext);
@@ -90,8 +91,15 @@ function SketchPanel() {
             });
 
             let labelLetter = String.fromCharCode(65 + (numNodes))
+            circle.fillColor = getRandomColor();
+
             setNodes(nodes => [...nodes, circle]);
             label.content = labelLetter;
+
+            let tmp_edges = [...myEdges];
+            tmp_edges.push([]);
+            setMyEdges(tmp_edges);
+
             return true;
 
 
@@ -111,6 +119,8 @@ function SketchPanel() {
             return false
         }
 
+        console.log(intersectingIndices);
+
         let circleA = nodes[intersectingIndices[0]];
         let circleB = nodes[intersectingIndices[1]];
         let startingPoint = [p.segments[0].point._x, p.segments[0].point._y];
@@ -122,20 +132,49 @@ function SketchPanel() {
         let start, end;
         let circleAChar = String.fromCharCode(65 + intersectingIndices[0])
         let circleBChar = String.fromCharCode(65 + intersectingIndices[1])
+        //let edge;
+        //let circleAChar = String.fromCharCode(65 + intersectingIndices[0])
+        //let circleBChar = String.fromCharCode(65 + intersectingIndices[1])
         if (distanceToCircleA < distanceToCircleB) {
             edge = `${circleAChar} -> ${circleBChar}`
             start = circleA
             end = circleB
+            let tmp_edges = [...myEdges];
+            console.log(tmp_edges);
+            if (!tmp_edges[intersectingIndices[0]].includes(intersectingIndices[1])) {
+                //edge = `${circleAChar} -> ${circleBChar}`
+                tmp_edges[intersectingIndices[1]].push(intersectingIndices[0]);
+            }
+            setMyEdges(tmp_edges);
+
         } else { // Start at B going to A
             edge = `${circleAChar} -> ${circleBChar}`
             start = circleA
             end = circleB
+            let tmp_edges = {...myEdges};
+            console.log(tmp_edges);
+            if (!tmp_edges[intersectingIndices[0]].includes(intersectingIndices[1])) {
+                tmp_edges[intersectingIndices[0]].push(intersectingIndices[1]);
+                //edge = `${circleAChar} -> ${circleBChar}`
+            }
+            setMyEdges(tmp_edges);
+
+            // tmp_edges[intersectingIndices[1]].push(intersectingIndices[0]);
+            // setMyEdges(tmp_edges);
+
+            //edge = `${circleAChar} -> ${circleBChar}`
         }
 
         if (edges[edge]) {
             console.log('Edge Already Exists')
             return false;
         }
+        console.log(myEdges);
+
+        // if (edges[edge]) {
+        //     console.log('Edge Already Exists')
+        //     return;
+        // }
         // Draw the edge
         // let line = new paper.Path.Line([circleA.position._x, circleA.position._y], [circleB.position._x, circleB.position._y]);
         // line.strokeColor = 'black';
@@ -143,11 +182,10 @@ function SketchPanel() {
         arrow.draw(new paper.Point([end.position._x, end.position._y]))
 
         // Update our local track of edges, which will in turn update global
-        setEdges({
-            ...edges,
-            [edge]: true
-        })
-        return true;
+        // setEdges({
+        //     ...edges,
+        //     [edge]: true
+        // })
     }
 
     const clearSketch = () => {
@@ -155,7 +193,7 @@ function SketchPanel() {
         paper?.view?.draw();
         // Remove all edges and nodes
         setNodes([]);
-        setEdges({});
+        setMyEdges([]);
 
     }
 
@@ -193,11 +231,12 @@ function SketchPanel() {
 
     // Update global motif tracker
     useEffect(() => {
-        if (edges) {
-            context.actions.changeMotifQuery(edges);
+        if (myEdges) {
+            console.log(myEdges);
+            context.actions.changeMotifQuery(myEdges);
         }
 
-    }, [edges])
+    }, [myEdges])
 
 
     return (
