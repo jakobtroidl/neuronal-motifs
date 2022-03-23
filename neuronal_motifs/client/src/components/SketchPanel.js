@@ -10,9 +10,13 @@ import {AppContext} from "../contexts/AbstractionLevelContext";
 function SketchPanel() {
 
     const sketchPanelId = "sketch-panel";
+    // Keeps track of the most recent thing drawn
     let [path, setPath] = useState();
-    let [circles, setCircles] = useState([])
+    
+    let [nodes, setNodes] = useState([])
     let [edges, setEdges] = useState({});
+
+    // We track the overall motif in the global context
     const context = useContext(AppContext);
 
 
@@ -25,6 +29,8 @@ function SketchPanel() {
         return color;
     }
 
+    // Checks to see if the points in a path are roughly circular,
+    // if so draw a circle that resembles them
     const isCircle = (p) => {
         let points = p?.segments.map(segment => {
             return [segment.point._x, segment.point._y]
@@ -34,28 +40,32 @@ function SketchPanel() {
 
         let distancesMean = mean(pointDistances);
         let distancesStd = std(pointDistances);
-        if ((distancesMean / distancesStd) > 3.5) {
+        if ((distancesMean / distancesStd) > 3) {
             let circle = new paper.Path.Circle(pointMean, distancesMean)
             circle.strokeColor = 'black';
             circle.fillColor = getRandomColor();
-            setCircles(circles => [...circles, circle]);
+            setNodes(nodes => [...nodes, circle]);
             return true;
         }
 
     }
 
+    // Checks to see if a path intersects exatly two nodes, and is thus an edge
     const isLine = (p) => {
-        let intersections = circles.map(e => {
+        let intersections = nodes.map(e => {
             let intersect = e.getIntersections(p);
             return intersect && intersect.length > 0;
         })
         let intersectingIndices = [...intersections.keys()].filter(i => intersections[i]) || [];
+        // Edge can only connect 2 nodes
         if (intersectingIndices.length !== 2) {
             return
         }
-        let circleA = circles[intersectingIndices[0]];
-        let circleB = circles[intersectingIndices[1]];
+
+        let circleA = nodes[intersectingIndices[0]];
+        let circleB = nodes[intersectingIndices[1]];
         let startingPoint = [p.segments[0].point._x, p.segments[0].point._y];
+        // Check if the edge is A -> B or B -> A depending on which node the edge starts closest to
         let distanceToCircleA = distance([circleA.position._x, circleA.position._y], startingPoint)
         let distanceToCircleB = distance([circleB.position._x, circleB.position._y], startingPoint)
         // Start at A, going to B
@@ -72,9 +82,11 @@ function SketchPanel() {
             console.log('Edge Already Exists')
             return;
         }
+        // Draw the edge
         let line = new paper.Path.Line([circleA.position._x, circleA.position._y], [circleB.position._x, circleB.position._y]);
         line.strokeColor = 'black';
 
+        // Update our local track of edges, which will in turn update global
         setEdges({
             ...edges,
             [edge]: true
@@ -82,14 +94,17 @@ function SketchPanel() {
     }
 
     const clearSketch = () => {
-        console.log('clear');
         paper?.project?.activeLayer?.removeChildren();
         paper?.view?.draw();
+        // Remove all edges and nodes
+        setNodes([]);
+        setEdges({});
 
     }
 
-// Global context holds abstraction state
 
+
+    // On init set up our paperjs
     useEffect(() => {
         paper.setup(sketchPanelId);
         let tool = new paper.Tool();
@@ -111,6 +126,7 @@ function SketchPanel() {
         }
     }, []);
 
+    // Check if our path is node or edge
     useEffect(() => {
         if (path) {
             isCircle(path) || isLine(path);
@@ -119,6 +135,7 @@ function SketchPanel() {
         console.log('Added a new path')
     }, [path])
 
+    // Update global motif tracker
     useEffect(() => {
         if (edges) {
             context.actions.changeMotifQuery(edges);
@@ -128,7 +145,12 @@ function SketchPanel() {
 
 
     return (
-        <canvas id={sketchPanelId}></canvas>
+        <div>
+            <div className="eraser">
+                <FontAwesomeIcon icon={faEraser} onClick={((e) => clearSketch(e))}/>
+            </div>
+            <canvas id={sketchPanelId}></canvas>
+        </div>
     );
 
 }

@@ -2,7 +2,7 @@ import React, {useState, useEffect, useContext} from 'react';
 import axios from "axios";
 import './MotifPanel.css'
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faUpDownLeftRight} from "@fortawesome/free-solid-svg-icons";
+import {faEraser, faUpDownLeftRight} from "@fortawesome/free-solid-svg-icons";
 import {AppContext} from "../contexts/AbstractionLevelContext";
 import SketchPanel from "./SketchPanel";
 /* fetches a list of motifs from backend/janelia and displays them here */
@@ -79,7 +79,6 @@ function MotifPanel() {
                 <ul id="returned_value"></ul>
 
 
-                {/* {displaySearch} */}
                 <script>
                     {displaySearch()}
                 </script>

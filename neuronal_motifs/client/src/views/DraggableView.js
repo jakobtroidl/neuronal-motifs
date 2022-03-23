@@ -27,11 +27,7 @@ function DraggableView() {
                     <MotifPanel/>
                 </div>
             </Draggable>
-            <Draggable handle=".handle">
-                <div className='drag-overlay'>
-                    <SketchPanel/>
-                </div>
-            </Draggable>
+
         </div>
 
 
