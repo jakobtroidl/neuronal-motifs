@@ -2,11 +2,13 @@ import React, {useState, useEffect, useContext} from 'react';
 import axios from "axios";
 import './MotifPanel.css'
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faUpDownLeftRight} from "@fortawesome/free-solid-svg-icons";
-import SearchButton from "./Button";
 import {faEraser, faUpDownLeftRight} from "@fortawesome/free-solid-svg-icons";
 import {AppContext} from "../contexts/AbstractionLevelContext";
 import SketchPanel from "./SketchPanel";
+import SearchIcon from "@mui/icons-material/Search";
+import Button from "@mui/material/Button";
+import TextField from '@mui/material/TextField';
+
 /* fetches a list of motifs from backend/janelia and displays them here */
 /* motif sketching panel sends a list of text to the backend, backend returns list of ids */
 
@@ -23,9 +25,9 @@ function MotifPanel() {
     const context = useContext(AppContext);
 
 
-    const handleSubmit = (e) => {
-        console.log(e)
-        e.preventDefault()
+    const handleSubmit = () => {
+        console.log('handle submit clicked')
+        //e.preventDefault()
         fetchMotifs()
     }
 
@@ -56,7 +58,6 @@ function MotifPanel() {
             })
 
 
-
         } else {
             return (
                 <div>No motifs found</div>
@@ -71,17 +72,24 @@ function MotifPanel() {
             </div>
             <div id='motif-panel-wrapper'>
                 <SketchPanel/>
-                <form onSubmit={(event) => handleSubmit(event)}>
+                <form>
                     <div>
-                        <label>Number:
-                            <input
-                                type="number"
-                                defaultValue="1"
-                                onChange={event => setNumber(event.target.value)}/>
-                        </label>
+                        <TextField
+                            id="outlined-number"
+                            label="Number"
+                            type="number"
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            margin="normal"
+                            defaultValue={1}
+                            onChange={event => setNumber(event.target.value)}
+                        />
+                        <Button variant="contained" startIcon={<SearchIcon/>} onClick={handleSubmit}>
+                            Search
+                        </Button>
                     </div>
-                    <SearchButton/>
-                    <input type="submit" value="Search"/>
+
                 </form>
                 <ul id="returned_value"></ul>
 
