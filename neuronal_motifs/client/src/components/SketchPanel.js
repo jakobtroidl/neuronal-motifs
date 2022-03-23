@@ -12,7 +12,7 @@ function SketchPanel() {
     const sketchPanelId = "sketch-panel";
     // Keeps track of the most recent thing drawn
     let [path, setPath] = useState();
-    
+
     let [nodes, setNodes] = useState([])
     let [edges, setEdges] = useState({});
 
@@ -20,13 +20,15 @@ function SketchPanel() {
     const context = useContext(AppContext);
 
 
-    const getRandomColor = () => {
-        const letters = '0123456789ABCDEF';
-        let color = '#';
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
+    const getColor = (i) => {
+        let colorList = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5']
+        return colorList[i % 10]
+        // const letters = '0123456789ABCDEF';
+        // let color = '#';
+        // for (let i = 0; i < 6; i++) {
+        //     color += letters[Math.floor(Math.random() * 16)];
+        // }
+        // return color;
     }
 
     // Checks to see if the points in a path are roughly circular,
@@ -41,11 +43,18 @@ function SketchPanel() {
         let distancesMean = mean(pointDistances);
         let distancesStd = std(pointDistances);
         if ((distancesMean / distancesStd) > 3) {
+            let numNodes = nodes?.length || 0
             let circle = new paper.Path.Circle(pointMean, distancesMean)
             circle.strokeColor = 'black';
-            circle.fillColor = getRandomColor();
+            circle.fillColor = getColor(numNodes);
+            let label = new paper.PointText(pointMean);
+
+            let labelLetter = String.fromCharCode(65 + (numNodes))
             setNodes(nodes => [...nodes, circle]);
+            label.content = labelLetter;
             return true;
+
+
         }
 
     }
@@ -59,7 +68,7 @@ function SketchPanel() {
         let intersectingIndices = [...intersections.keys()].filter(i => intersections[i]) || [];
         // Edge can only connect 2 nodes
         if (intersectingIndices.length !== 2) {
-            return
+            return false
         }
 
         let circleA = nodes[intersectingIndices[0]];
@@ -80,7 +89,7 @@ function SketchPanel() {
 
         if (edges[edge]) {
             console.log('Edge Already Exists')
-            return;
+            return false;
         }
         // Draw the edge
         let line = new paper.Path.Line([circleA.position._x, circleA.position._y], [circleB.position._x, circleB.position._y]);
@@ -91,6 +100,7 @@ function SketchPanel() {
             ...edges,
             [edge]: true
         })
+        return true;
     }
 
     const clearSketch = () => {
@@ -101,7 +111,6 @@ function SketchPanel() {
         setEdges({});
 
     }
-
 
 
     // On init set up our paperjs
@@ -129,7 +138,7 @@ function SketchPanel() {
     // Check if our path is node or edge
     useEffect(() => {
         if (path) {
-            isCircle(path) || isLine(path);
+            isLine(path) || isCircle(path);
             path?.remove()
         }
         console.log('Added a new path')
