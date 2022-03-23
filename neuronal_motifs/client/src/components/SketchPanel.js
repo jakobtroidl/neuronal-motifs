@@ -145,7 +145,7 @@ function SketchPanel() {
 
 
     return (
-        <div>
+        <div className={'sketch-panel-style'}>
             <div className="eraser">
                 <FontAwesomeIcon icon={faEraser} onClick={((e) => clearSketch(e))}/>
             </div>
