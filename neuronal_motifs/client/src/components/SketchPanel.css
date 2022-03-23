@@ -1,0 +1,11 @@
+/* Scale canvas with resize attribute to full size */
+canvas {
+    height: 300px;
+    width: 300px;
+}
+
+.eraser {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}

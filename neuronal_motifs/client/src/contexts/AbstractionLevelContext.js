@@ -6,10 +6,12 @@ export const AppContext = React.createContext(null);
 
 export const ContextWrapper = (props) => {
     const [store, setStore] = useState({
-        abstractionLevel: 0
+        abstractionLevel: 0,
+        motifQuery: {}
     });
     const [actions, setActions] = useState({
-        changeAbstractionLevel: level => setStore({...store, abstractionLevel: level})
+        changeAbstractionLevel: level => setStore({...store, abstractionLevel: level}),
+        changeMotifQuery: query => setStore({...store, motifQuery: query}),
     });
 
     return (

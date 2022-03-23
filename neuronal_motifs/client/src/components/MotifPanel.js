@@ -1,9 +1,12 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import axios from "axios";
 import './MotifPanel.css'
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faUpDownLeftRight} from "@fortawesome/free-solid-svg-icons";
 import SearchButton from "./Button";
+import {faEraser, faUpDownLeftRight} from "@fortawesome/free-solid-svg-icons";
+import {AppContext} from "../contexts/AbstractionLevelContext";
+import SketchPanel from "./SketchPanel";
 /* fetches a list of motifs from backend/janelia and displays them here */
 /* motif sketching panel sends a list of text to the backend, backend returns list of ids */
 
@@ -17,6 +20,8 @@ function MotifPanel() {
     const [number, setNumber] = useState(1);
     const [searchedMotifs, setSearchedMotifs] = useState({});
     const motifPanelId = 'motif-panel-div'
+    const context = useContext(AppContext);
+
 
     const handleSubmit = (e) => {
         console.log(e)
@@ -25,12 +30,11 @@ function MotifPanel() {
     }
 
     const fetchMotifs = async () => {
-        console.log(motif, typeof (motif))
-        const encodedMotif = encodeURIComponent(motif);
+        const encodedMotif = encodeURIComponent(Object.keys(context.store.motifQuery).join('\n'));
         const res = await axios(`http://localhost:5050/search/motif=${encodedMotif}&lim=${number}`)
-        const motifs = res
+        const motifs = res.data
         console.log(motifs)
-        setSearchedMotifs(motifs.data)
+        setSearchedMotifs(motifs)
     }
 
     const displaySearch = () => {
@@ -39,14 +43,19 @@ function MotifPanel() {
             var heading = document.createElement('h5')
             heading.appendChild(document.createTextNode("Returned Neuron Ids"));
             list.appendChild(heading);
-            console.log(searchedMotifs[0].length)
-            for (let i = 0; i < searchedMotifs.length; i++) {
-                for (let j = 0; j < searchedMotifs[i].length; j++) {
+            console.log(searchedMotifs)
+
+            searchedMotifs.forEach(motif => {
+                console.log(motif)
+                for (const [name, neuron] of Object.entries(motif)) {
+                    console.log(neuron);
                     var entry = document.createElement('li');
-                    entry.appendChild(document.createTextNode(searchedMotifs[i][j]));
+                    entry.appendChild(document.createTextNode(neuron.bodyId));
                     list.appendChild(entry);
                 }
-            }
+            })
+
+
 
         } else {
             return (
@@ -61,14 +70,8 @@ function MotifPanel() {
                 <FontAwesomeIcon icon={faUpDownLeftRight}/>
             </div>
             <div id='motif-panel-wrapper'>
+                <SketchPanel/>
                 <form onSubmit={(event) => handleSubmit(event)}>
-                    <div>
-                        <label>
-                            Motif BodyID:
-                            <textarea type="text" onChange={event => setMotif(event.target.value)}/>
-                        </label>
-                    </div>
-
                     <div>
                         <label>Number:
                             <input
@@ -83,7 +86,6 @@ function MotifPanel() {
                 <ul id="returned_value"></ul>
 
 
-                {/* {displaySearch} */}
                 <script>
                     {displaySearch()}
                 </script>

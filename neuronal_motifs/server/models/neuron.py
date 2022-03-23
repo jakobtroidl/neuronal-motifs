@@ -230,9 +230,6 @@ class Neuron:
         print('Took {} sec'.format(time.time() - t))
         return list(map(itemgetter(1), results))  # only return TreeNeuron
 
-
-
-    @profile
     def prune_to_motif_path(self, factor):
         """
         Prunes the given skeleton to the motif path
