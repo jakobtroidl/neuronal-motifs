@@ -29,6 +29,18 @@ def treeneuron_to_swc_string(neuron_skeleton):
     return {'swc': out, 'map': map_new_to_old}
 
 
+def adjacency_list_to_motif_string(adjacency_list):
+    print(adjacency_list)
+    output = "\n "
+    for i in range(0, len(adjacency_list)):
+        first = chr(65 + int(i))
+        if len(adjacency_list[i]) > 0:
+            for neighbor in adjacency_list[i]:
+                second = chr(65 + int(neighbor))
+                output += first + " -> " + second + " \n"
+    return output
+
+
 def synapse_array_to_object(synapse_df):
     """
     TODO

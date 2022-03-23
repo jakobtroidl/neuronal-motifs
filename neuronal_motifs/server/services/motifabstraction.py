@@ -34,6 +34,9 @@ def get_example_motif():
 #         motif.simplify(factor=factor)
 #         return motif.as_json()
 
+def get_motif_data(body_ids, motif):
+    pass
+
 
 def example_motif_data():
     """

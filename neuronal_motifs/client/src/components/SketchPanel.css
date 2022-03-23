@@ -1,9 +1,15 @@
 /* Scale canvas with resize attribute to full size */
 canvas {
     height: 300px;
-    width: 300px;
+    width: 500px;
+
 }
 
+.sketch-panel-style{
+    border-radius: 6px;
+    border: thin solid #b9b7b7;
+    cursor: crosshair;
+}
 .eraser {
     position: absolute;
     top: 5px;
