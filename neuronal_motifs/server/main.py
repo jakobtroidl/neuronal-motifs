@@ -42,9 +42,8 @@ def get_test_motif():
 
 
 @app.get("/search/motif={q}&lim={n}")
-def search_motif(q: str, n: int): # search one motif at a time
-    results = motif_search.search_hemibrain_motif(q, n)
-    return results
+def search_motif(q: str, n: int):  # search one motif at a time
+    return motif_search.search_hemibrain_motif(q, n)
 
 
 @app.get("/get_swc")

@@ -30,9 +30,9 @@ function MotifPanel() {
     const fetchMotifs = async () => {
         const encodedMotif = encodeURIComponent(Object.keys(context.store.motifQuery).join('\n'));
         const res = await axios(`http://localhost:5050/search/motif=${encodedMotif}&lim=${number}`)
-        const motifs = res
+        const motifs = res.data
         console.log(motifs)
-        setSearchedMotifs(motifs.data)
+        setSearchedMotifs(motifs)
     }
 
     const displaySearch = () => {
@@ -41,14 +41,19 @@ function MotifPanel() {
             var heading = document.createElement('h5')
             heading.appendChild(document.createTextNode("Returned Neuron Ids"));
             list.appendChild(heading);
-            console.log(searchedMotifs[0].length)
-            for (let i = 0; i < searchedMotifs.length; i++) {
-                for (let j = 0; j < searchedMotifs[i].length; j++) {
+            console.log(searchedMotifs)
+
+            searchedMotifs.forEach(motif => {
+                console.log(motif)
+                for (const [name, neuron] of Object.entries(motif)) {
+                    console.log(neuron);
                     var entry = document.createElement('li');
-                    entry.appendChild(document.createTextNode(searchedMotifs[i][j]));
+                    entry.appendChild(document.createTextNode(neuron.bodyId));
                     list.appendChild(entry);
                 }
-            }
+            })
+
+
 
         } else {
             return (
