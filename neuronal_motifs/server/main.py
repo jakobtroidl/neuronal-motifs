@@ -45,6 +45,10 @@ def get_test_motif():
 def search_motif(q: str, n: int):  # search one motif at a time
     return motif_search.search_hemibrain_motif(q, n)
 
+# @app.get("/display/bodyIDs={ids}&motif={motif}")
+# def get_motif_data(ids: [int], motif: str):
+#     pass
+
 
 @app.get("/get_swc")
 def get_swc():

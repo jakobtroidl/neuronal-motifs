@@ -49,8 +49,8 @@ function SketchPanel() {
     let [path, setPath] = useState();
 
     let [nodes, setNodes] = useState([])
-    let [edges, setEdges] = useState({});
-    let [myEdges, setMyEdges] = useState([])
+    // let [edges, setEdges] = useState({});
+    let [edges, setEdges] = useState([])
 
     // We track the overall motif in the global context
     const context = useContext(AppContext);
@@ -59,12 +59,6 @@ function SketchPanel() {
     const getColor = (i) => {
         let colorList = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5']
         return colorList[i % 10]
-        // const letters = '0123456789ABCDEF';
-        // let color = '#';
-        // for (let i = 0; i < 6; i++) {
-        //     color += letters[Math.floor(Math.random() * 16)];
-        // }
-        // return color;
     }
 
     // Checks to see if the points in a path are roughly circular,
@@ -91,18 +85,16 @@ function SketchPanel() {
             });
 
             let labelLetter = String.fromCharCode(65 + (numNodes))
-            circle.fillColor = getRandomColor();
+            circle.fillColor = getColor(nodes?.length || 0);
 
             setNodes(nodes => [...nodes, circle]);
             label.content = labelLetter;
 
-            let tmp_edges = [...myEdges];
+            let tmp_edges = [...edges];
             tmp_edges.push([]);
-            setMyEdges(tmp_edges);
+            setEdges(tmp_edges);
 
             return true;
-
-
         }
 
     }
@@ -119,73 +111,33 @@ function SketchPanel() {
             return false
         }
 
-        console.log(intersectingIndices);
-
         let circleA = nodes[intersectingIndices[0]];
         let circleB = nodes[intersectingIndices[1]];
         let startingPoint = [p.segments[0].point._x, p.segments[0].point._y];
         // Check if the edge is A -> B or B -> A depending on which node the edge starts closest to
         let distanceToCircleA = distance([circleA.position._x, circleA.position._y], startingPoint)
         let distanceToCircleB = distance([circleB.position._x, circleB.position._y], startingPoint)
-        // Start at A, going to B
-        let edge;
-        let start, end;
-        let circleAChar = String.fromCharCode(65 + intersectingIndices[0])
-        let circleBChar = String.fromCharCode(65 + intersectingIndices[1])
-        //let edge;
-        //let circleAChar = String.fromCharCode(65 + intersectingIndices[0])
-        //let circleBChar = String.fromCharCode(65 + intersectingIndices[1])
+
         if (distanceToCircleA < distanceToCircleB) {
-            edge = `${circleAChar} -> ${circleBChar}`
-            start = circleA
-            end = circleB
-            let tmp_edges = [...myEdges];
-            console.log(tmp_edges);
+            let tmp_edges = JSON.parse(JSON.stringify(edges)); // deepcopy
             if (!tmp_edges[intersectingIndices[0]].includes(intersectingIndices[1])) {
-                //edge = `${circleAChar} -> ${circleBChar}`
                 tmp_edges[intersectingIndices[1]].push(intersectingIndices[0]);
             }
-            setMyEdges(tmp_edges);
+            setEdges(tmp_edges);
 
         } else { // Start at B going to A
-            edge = `${circleAChar} -> ${circleBChar}`
-            start = circleA
-            end = circleB
-            let tmp_edges = {...myEdges};
-            console.log(tmp_edges);
+            console.log("tmp edges: ", edges);
+            let tmp_edges = JSON.parse(JSON.stringify(edges)); // deepcopy
             if (!tmp_edges[intersectingIndices[0]].includes(intersectingIndices[1])) {
                 tmp_edges[intersectingIndices[0]].push(intersectingIndices[1]);
-                //edge = `${circleAChar} -> ${circleBChar}`
             }
-            setMyEdges(tmp_edges);
-
-            // tmp_edges[intersectingIndices[1]].push(intersectingIndices[0]);
-            // setMyEdges(tmp_edges);
-
-            //edge = `${circleAChar} -> ${circleBChar}`
+            setEdges(tmp_edges);
         }
-
-        if (edges[edge]) {
-            console.log('Edge Already Exists')
-            return false;
-        }
-        console.log(myEdges);
-
-        // if (edges[edge]) {
-        //     console.log('Edge Already Exists')
-        //     return;
-        // }
         // Draw the edge
-        // let line = new paper.Path.Line([circleA.position._x, circleA.position._y], [circleB.position._x, circleB.position._y]);
-        // line.strokeColor = 'black';
-        let arrow = new Arrow(new paper.Point([start.position._x, start.position._y]))
-        arrow.draw(new paper.Point([end.position._x, end.position._y]))
-
-        // Update our local track of edges, which will in turn update global
-        // setEdges({
-        //     ...edges,
-        //     [edge]: true
-        // })
+        let line = new paper.Path.Line([circleA.position._x, circleA.position._y], [circleB.position._x, circleB.position._y]);
+        line.strokeColor = 'black';
+        //let arrow = new Arrow(new paper.Point([start.position._x, start.position._y]))
+        //arrow.draw(new paper.Point([end.position._x, end.position._y]))
     }
 
     const clearSketch = () => {
@@ -193,7 +145,7 @@ function SketchPanel() {
         paper?.view?.draw();
         // Remove all edges and nodes
         setNodes([]);
-        setMyEdges([]);
+        setEdges([]);
 
     }
 
@@ -231,12 +183,12 @@ function SketchPanel() {
 
     // Update global motif tracker
     useEffect(() => {
-        if (myEdges) {
-            console.log(myEdges);
-            context.actions.changeMotifQuery(myEdges);
+        if (edges) {
+            console.log(edges);
+            context.actions.changeMotifQuery(edges);
         }
 
-    }, [myEdges])
+    }, [edges])
 
 
     return (

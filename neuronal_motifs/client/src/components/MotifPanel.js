@@ -40,7 +40,11 @@ function MotifPanel() {
     }
 
     const fetchMotifs = async () => {
-        const encodedMotif = encodeURIComponent(Object.keys(context.store.motifQuery).join('\n'));
+        //const encodedMotif = encodeURIComponent(Object.keys(context.store.motifQuery).join('\n'));
+        const encodedMotif = JSON.stringify(context.store.motifQuery);
+
+        console.log(encodedMotif);
+
         const res = await axios(`http://localhost:5050/search/motif=${encodedMotif}&lim=${number}`)
         const motifs = res.data
         console.log(motifs)
