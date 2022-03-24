@@ -1,3 +1,4 @@
+import json
 from typing import Optional, List
 from fastapi import FastAPI
 from starlette.middleware import Middleware
@@ -47,14 +48,10 @@ def search_motif(q: str, n: int):  # search one motif at a time
 
 
 @app.get("/display_motif/bodyIDs={ids}&motif={motif}")
-# @app.get("/display_motif")
 def get_motif_data(ids, motif):
-    print(ids)
-    print(motif)
-    ids = [1001453586, 1003474104, 5813091420]
-    motif = [[1], [2], [0]]
-    motifabstraction.compute_motif_data(ids, motif)
-    return 0
+    ids = json.loads(ids)
+    motif = json.loads(motif)
+    return motifabstraction.get_motif(ids, motif)
 
 
 @app.get("/get_swc")

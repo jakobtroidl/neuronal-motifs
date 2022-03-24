@@ -4,7 +4,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faUpDownLeftRight, faEraser} from "@fortawesome/free-solid-svg-icons";
 import paper from 'paper'
 import {std, mean, distance} from 'mathjs'
-import {AppContext} from "../contexts/AbstractionLevelContext";
+import {AppContext} from "../contexts/GlobalContext";
 
 function Arrow(mouseDownPoint) {
     this.start = mouseDownPoint;
@@ -126,7 +126,6 @@ function SketchPanel() {
             setEdges(tmp_edges);
 
         } else { // Start at B going to A
-            console.log("tmp edges: ", edges);
             let tmp_edges = JSON.parse(JSON.stringify(edges)); // deepcopy
             if (!tmp_edges[intersectingIndices[0]].includes(intersectingIndices[1])) {
                 tmp_edges[intersectingIndices[0]].push(intersectingIndices[1]);
@@ -178,14 +177,11 @@ function SketchPanel() {
             isLine(path) || isCircle(path);
             path?.remove()
         }
-        console.log('Added a new path')
     }, [path])
 
     // Update global motif tracker
     useEffect(() => {
         if (edges) {
-            console.log(edges);
-            console.log("Motif query: ", context.store.motifQuery);
             context.actions.changeMotifQuery(edges);
         }
 

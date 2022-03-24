@@ -3,7 +3,7 @@ import axios from "axios";
 import './MotifPanel.css'
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faEraser, faUpDownLeftRight} from "@fortawesome/free-solid-svg-icons";
-import {AppContext} from "../contexts/AbstractionLevelContext";
+import {AppContext} from "../contexts/GlobalContext";
 import SketchPanel from "./SketchPanel";
 import SearchIcon from "@mui/icons-material/Search";
 import Button from "@mui/material/Button";
@@ -47,13 +47,12 @@ function MotifPanel() {
 
     const fetchMotifs = async () => {
         //const encodedMotif = encodeURIComponent(Object.keys(context.store.motifQuery).join('\n'));
-        const encodedMotif = JSON.stringify(context.store.motifQuery);
+        const encodedMotif = JSON.stringify(context.motifQuery);
 
         console.log(encodedMotif);
 
-        const res = await axios(`http://localhost:5050/search/motif=${encodedMotif}&lim=${number}`)
-        const motifs = res.data
-        console.log(motifs)
+        const res = await axios(`http://localhost:5050/search/motif=${encodedMotif}&lim=${number}`);
+        const motifs = res.data;
         setSearchedMotifs(motifs)
     }
     useEffect(() => {

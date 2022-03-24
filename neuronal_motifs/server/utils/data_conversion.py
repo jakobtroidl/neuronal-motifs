@@ -3,6 +3,14 @@ from pathlib import Path
 import os
 
 
+def get_cache_filename(ids):
+    """
+    TODO
+    @param ids:
+    @return:
+    """
+    return "_".join(map(str, ids))
+
 def apply_ids_to_motif_adjacency(body_ids, motif):
     """
     TODO

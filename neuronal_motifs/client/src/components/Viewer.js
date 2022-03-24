@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useContext} from 'react';
 import SharkViewer, {swcParser} from '@janelia/sharkviewer';
-import {AppContext} from "../contexts/AbstractionLevelContext";
+import {AppContext} from "../contexts/GlobalContext";
 import {getRandomColor} from '../utils/rendering';
 import './Viewer.css'
 import * as THREE from 'three';
@@ -37,28 +37,25 @@ function Viewer() {
 
     // Fetches the data, only runs on init
     useEffect(async () => {
-        console.log("select motif called in Viewer")
-        let selectedMotif = context.store.selectedMotif;
-        console.log(selectedMotif);
-        let motifQuery = context.store.motifQuery;
+        if (context.selectedMotif)
+        {
+            let selectedMotif = context.selectedMotif;
+            let bodyIds = selectedMotif.map(m => m.bodyId);
 
-        let id_ranges = Array.from({length: selectedMotif.length}, (_, i) => i * 1000);
-        setLoadedNeurons(id_ranges);
-        let randomColors = Array.from({length: selectedMotif.length}, (_, i) => getRandomColor());
-        setColors(randomColors)
+            bodyIds = JSON.stringify(bodyIds);
+            let motifQuery = JSON.stringify(context.motifQuery);
 
-        const bodyIds = selectedMotif.map(m => m.bodyId);
+            let id_ranges = Array.from({length: selectedMotif.length}, (_, i) => i * 1000);
+            setLoadedNeurons(id_ranges);
+            let randomColors = Array.from({length: selectedMotif.length}, (_, i) => getRandomColor());
+            setColors(randomColors)
 
-        console.log(bodyIds);
-        console.log(context.store.motifQuery);
-        //if (!motif) {
-            // Update the document title using the browser API
-
-            let res = await axios.get(`http://localhost:5050//display_motif/bodyIDs=${bodyIds}&motif=${motifQuery}`);
+            let res = await axios.get(`http://localhost:5050/display_motif/bodyIDs=${bodyIds}&motif=${motifQuery}`);
             //let res = await axios.get(`http://localhost:5050/get_test_motif`);
             setMotif(res.data);
-        //}
-    }, [context.store.selectedMotif]);
+        }
+
+    }, [context.selectedMotif]);
 
     useEffect(() => {
         if (motif && sharkViewerInstance) {
@@ -88,14 +85,12 @@ function Viewer() {
             let neurons = motif.neurons;
             let neuron_number = 0;
             neurons.forEach(n => {
-                let slider_value = context.store.abstractionLevel;
+                let slider_value = context.abstractionLevel;
                 let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value);
                 let load_id = loadedNeurons[neuron_number] + level;
                 let unload_id = loadedNeurons[neuron_number] + prevSliderValue;
 
                 if (load_id !== unload_id) {
-                    // console.log('load -> ', load_id);
-                    // console.log('unload -> ', unload_id);
                     sharkViewerInstance.setNeuronVisible(load_id, true);
                     sharkViewerInstance.setNeuronVisible(unload_id, false);
                 }
@@ -103,7 +98,7 @@ function Viewer() {
                 neuron_number += 1;
             })
         }
-    }, [context.store.abstractionLevel])
+    }, [context.abstractionLevel])
 
     useEffect(() => {
         if (motif && sharkViewerInstance) {
