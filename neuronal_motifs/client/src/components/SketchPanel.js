@@ -118,23 +118,37 @@ function SketchPanel() {
         let distanceToCircleA = distance([circleA.position._x, circleA.position._y], startingPoint)
         let distanceToCircleB = distance([circleB.position._x, circleB.position._y], startingPoint)
 
+        let drawEdge = null;
+        let startNode, endNode = null;
         if (distanceToCircleA < distanceToCircleB) {
+            console.log('Close to A')
             let tmp_edges = JSON.parse(JSON.stringify(edges)); // deepcopy
-            if (!tmp_edges[intersectingIndices[0]].includes(intersectingIndices[1])) {
+            if (!tmp_edges[intersectingIndices[1]].includes(intersectingIndices[0])) {
                 tmp_edges[intersectingIndices[1]].push(intersectingIndices[0]);
+                drawEdge = tmp_edges
+                startNode = circleA;
+                endNode = circleB;
+
             }
-            setEdges(tmp_edges);
+
 
         } else { // Start at B going to A
             let tmp_edges = JSON.parse(JSON.stringify(edges)); // deepcopy
             if (!tmp_edges[intersectingIndices[0]].includes(intersectingIndices[1])) {
                 tmp_edges[intersectingIndices[0]].push(intersectingIndices[1]);
+                drawEdge = tmp_edges;
+                startNode = circleB;
+                endNode = circleA;
             }
-            setEdges(tmp_edges);
         }
         // Draw the edge
-        let line = new paper.Path.Line([circleA.position._x, circleA.position._y], [circleB.position._x, circleB.position._y]);
-        line.strokeColor = 'black';
+        if (drawEdge && startNode && endNode) {
+            let arrow = new Arrow(new paper.Point([startNode.position._x, startNode.position._y]))
+            arrow.draw(new paper.Point([endNode.position._x, endNode.position._y]))
+            setEdges(drawEdge);
+
+        }
+
         //let arrow = new Arrow(new paper.Point([start.position._x, start.position._y]))
         //arrow.draw(new paper.Point([end.position._x, end.position._y]))
     }
