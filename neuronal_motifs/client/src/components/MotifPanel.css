@@ -18,6 +18,15 @@
     z-index: 2;
 }
 
+#motif-panel-div .motif-selection-div {
+    cursor: pointer;
+}
+#motif-panel-div .motif-selection-div:hover {
+    background-color: #e7e7e7;
+}
+
+
+
 #motif-panel-div .results {
     position: relative;
     margin-top: -10px;

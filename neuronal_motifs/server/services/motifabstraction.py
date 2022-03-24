@@ -2,6 +2,7 @@ import networkx as nx
 import pickle as pkl
 
 from neuronal_motifs.server.models.motif import MyMotif
+from neuronal_motifs.server.utils.data_conversion import *
 
 
 def get_example_motif():
@@ -35,14 +36,17 @@ def get_example_motif():
 #         return motif.as_json()
 
 def compute_motif_data(body_ids, motif):
-    adjacency = dict(zip(body_ids, motif))
+
+    adjacency = apply_ids_to_motif_adjacency(body_ids, motif)
     motif_graph = nx.DiGraph(adjacency)
 
     motif = MyMotif(body_ids, motif_graph)
     motif.compute_motif_paths()
 
-    filename = "cache/new_motif.pkl"
-    with open(filename, "wb") as f:
+    filename = "_".join(map(str, body_ids))
+
+    path = "cache/" + filename + ".pkl"
+    with open(path, "wb") as f:
         print('Write Motif to cache ...')
         pkl.dump(motif, f)
     print('Done Write Motif to cache ...')

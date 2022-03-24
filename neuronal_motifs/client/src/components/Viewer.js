@@ -20,24 +20,11 @@ function Viewer() {
 
     // Instantiates the viewer, will only run once on init
     useEffect(() => {
-        setColors(
-            [
-                getRandomColor(),
-                getRandomColor(),
-                getRandomColor()
-            ]
-        )
-
         setSharkViewerInstance(
             new SharkViewer({dom_element: id})
         )
-
-        setLoadedNeurons(
-            [0, 1000, 2000]
-        )
-
-
     }, [])
+
     // Inits the viewer once it is created
     useEffect(() => {
         if (sharkViewerInstance) {
@@ -47,14 +34,31 @@ function Viewer() {
 
         setPrevSliderValue(0)
     }, [sharkViewerInstance])
+
     // Fetches the data, only runs on init
     useEffect(async () => {
-        if (!motif) {
+        console.log("select motif called in Viewer")
+        let selectedMotif = context.store.selectedMotif;
+        console.log(selectedMotif);
+        let motifQuery = context.store.motifQuery;
+
+        let id_ranges = Array.from({length: selectedMotif.length}, (_, i) => i * 1000);
+        setLoadedNeurons(id_ranges);
+        let randomColors = Array.from({length: selectedMotif.length}, (_, i) => getRandomColor());
+        setColors(randomColors)
+
+        const bodyIds = selectedMotif.map(m => m.bodyId);
+
+        console.log(bodyIds);
+        console.log(context.store.motifQuery);
+        //if (!motif) {
             // Update the document title using the browser API
-            let res = await axios.get(`http://localhost:5050/get_test_motif`);
+
+            let res = await axios.get(`http://localhost:5050//display_motif/bodyIDs=${bodyIds}&motif=${motifQuery}`);
+            //let res = await axios.get(`http://localhost:5050/get_test_motif`);
             setMotif(res.data);
-        }
-    }, []);
+        //}
+    }, [context.store.selectedMotif]);
 
     useEffect(() => {
         if (motif && sharkViewerInstance) {

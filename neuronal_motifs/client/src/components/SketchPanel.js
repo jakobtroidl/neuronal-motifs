@@ -185,6 +185,7 @@ function SketchPanel() {
     useEffect(() => {
         if (edges) {
             console.log(edges);
+            console.log("Motif query: ", context.store.motifQuery);
             context.actions.changeMotifQuery(edges);
         }
 

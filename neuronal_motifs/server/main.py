@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from fastapi import FastAPI
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
@@ -46,9 +46,11 @@ def search_motif(q: str, n: int):  # search one motif at a time
     return motif_search.search_hemibrain_motif(q, n)
 
 
-# @app.get("/display_motif/bodyIDs={ids}&motif={motif}")
-@app.get("/display_motif")
-def get_motif_data():
+@app.get("/display_motif/bodyIDs={ids}&motif={motif}")
+# @app.get("/display_motif")
+def get_motif_data(ids, motif):
+    print(ids)
+    print(motif)
     ids = [1001453586, 1003474104, 5813091420]
     motif = [[1], [2], [0]]
     motifabstraction.compute_motif_data(ids, motif)

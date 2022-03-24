@@ -39,6 +39,12 @@ function MotifPanel() {
         fetchMotifs()
     }
 
+    const handleMotifSelection = (motif) => {
+        console.log(motif);
+        context.actions.changeSelectedMotif(motif);
+
+    }
+
     const fetchMotifs = async () => {
         //const encodedMotif = encodeURIComponent(Object.keys(context.store.motifQuery).join('\n'));
         const encodedMotif = JSON.stringify(context.store.motifQuery);
@@ -68,16 +74,16 @@ function MotifPanel() {
     }, [searchedMotifs])
 
 
-    const displaySearch = () => {
-        if (searchedMotifs.length !== undefined) {
-            //    bodyId, instance, type, status
-
-        } else {
-            return (
-                <div>No motifs found</div>
-            )
-        }
-    }
+    // const displaySearch = () => {
+    //     if (searchedMotifs.length !== undefined) {
+    //         //    bodyId, instance, type, status
+    //
+    //     } else {
+    //         return (
+    //             <div>No motifs found</div>
+    //         )
+    //     }
+    // }
 
     return (
         <div id={motifPanelId}>
@@ -88,7 +94,7 @@ function MotifPanel() {
                 <div id='motif-panel-wrapper'>
                     <SketchPanel/>
                     <div className="formRow">
-                        <div >
+                        <div>
                             <TextField
                                 id="outlined-number"
                                 label="Number"
@@ -110,57 +116,61 @@ function MotifPanel() {
                 </div>
             </div>
             {resultRows?.length > 0 &&
-            < div className='results'>
-                <TableContainer component={Paper} className='table'>
-                    <Table sx={{minWidth: 400, maxWidth: 400}} size="small">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>
-                                    <div className='textContainer'>Node</div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className='textContainer'>Body ID</div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className='textContainer'>Instance</div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className='textContainer'>Type</div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className='textContainer'>Status</div>
-                                </TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {resultRows.map((motif, i) => motif.map((row, j) => (
-                                <TableRow className={`row-${j}`}
-                                          key={`${row.nodeKey}-${i}`}
-                                          sx={{'&:last-child td, &:last-child th': {border: 0}}}
-                                >
-                                    <TableCell component="th" scope="row">
-                                        <div className='textContainer'>  {row.nodeKey}</div>
-                                    </TableCell>
-
-
+                < div className='results'>
+                    <TableContainer component={Paper} className='table'>
+                        <Table sx={{minWidth: 400, maxWidth: 400}} size="small">
+                            <TableHead>
+                                <TableRow>
                                     <TableCell>
-                                        <div className='textContainer'>{row?.bodyId}</div>
+                                        <div className='textContainer'>Node</div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className='textContainer'>{row?.instance}</div>
+                                        <div className='textContainer'>Body ID</div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className='textContainer'>{row?.type}</div>
+                                        <div className='textContainer'>Instance</div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className='textContainer'>{row?.status}</div>
+                                        <div className='textContainer'>Type</div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className='textContainer'>Status</div>
                                     </TableCell>
                                 </TableRow>
-                            )))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </div>
+                            </TableHead>
+                            <TableBody>
+                                {resultRows.map((motif, i) => (
+                                    <div onClick={() => handleMotifSelection(motif)} className={"motif-selection-div"}>
+                                        {motif.map((row, j) => (
+
+                                            <TableRow className={`row-${j}`}
+                                                      key={`${row.nodeKey}-${i}`}
+                                                      sx={{'&:last-child td, &:last-child th': {border: 0}}}
+                                            >
+                                                <TableCell component="th" scope="row">
+                                                    <div className='textContainer'>  {row.nodeKey}</div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className='textContainer'>{row?.bodyId}</div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className='textContainer'>{row?.instance}</div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className='textContainer'>{row?.type}</div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className='textContainer'>{row?.status}</div>
+                                                </TableCell>
+                                            </TableRow>
+
+                                        ))}
+                                    </div>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </div>
             }
         </div>
     )
