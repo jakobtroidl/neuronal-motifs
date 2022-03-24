@@ -5,6 +5,7 @@ import {faUpDownLeftRight, faEraser} from "@fortawesome/free-solid-svg-icons";
 import paper from 'paper'
 import {std, mean, distance} from 'mathjs'
 import {AppContext} from "../contexts/GlobalContext";
+import {getRandomColor} from "../utils/rendering";
 
 function Arrow(mouseDownPoint) {
     this.start = mouseDownPoint;
@@ -55,12 +56,6 @@ function SketchPanel() {
     // We track the overall motif in the global context
     const context = useContext(AppContext);
 
-
-    const getColor = (i) => {
-        let colorList = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5']
-        return colorList[i % 10]
-    }
-
     // Checks to see if the points in a path are roughly circular,
     // if so draw a circle that resembles them
     const isCircle = (p) => {
@@ -74,9 +69,10 @@ function SketchPanel() {
         let distancesStd = std(pointDistances);
         if ((distancesMean / distancesStd) > 3) {
             let numNodes = nodes?.length || 0
+            let color = numNodes <= context.colors.length ? context.colors[numNodes] : '#000000';
             let circle = new paper.Path.Circle(pointMean, distancesMean)
             circle.strokeColor = 'black';
-            circle.fillColor = getColor(numNodes);
+            circle.fillColor = color;
             let textPoint = [pointMean[0], pointMean[1] - distancesMean - 3]
             let label = new paper.PointText({
                 point: textPoint,
@@ -85,7 +81,6 @@ function SketchPanel() {
             });
 
             let labelLetter = String.fromCharCode(65 + (numNodes))
-            circle.fillColor = getColor(nodes?.length || 0);
 
             setNodes(nodes => [...nodes, circle]);
             label.content = labelLetter;

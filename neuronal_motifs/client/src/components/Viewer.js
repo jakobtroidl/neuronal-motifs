@@ -1,7 +1,6 @@
 import React, {useState, useEffect, useContext} from 'react';
 import SharkViewer, {swcParser} from '@janelia/sharkviewer';
 import {AppContext} from "../contexts/GlobalContext";
-import {getRandomColor} from '../utils/rendering';
 import './Viewer.css'
 import * as THREE from 'three';
 import axios from "axios";
@@ -9,7 +8,6 @@ import axios from "axios";
 function Viewer() {
     const [motif, setMotif] = React.useState()
     const [sharkViewerInstance, setSharkViewerInstance] = useState();
-    const [colors, setColors] = useState()  // store motif colors
     const [loadedNeurons, setLoadedNeurons] = useState()
     const [prevSliderValue, setPrevSliderValue] = useState()
     const id = "my_shark_viewer";
@@ -47,8 +45,6 @@ function Viewer() {
 
             let id_ranges = Array.from({length: selectedMotif.length}, (_, i) => i * 1000);
             setLoadedNeurons(id_ranges);
-            let randomColors = Array.from({length: selectedMotif.length}, (_, i) => getRandomColor());
-            setColors(randomColors)
 
             let res = await axios.get(`http://localhost:5050/display_motif/bodyIDs=${bodyIds}&motif=${motifQuery}`);
             //let res = await axios.get(`http://localhost:5050/get_test_motif`);
@@ -60,17 +56,18 @@ function Viewer() {
     useEffect(() => {
         if (motif && sharkViewerInstance) {
             let neuron_number = 0
+            //console.log(context.colors);
             motif.neurons.forEach(n => {
                 let abstraction_level = 0
                 n.skeleton_abstractions.forEach(abstraction => {
                     let parsedSwc = swcParser(abstraction.swc)
                     let id = loadedNeurons[neuron_number] + abstraction_level
-
+                    let color = context.colors[neuron_number];
                     if (abstraction_level === 0) {  // initialize view instance
-                        sharkViewerInstance.loadNeuron(id, colors[neuron_number], parsedSwc, true);
+                        sharkViewerInstance.loadNeuron(id, color, parsedSwc, true);
                         sharkViewerInstance.setNeuronVisible(id, true)
                     } else {  // load all neurons but set the all to invisible
-                        sharkViewerInstance.loadNeuron(id, colors[neuron_number], parsedSwc, false);
+                        sharkViewerInstance.loadNeuron(id, color, parsedSwc, false);
                         sharkViewerInstance.setNeuronVisible(id, false)
                     }
                     abstraction_level += 1
