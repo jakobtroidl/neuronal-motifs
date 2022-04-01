@@ -1,6 +1,7 @@
 import json
 import pandas as pd
 from networkx.readwrite import json_graph
+from line_profiler_pycharm import profile
 
 from neuronal_motifs.server.services.data_access import DataAccess
 
@@ -29,6 +30,7 @@ class MyMotif:
 
         return motif
 
+    @profile
     def compute_motif_paths(self):
         """
         For each neuron in the motif, matches synapses with closest skeleton connector,
@@ -39,7 +41,7 @@ class MyMotif:
             print("Compute Motif Abstraction for Neuron {}".format(neuron.id))
             nodes = neuron.get_nodes_of_motif_synapses()
             neuron.compute_skeleton_labels(nodes)
-            neuron.set_skeleton_abstractions(15)
+            neuron.set_skeleton_abstractions(7)
 
     def download_synapses(self):
         """
