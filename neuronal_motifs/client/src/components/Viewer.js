@@ -33,6 +33,21 @@ function Viewer() {
         setPrevSliderValue(0)
     }, [sharkViewerInstance])
 
+    useEffect(() => {
+        if (sharkViewerInstance && motif && loadedNeurons) {
+            let neuron_number = 0
+            motif.neurons.forEach(n => {
+                let abstraction_level = 0
+                n.skeleton_abstractions.forEach(abstraction => {
+                    let id = loadedNeurons[neuron_number] + abstraction_level
+                    sharkViewerInstance.unloadNeuron(id);
+                    abstraction_level += 1
+                })
+                neuron_number += 1
+            })
+        }
+    }, [context.clearViewer])
+
     // Fetches the data, only runs on init
     useEffect(async () => {
         if (context.selectedMotif)
