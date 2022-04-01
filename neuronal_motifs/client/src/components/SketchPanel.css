@@ -10,7 +10,7 @@ canvas {
     border: thin solid #b9b7b7;
     cursor: crosshair;
     margin-left: 23px;
-    margin-right: 15px;
+    margin-right: 20px;
 }
 .eraser {
     position: absolute;
