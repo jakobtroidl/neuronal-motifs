@@ -38,10 +38,15 @@ class MyMotif:
         @return:
         """
         for neuron in self.neurons:
-            print("Compute Motif Abstraction for Neuron {}".format(neuron.id))
             nodes = neuron.get_nodes_of_motif_synapses()
+
+            print("Compute compute node labels for skeleton {} ...".format(neuron.id))
             neuron.compute_skeleton_labels(nodes)
+            print("Done")
+
+            print("Compute Motif Abstraction for Neuron {} ...".format(neuron.id))
             neuron.set_skeleton_abstractions(7)
+            print('Done')
 
     def download_synapses(self):
         """
