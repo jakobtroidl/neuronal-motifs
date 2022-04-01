@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useContext} from 'react';
-import {AppContext} from "../contexts/AbstractionLevelContext";
+import {AppContext} from "../contexts/GlobalContext";
 import './Viewer.css'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {faUpDownLeftRight} from '@fortawesome/free-solid-svg-icons'
@@ -17,8 +17,8 @@ function AbstractionSlider() {
     const context = useContext(AppContext);
     // Updates the state when it changes
     const handleChange = (event, val) => {
-        if (val !== context.store.abstractionLevel) {
-            context.actions.changeAbstractionLevel(val);
+        if (val !== context.abstractionLevel) {
+            context.setAbstractionLevel(val);
         }
     }
 
@@ -38,11 +38,12 @@ function AbstractionSlider() {
                         defaultValue={0}
                         valueLabelFormat={valueLabelFormat}
                         valueLabelDisplay="auto"
-                        step={0.05}
+                        step={0.1}
                         marks
                         min={0}
                         max={1}
                         onChange={handleChange}
+
                     />
                 </div>
             </div>

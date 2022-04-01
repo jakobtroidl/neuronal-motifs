@@ -1,7 +1,6 @@
 import React, {useState, useEffect, useContext} from 'react';
 import SharkViewer, {swcParser} from '@janelia/sharkviewer';
-import {AppContext} from "../contexts/AbstractionLevelContext";
-import {getRandomColor} from '../utils/rendering';
+import {AppContext} from "../contexts/GlobalContext";
 import './Viewer.css'
 import * as THREE from 'three';
 import axios from "axios";
@@ -9,7 +8,6 @@ import axios from "axios";
 function Viewer() {
     const [motif, setMotif] = React.useState()
     const [sharkViewerInstance, setSharkViewerInstance] = useState();
-    const [colors, setColors] = useState()  // store motif colors
     const [loadedNeurons, setLoadedNeurons] = useState()
     const [prevSliderValue, setPrevSliderValue] = useState()
     const id = "my_shark_viewer";
@@ -20,56 +18,75 @@ function Viewer() {
 
     // Instantiates the viewer, will only run once on init
     useEffect(() => {
-        setColors(
-            [
-                getRandomColor(),
-                getRandomColor(),
-                getRandomColor()
-            ]
-        )
-
         setSharkViewerInstance(
             new SharkViewer({dom_element: id})
         )
-
-        setLoadedNeurons(
-            [0, 1000, 2000]
-        )
-
-
     }, [])
+
     // Inits the viewer once it is created
     useEffect(() => {
         if (sharkViewerInstance) {
             sharkViewerInstance.init();
             sharkViewerInstance.animate();
         }
-
         setPrevSliderValue(0)
     }, [sharkViewerInstance])
+
+    useEffect(() => {
+        if (sharkViewerInstance && motif && loadedNeurons) {
+            let neuron_number = 0
+            motif.neurons.forEach(n => {
+                let abstraction_level = 0
+                n.skeleton_abstractions.forEach(abstraction => {
+                    let id = loadedNeurons[neuron_number] + abstraction_level
+                    sharkViewerInstance.unloadNeuron(id);
+                    abstraction_level += 1
+                })
+                neuron_number += 1
+            })
+        }
+    }, [context.clearViewer])
+
     // Fetches the data, only runs on init
     useEffect(async () => {
-        if (!motif) {
-            // Update the document title using the browser API
-            let res = await axios.get(`http://localhost:5050/get_test_motif`);
+        if (context.selectedMotif)
+        {
+            let selectedMotif = context.selectedMotif;
+            let bodyIds = selectedMotif.map(m => m.bodyId);
+
+            bodyIds = JSON.stringify(bodyIds);
+            let motifQuery = JSON.stringify(context.motifQuery);
+
+            let id_ranges = Array.from({length: selectedMotif.length}, (_, i) => i * 1000);
+            setLoadedNeurons(id_ranges);
+
+            let res = await axios.get(`http://localhost:5050/display_motif/bodyIDs=${bodyIds}&motif=${motifQuery}`);
+            //let res = await axios.get(`http://localhost:5050/get_test_motif`);
             setMotif(res.data);
         }
-    }, []);
+
+    }, [context.selectedMotif]);
 
     useEffect(() => {
         if (motif && sharkViewerInstance) {
+
+            // remove all previous loaded objects in three.js scene
+            let scene = sharkViewerInstance.scene;
+            scene.remove.apply(scene, scene.children);
+
             let neuron_number = 0
+            //console.log(context.colors);
             motif.neurons.forEach(n => {
                 let abstraction_level = 0
                 n.skeleton_abstractions.forEach(abstraction => {
                     let parsedSwc = swcParser(abstraction.swc)
                     let id = loadedNeurons[neuron_number] + abstraction_level
-
+                    let color = context.colors[neuron_number];
                     if (abstraction_level === 0) {  // initialize view instance
-                        sharkViewerInstance.loadNeuron(id, colors[neuron_number], parsedSwc, true);
+                        sharkViewerInstance.loadNeuron(id, color, parsedSwc, true);
                         sharkViewerInstance.setNeuronVisible(id, true)
                     } else {  // load all neurons but set the all to invisible
-                        sharkViewerInstance.loadNeuron(id, colors[neuron_number], parsedSwc, false);
+                        sharkViewerInstance.loadNeuron(id, color, parsedSwc, false);
                         sharkViewerInstance.setNeuronVisible(id, false)
                     }
                     abstraction_level += 1
@@ -84,14 +101,12 @@ function Viewer() {
             let neurons = motif.neurons;
             let neuron_number = 0;
             neurons.forEach(n => {
-                let slider_value = context.store.abstractionLevel;
+                let slider_value = context.abstractionLevel;
                 let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value);
                 let load_id = loadedNeurons[neuron_number] + level;
                 let unload_id = loadedNeurons[neuron_number] + prevSliderValue;
 
                 if (load_id !== unload_id) {
-                    // console.log('load -> ', load_id);
-                    // console.log('unload -> ', unload_id);
                     sharkViewerInstance.setNeuronVisible(load_id, true);
                     sharkViewerInstance.setNeuronVisible(unload_id, false);
                 }
@@ -99,7 +114,7 @@ function Viewer() {
                 neuron_number += 1;
             })
         }
-    }, [context.store.abstractionLevel])
+    }, [context.abstractionLevel])
 
     useEffect(() => {
         if (motif && sharkViewerInstance) {

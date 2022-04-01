@@ -2,7 +2,7 @@ import logo from './logo.svg';
 import Viewer from './components/Viewer'
 import MotifPanel from './components/MotifPanel'
 import DraggableView from "./views/DraggableView";
-import {ContextWrapper} from "./contexts/AbstractionLevelContext";
+import {ContextWrapper} from "./contexts/GlobalContext";
 import './App.css';
 
 

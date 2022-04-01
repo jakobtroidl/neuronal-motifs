@@ -3,7 +3,36 @@ from pathlib import Path
 import os
 
 
-def treeneuron_list_to_swc_string_list(skeletons):
+def get_cache_filename(ids):
+    """
+    TODO
+    @param ids:
+    @return:
+    """
+    return "_".join(map(str, ids))
+
+def apply_ids_to_motif_adjacency(body_ids, motif):
+    """
+    TODO
+    @param body_ids:
+    @param motif:
+    @return:
+    """
+
+    adj = [[] for i in range(len(motif))]  # map motif adjacency to node ids
+    for i in range(0, len(motif)):
+        for connection in motif[i]:
+            mapped = body_ids[connection]
+            adj[i].append(mapped)
+
+    return dict(zip(body_ids, adj))
+
+def treeneurons_list_to_swc_string_list(skeletons):
+    """
+    TODO
+    @param skeletons:
+    @return:
+    """
     out = [None] * len(skeletons)
     for i in range(len(skeletons)):
         skl = skeletons[i]

@@ -2,9 +2,10 @@
     position: absolute;
     top: -99vh;
     left: 1vw;
-    width: 570px;
+    max-width: 35vw;
     margin: 20px;
     padding: 0;
+    max-height: 90vh;
 }
 
 
@@ -13,27 +14,40 @@
     padding: 5px;
     background-color: rgba(255, 255, 255, 0.75);
     border-radius: 10px;
-    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-    width: 100%;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 0px 15px;
+    width: inherit;
     z-index: 2;
 }
 
+#motif-panel-div .motif-selection-div {
+    cursor: pointer;
+}
+#motif-panel-div .motif-selection-div:hover {
+    background-color: #e7e7e7;
+}
+#motif-panel-div .motif-selection-div:focus {
+    background-color: lightsalmon;
+}
+
+
+
 #motif-panel-div .results {
     position: relative;
-    margin-top: -10px;
-    padding: 5px;
+    margin-top: 1px;
+    padding: 0px;
     border-radius: 0 0 10px 10px;
-    box-shadow: 0px 5px 10px 5px rgb(0 0 0 / 15%);
+    /*box-shadow: 0px 5px 10px 5px rgb(0 0 0 / 15%);*/
     background-color: rgba(255, 255, 255, 0.75);
-    width: 100%;
+    width: inherit;
+    height: 50vh;
+    overflow-y: auto;
     z-index: 1;
 }
 
 #motif-panel-div .results .textContainer {
     display: block;
-    max-width: 150px;
     white-space: nowrap;
-    overflow: hidden;
+    overflow: scroll;
     text-overflow: ellipsis;
 }
 
@@ -50,24 +64,31 @@
 #motif-panel-wrapper {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    margin: 5px 30px 0 30px;
+    width: inherit;
+    /*align-items: center;*/
+    /*margin: 5px 5px 0 5px;*/
 
 }
 
 .handle {
-    position: absolute;
+    position: relative;
     top: 5px;
     left: 5px;
 }
 
 .formRow {
     display: flex;
-    justify-content: space-between;
-    width: 100%;
+    float: left;
+}
+.formColumn {
+    flex-grow: 1;
+    display:flex;
+    justify-content: left;
+    align-items: center;
+    margin: 10px 10px 10px 10px;
 }
 
-.buttonDiv {
-    align-self: flex-end;
-    padding-bottom: 8px;
-}
+/*.buttonDiv {*/
+/*    height: inherit;*/
+/*    align-self: flex-end;*/
+/*}*/

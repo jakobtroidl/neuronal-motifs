@@ -81,7 +81,7 @@ class Neuron:
         """
         swc_object = conversion.treeneuron_to_swc_string(self.skeleton)
         syn_export = conversion.synapse_array_to_object(self.synapses)
-        abstraction_export = conversion.treeneuron_list_to_swc_string_list(self.skeleton_abstractions)
+        abstraction_export = conversion.treeneurons_list_to_swc_string_list(self.skeleton_abstractions)
 
         neuron = {
             'id': self.id,

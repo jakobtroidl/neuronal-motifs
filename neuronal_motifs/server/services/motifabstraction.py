@@ -2,10 +2,29 @@ import networkx as nx
 import pickle as pkl
 
 from neuronal_motifs.server.models.motif import MyMotif
+from neuronal_motifs.server.utils.data_conversion import *
+
+
+def get_motif(ids, motif):
+    # ids = [1001453586, 1003474104, 5813091420]
+    # motif = [[1], [2], [0]]
+    filename = get_cache_filename(ids)
+    filepath = "cache/data/" + filename + ".pkl"
+    try:  # try to load from cache
+        f = open(filepath)
+        f.close()
+    except FileNotFoundError:
+        compute_motif_data(ids, motif)  # download data if not available
+        f = open(filepath)
+    finally:
+        f = open(filepath, "rb")
+        motif = pkl.load(f)
+        f.close()
+        return motif.as_json()
 
 
 def get_example_motif():
-    filepath = "cache/test_motif.pkl"
+    filepath = "cache/test/test_motif.pkl"
     try:  # try to load from cache
         f = open(filepath)
         f.close()
@@ -34,8 +53,20 @@ def get_example_motif():
 #         motif.simplify(factor=factor)
 #         return motif.as_json()
 
-def get_motif_data(body_ids, motif):
-    pass
+def compute_motif_data(body_ids, motif):
+    adjacency = apply_ids_to_motif_adjacency(body_ids, motif)
+    motif_graph = nx.DiGraph(adjacency)
+
+    motif = MyMotif(body_ids, motif_graph)
+    motif.compute_motif_paths()
+
+    filename = get_cache_filename(body_ids)
+
+    path = "cache/data/" + filename + ".pkl"
+    with open(path, "wb") as f:
+        print('Write Motif to cache ...')
+        pkl.dump(motif, f)
+    print('Done Write Motif to cache ...')
 
 
 def example_motif_data():
@@ -51,7 +82,7 @@ def example_motif_data():
 
     motif.compute_motif_paths()
 
-    filename = "cache/test_motif.pkl"
+    filename = "cache/test/test_motif.pkl"
     with open(filename, "wb") as f:
         print('Write Motif to cache ...')
         pkl.dump(motif, f)
