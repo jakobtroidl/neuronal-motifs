@@ -40,7 +40,7 @@ function MotifPanel() {
     }
 
     const handleMotifSelection = (motif) => {
-        //context.actions.clearView(1);
+        //context.setAbstractionLevel(0);
         context.setSelectedMotif(motif.neurons);
     }
 
@@ -78,7 +78,6 @@ function MotifPanel() {
                     <FontAwesomeIcon icon={faUpDownLeftRight}/>
                 </div>
                 <div id='motif-panel-wrapper'>
-
                     <div className="formRow">
                         <SketchPanel/>
                     </div>
@@ -103,7 +102,8 @@ function MotifPanel() {
                         </div>
                     </div>
                 </div>
-            </div>
+
+
             {resultRows?.length > 0 &&
                 < div className='results'>
                     <TableContainer component={Paper}>
@@ -125,6 +125,7 @@ function MotifPanel() {
                     </TableContainer>
                 </div>
             }
+            </div>
         </div>
     )
 }
