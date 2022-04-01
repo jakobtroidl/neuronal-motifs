@@ -9,16 +9,23 @@ export const ContextWrapper = (props) => {
     const [selectedMotif, setSelectedMotif] = useState();
     const [motifQuery, setMotifQuery] = useState();
     const [abstractionLevel, setAbstractionLevel] = useState();
-    const [colors, setColors] = useState(['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5']);
+    const [colors, setColors] = useState(['#7e2fd0', '#81D02F', '#34AFCB', '#CB5034', '#B3A94C', '#4C56B3', '#D9C226', '#263DD9']);
+    const [clearViewer, setClearViewer] = useState(0);
 
-    const [actions, setActions] = useState({
-        changeAbstractionLevel: level => setAbstractionLevel(level),
-        changeMotifQuery: query => setMotifQuery(query),
-        changeSelectedMotif: motif => setSelectedMotif(motif),
-    });
+    // const [actions, setActions] = useState({
+    //     changeAbstractionLevel: level => setAbstractionLevel(level),
+    //     changeMotifQuery: query => setMotifQuery(query),
+    //     changeSelectedMotif: motif => setSelectedMotif(motif),
+    //     clearView: clear => setClearViewer(clearViewer + clear)
+    // });
 
     return (
-        <AppContext.Provider value={{selectedMotif, motifQuery, abstractionLevel, colors, actions}}>
+        <AppContext.Provider value={
+            {selectedMotif, setSelectedMotif,
+            motifQuery, setMotifQuery,
+            abstractionLevel, setAbstractionLevel,
+            colors, setColors,
+            clearViewer, setClearViewer }}>
             {props.children}
         </AppContext.Provider>
     );

@@ -1,7 +1,7 @@
 /* Scale canvas with resize attribute to full size */
 canvas {
-    height: 300px;
-    width: 500px;
+    height: 30vh;
+    width: 25vw;
 
 }
 
@@ -9,6 +9,8 @@ canvas {
     border-radius: 6px;
     border: thin solid #b9b7b7;
     cursor: crosshair;
+    margin-left: 23px;
+    margin-right: 15px;
 }
 .eraser {
     position: absolute;

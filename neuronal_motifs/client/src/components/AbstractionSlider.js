@@ -18,7 +18,7 @@ function AbstractionSlider() {
     // Updates the state when it changes
     const handleChange = (event, val) => {
         if (val !== context.abstractionLevel) {
-            context.actions.changeAbstractionLevel(val);
+            context.setAbstractionLevel(val);
         }
     }
 

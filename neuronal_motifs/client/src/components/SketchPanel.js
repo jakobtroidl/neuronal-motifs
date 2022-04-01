@@ -191,7 +191,7 @@ function SketchPanel() {
     // Update global motif tracker
     useEffect(() => {
         if (edges) {
-            context.actions.changeMotifQuery(edges);
+            context.setMotifQuery(edges);
         }
 
     }, [edges])

@@ -9,7 +9,7 @@ import TableHead from "@mui/material/TableHead";
 import TableBody from "@mui/material/TableBody";
 import PropTypes from "prop-types";
 
-function TableRow(props) {
+export function CollapsableTableRow(props) {
     const {row, handleClick} = props;
     const [open, setOpen] = React.useState(false);
 
@@ -32,9 +32,7 @@ function TableRow(props) {
                 </TableCell>
             </TableRow>
             <TableRow>
-                <TableCell style={{paddingBottom: 0, paddingTop: 0}} colSpan={6} onClick={(event) => {
-                    handleClick(row)
-                }} className={"motif-selection-div"}>
+                <TableCell style={{paddingBottom: 0, paddingTop: 0}} colSpan={6} onClick={() => {handleClick(row)}} className={"motif-selection-div"}>
                     <Collapse in={open}>
                         <Box sx={{margin: 1}}>
                             {/*<Typography variant="h6" gutterBottom component="div">*/}
@@ -70,7 +68,7 @@ function TableRow(props) {
     );
 }
 
-TableRow.propTypes = {
+CollapsableTableRow.propTypes = {
     row: PropTypes.shape({
         name: PropTypes.string.isRequired,
         neurons: PropTypes.arrayOf(
