@@ -1,4 +1,6 @@
 import json
+import time
+
 import pandas as pd
 from networkx.readwrite import json_graph
 from line_profiler_pycharm import profile
@@ -41,12 +43,14 @@ class MyMotif:
             nodes = neuron.get_nodes_of_motif_synapses()
 
             print("Compute compute node labels for skeleton {} ...".format(neuron.id))
+            t = time.time()
             neuron.compute_skeleton_labels(nodes)
-            print("Done")
+            print("Done. Took {} sec".format(time.time() - t))
 
             print("Compute Motif Abstraction for Neuron {} ...".format(neuron.id))
+            t = time.time()
             neuron.set_skeleton_abstractions(7)
-            print('Done')
+            print('Done. Took {} sec'.format(time.time() - t))
 
     def download_synapses(self):
         """
