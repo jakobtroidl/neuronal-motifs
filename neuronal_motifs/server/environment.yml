@@ -5,6 +5,7 @@ dependencies:
   - python=3.9
   - fastapi
   - h5py
+  - numba
   - pandas
   - uvicorn
   - pip
