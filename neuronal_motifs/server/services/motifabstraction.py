@@ -1,12 +1,23 @@
 import networkx as nx
+import pickle as pkl
 
 from neuronal_motifs.server.models.motif import MyMotif
 
 
 def get_example_motif():
-    motif = example_motif_data()
-    motif.compute_motif_paths()
-    return motif.as_json()
+    filepath = "cache/test_motif.pkl"
+    try:  # try to load from cache
+        f = open(filepath)
+        f.close()
+    except FileNotFoundError:
+        example_motif_data()  # download data if not available
+        f = open(filepath)
+    finally:
+        f = open(filepath, "rb")
+        motif = pkl.load(f)
+        f.close()
+        motif.compute_motif_paths()
+        return motif.as_json()
 
 
 def example_motif_data():
@@ -16,8 +27,13 @@ def example_motif_data():
     @return: Motif object
     """
     body_ids = [1003474104, 5813091420, 1001453586]
+
     motif_graph = nx.DiGraph([(1003474104, 5813091420), (5813091420, 1001453586), (1001453586, 1003474104)])
-    return MyMotif(body_ids, motif_graph)
+    motif = MyMotif(body_ids, motif_graph)
+
+    filename = "cache/test_motif.pkl"
+    with open(filename, "wb") as f:
+        pkl.dump(motif, f)
 
 
 def compute_motif_path(motif):

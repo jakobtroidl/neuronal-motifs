@@ -15,6 +15,8 @@ origins = [
     "http://localhost:8080",
     "http://localhost:3000",
     "http://localhost:3001",
+    "http://localhost:3002",
+    "http://localhost:3003",
 ]
 
 app.add_middleware(
@@ -40,11 +42,13 @@ def read_item(item_id: int, q: Optional[str] = None):
 def get_test_motif():
     return motifabstraction.get_example_motif()
 
-
 @app.get("/search/motif={q}&lim={n}")
 def search_motif(q: str, n: int): # search one motif at a time
     results = motif_search.search_hemibrain_motif(q, n)
     return results
+@app.get("/download_test_motif")
+def download_test_motif():
+    return motifabstraction.example_motif_data()
 
 
 @app.get("/get_swc")
