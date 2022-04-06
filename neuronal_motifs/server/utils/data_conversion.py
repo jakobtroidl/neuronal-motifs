@@ -76,7 +76,8 @@ def synapse_array_to_object(synapse_df):
     @param synapse_df:
     @return:
     """
-    synapses = [] * len(synapse_df.index) * 2
+    pre_synapses = [] * len(synapse_df.index)
+    post_synapses = [] * len(synapse_df.index)
     for index, synapse in synapse_df.iterrows():
         x_pre = synapse['x_pre']
         y_pre = synapse['y_pre']
@@ -88,7 +89,7 @@ def synapse_array_to_object(synapse_df):
         z_post = synapse['z_post']
         syn_post = {'x': x_post, 'y': y_post, 'z': z_post}
 
-        synapses.append(syn_pre)
-        synapses.append(syn_post)
+        pre_synapses.append(syn_pre)
+        post_synapses.append(syn_post)
 
-    return synapses
+    return {'pre_syn': pre_synapses, 'post_syn': post_synapses}

@@ -109,7 +109,8 @@ class Neuron:
             'skeleton_swc': swc_object['swc'],
             'node_map': swc_object['map'],
             'skeleton_labels': self.skeleton_labels.tolist(),
-            'skeleton_abstractions': abstraction_export
+            'skeleton_abstractions': abstraction_export,
+            'soma_pos': self.get_soma()
         }
 
         return neuron
@@ -157,6 +158,12 @@ class Neuron:
         # compute the shortest path between all synapse nodes which is equivalent to the motif path
         labels = compute_labels(labels, edges, motif_nodes, unlabeled_node_id)
         self.skeleton_labels = labels  # add labeled nodes to the neuron object
+
+    def get_soma(self):
+        soma = self.skeleton.soma_pos
+        if not isinstance(soma, type(None)):
+            return soma.tolist()
+        return soma
 
     def get_closest_connector(self, x, y, z):
         """
@@ -221,7 +228,23 @@ class Neuron:
         levels = np.linspace(0, 1, num_of_levels, endpoint=True)
         results = Parallel(n_jobs=8)(delayed(self.prune_to_motif_path)(levels[i]) for i in range(levels.size))
         results = sorted(results, key=lambda x: x[0])  # sort based on abstraction level
-        return list(map(itemgetter(1), results))  # only return TreeNeuron
+        results = list(map(itemgetter(1), results))
+
+        pruned_neuron = results[num_of_levels - 1]
+
+        simplified1 = navis.downsample_neuron(pruned_neuron, downsampling_factor=5, inplace=False)
+        results.append(simplified1)
+
+        simplified1 = navis.downsample_neuron(pruned_neuron, downsampling_factor=10, inplace=False)
+        results.append(simplified1)
+
+        simplified1 = navis.downsample_neuron(pruned_neuron, downsampling_factor=15, inplace=False)
+        results.append(simplified1)
+
+        simplified2 = pruned_neuron.simple
+        results.append(simplified2)
+
+        return results  # only return TreeNeuron
 
     def prune_to_motif_path(self, factor):
         """
