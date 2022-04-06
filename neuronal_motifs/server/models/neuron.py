@@ -1,5 +1,3 @@
-import json
-
 import navis
 import networkx as nx
 import numpy as np
@@ -8,8 +6,6 @@ from tqdm import tqdm
 from line_profiler_pycharm import profile
 
 from joblib import Parallel, delayed
-import time
-
 from operator import *
 
 import pandas as pd
@@ -62,9 +58,7 @@ def multiple_shortest_paths(graph, start_node, end_node_list):
 @jit(nopython=True)
 def compute_labels(labels, edges, motif_nodes, unlabeled_node_id):
     labels[motif_nodes - 1] = 0  # label all motif nodes in the skeleton with 0
-    num_unlabeled_nodes = np.count_nonzero(labels == unlabeled_node_id)  # countOf(labels.values(),
-
-    # unlabeled_node_id)
+    num_unlabeled_nodes = np.count_nonzero(labels == unlabeled_node_id)
     label = 1  # specifies node labels, start with distance to motif path is 1
     while num_unlabeled_nodes > 0:  # repeat until all nodes are labeled
         labels_copy = np.copy(labels)
@@ -235,8 +229,8 @@ class Neuron:
         @param factor: float [0, 1]. 0 -> full skeleton is returned. 1 -> only motif path is returned
         @return: pruned skeleton
         """
-        node_ids = np.arange(1, self.skeleton_labels.shape[0] + 1)  # np.fromiter(self.skeleton_labels.keys(), dtype=int)
-        labels = self.skeleton_labels  # np.fromiter(self.skeleton_labels.values(), dtype=int)
+        node_ids = np.arange(1, self.skeleton_labels.shape[0] + 1)
+        labels = self.skeleton_labels
 
         max_label = np.max(labels)
         threshold = int(max_label * (1.0 - factor))  # convert scale factor to pruning threshold
