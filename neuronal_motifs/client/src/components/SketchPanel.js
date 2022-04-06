@@ -48,13 +48,12 @@ function SketchPanel() {
     const sketchPanelId = "sketch-panel";
     // Keeps track of the most recent thing drawn
     let [path, setPath] = useState();
-
     let [nodes, setNodes] = useState([])
-    // let [edges, setEdges] = useState({});
     let [edges, setEdges] = useState([])
 
     // We track the overall motif in the global context
     const context = useContext(AppContext);
+
 
     // Checks to see if the points in a path are roughly circular,
     // if so draw a circle that resembles them
@@ -73,6 +72,7 @@ function SketchPanel() {
             let circle = new paper.Path.Circle(pointMean, distancesMean)
             circle.strokeColor = 'black';
             circle.fillColor = color;
+            circle.name = 'nodeCircle';
             let textPoint = [pointMean[0], pointMean[1] - distancesMean - 3]
             let label = new paper.PointText({
                 point: textPoint,
@@ -149,6 +149,7 @@ function SketchPanel() {
     }
 
     const clearSketch = () => {
+        console.log('Clearing')
         paper?.project?.activeLayer?.removeChildren();
         paper?.view?.draw();
         // Remove all edges and nodes
@@ -160,25 +161,37 @@ function SketchPanel() {
 
     // On init set up our paperjs
     useEffect(() => {
-        paper.setup(sketchPanelId);
-        let tool = new paper.Tool();
-
-        let currentPath;
-
-        tool.onMouseDown = function (event) {
+        let scope = paper.setup(sketchPanelId);
+        console.log('Setting up Pencil')
+        let pencil = new paper.Tool();
+        let currentPath, mouseCircle;
+        pencil.onMouseDown = function (event) {
+            let circles = scope?.project?.getItems({
+                class: paper.Path
+            }).filter(e => e?.name === 'nodeCircle')
             currentPath = new paper.Path();
-            currentPath.strokeColor = 'black';
-            currentPath.add(event.point);
-        }
 
-        tool.onMouseDrag = function (event) {
+            currentPath.strokeColor = '#A9A9A9';
+            currentPath.strokeWidth = 5
             currentPath.add(event.point);
+            console.log(circles);
+            mouseCircle = new paper.Path.Circle(event.point, 7);
+            mouseCircle.strokeColor = '#f41f23';
+            mouseCircle.name = 'mouseCircle';
         }
-
-        tool.onMouseUp = function (event) {
+        pencil.onMouseDrag = function (event) {
+            currentPath.add(event.point);
+            currentPath.smooth({type: 'continuous'});
+            mouseCircle.position = new paper.Point(event.point);
+        }
+        pencil.onMouseUp = function (event) {
             setPath(currentPath);
+            mouseCircle.remove()
+            mouseCircle = null;
         }
+
     }, []);
+
 
     // Check if our path is node or edge
     useEffect(() => {

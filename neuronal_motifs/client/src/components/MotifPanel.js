@@ -7,7 +7,7 @@ import {AppContext} from "../contexts/GlobalContext";
 import SketchPanel from "./SketchPanel";
 import SearchIcon from "@mui/icons-material/Search";
 import Button from "@mui/material/Button";
-import TextField from '@mui/material/TextField';
+import {TextField, FormHelperText, InputLabel, Select, MenuItem, FormControl} from '@mui/material';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -28,6 +28,10 @@ import {CollapsableTableRow} from './CollapsableTableRow'
 
 function MotifPanel() {
     const [number, setNumber] = useState(1);
+    const [nodeAttribute, setNodeAttribute] = useState("");
+    const [nodeAttributeProperties, setNodeAttributeProperties] = useState([]);
+    const [edgeAttribute, setEdgeAttribute] = useState("");
+    const [edgeAttributeProperties, edgeNodeAttributeProperties] = useState([]);
     const [searchedMotifs, setSearchedMotifs] = useState({});
     const [resultRows, setResultRows] = useState([]);
     const motifPanelId = 'motif-panel-div'
@@ -81,7 +85,45 @@ function MotifPanel() {
                     <div className="formRow">
                         <SketchPanel/>
                     </div>
-                    <div className="formRow">
+                    <div className="formRow" style={{ marginTop: "10px"}}>
+                        <div className="formColumn">
+                            <FormControl sx={{m: 1, minWidth: 120}}>
+                                <InputLabel id="node-attr-label">Node Attribute</InputLabel>
+                                <Select
+                                    value={{nodeAttribute}}
+                                    id="node-attr-select"
+                                    label="Node Attribute"
+                                    onChange={event => setNodeAttribute(event.target.value)}
+                                >
+                                    <MenuItem value="">
+                                        <em>None</em>
+                                    </MenuItem>
+                                    {nodeAttributeProperties.map(attr => {
+                                        return <MenuItem value={attr}>{attr}</MenuItem>
+                                    })}
+                                </Select>
+                            </FormControl>
+                        </div>
+                        <div className="formColumn">
+                            <FormControl sx={{m: 1, minWidth: 120}}>
+                                <InputLabel id="edge-attr-label">Edge Attribute</InputLabel>
+                                <Select
+                                    value={{edgeAttribute}}
+                                    id="edge-attr-select"
+                                    label="Edge Attribute"
+                                    onChange={event => setEdgeAttribute(event.target.value)}
+                                >
+                                    <MenuItem value="">
+                                        <em>None</em>
+                                    </MenuItem>
+                                    {edgeAttributeProperties.map(attr => {
+                                        return <MenuItem value={attr}>{attr}</MenuItem>
+                                    })}
+                                </Select>
+                            </FormControl>
+                        </div>
+                    </div>
+                    <div className="formRow" >
                         <div className="formColumn">
                             <TextField
                                 id="outlined-number"
@@ -100,11 +142,11 @@ function MotifPanel() {
                                 Search
                             </Button>
                         </div>
-                    </div>
+                    </div >
                 </div>
 
 
-            {resultRows?.length > 0 &&
+                {resultRows?.length > 0 &&
                 < div className='results'>
                     <TableContainer component={Paper} sx={{backgroundColor: 'rgba(255, 255, 255, 0.0)'}}>
                         <Table aria-label="collapsible table">
@@ -117,14 +159,15 @@ function MotifPanel() {
                             <TableBody>
                                 {
                                     resultRows.map((row) => (
-                                        <CollapsableTableRow key={row.name} row={row} handleClick={handleMotifSelection}/>
+                                        <CollapsableTableRow key={row.name} row={row}
+                                                             handleClick={handleMotifSelection}/>
                                     ))
                                 }
                             </TableBody>
                         </Table>
                     </TableContainer>
                 </div>
-            }
+                }
             </div>
         </div>
     )
