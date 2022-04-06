@@ -106,7 +106,7 @@ function MotifPanel() {
 
             {resultRows?.length > 0 &&
                 < div className='results'>
-                    <TableContainer component={Paper}>
+                    <TableContainer component={Paper} sx={{backgroundColor: 'rgba(255, 255, 255, 0.0)'}}>
                         <Table aria-label="collapsible table">
                             <TableHead>
                                 <TableRow>
