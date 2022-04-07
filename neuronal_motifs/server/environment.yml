@@ -13,4 +13,4 @@ dependencies:
       - PyQt5==5.15.6
       - dotmotif
       - navis
-      - neuprint-python
+      - neuprint-python==0.4.16
