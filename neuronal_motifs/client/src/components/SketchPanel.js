@@ -50,7 +50,7 @@ function SketchPanel() {
     let [path, setPath] = useState();
     let [nodes, setNodes] = useState([])
     let [edges, setEdges] = useState([])
-
+    let [pencil, setPencil] = useState();
     // We track the overall motif in the global context
     const context = useContext(AppContext);
 
@@ -72,7 +72,6 @@ function SketchPanel() {
             let circle = new paper.Path.Circle(pointMean, distancesMean)
             circle.strokeColor = 'black';
             circle.fillColor = color;
-            circle.name = 'nodeCircle';
             let textPoint = [pointMean[0], pointMean[1] - distancesMean - 3]
             let label = new paper.PointText({
                 point: textPoint,
@@ -158,26 +157,22 @@ function SketchPanel() {
 
     }
 
-
-    // On init set up our paperjs
-    useEffect(() => {
-        let scope = paper.setup(sketchPanelId);
-        console.log('Setting up Pencil')
-        let pencil = new paper.Tool();
-        let currentPath, mouseCircle;
+    const bindPencilEvents = () => {
+        let mouseCircle, currentPath;
+        console.log('rebinding', nodes);
         pencil.onMouseDown = function (event) {
-            let circles = scope?.project?.getItems({
-                class: paper.Path
-            }).filter(e => e?.name === 'nodeCircle')
+            console.log('down', nodes);
+            let intersections = nodes.map(n=>{
+                return n.contains(event.point)
+            })
+            console.log('Intersections', intersections)
             currentPath = new paper.Path();
 
             currentPath.strokeColor = '#A9A9A9';
             currentPath.strokeWidth = 5
             currentPath.add(event.point);
-            console.log(circles);
             mouseCircle = new paper.Path.Circle(event.point, 7);
             mouseCircle.strokeColor = '#f41f23';
-            mouseCircle.name = 'mouseCircle';
         }
         pencil.onMouseDrag = function (event) {
             currentPath.add(event.point);
@@ -190,6 +185,20 @@ function SketchPanel() {
             mouseCircle = null;
         }
 
+    }
+    useEffect(() => {
+        if (pencil) {
+            // Rebind the pencil events whenever new nodes are drawn
+            bindPencilEvents();
+        }
+    }, [pencil, nodes])
+
+
+    // On init set up our paperjs
+    useEffect(() => {
+        let scope = paper.setup(sketchPanelId);
+        console.log('Setting up Pencil')
+        setPencil(new paper.Tool());
     }, []);
 
 
