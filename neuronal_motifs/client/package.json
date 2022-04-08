@@ -56,6 +56,5 @@
     ]
   },
   "devDependencies": {
-    "@material-ui/core": "^4.12.3"
   }
 }

@@ -8,10 +8,15 @@ canvas, .canvas-wrapper {
 .sketch-panel-style {
     height: 30vh;
     width: 25vw;
+    margin: 0 0 0 20px;
+}
+
+.sketch-canvas {
+    width: 100%;
+    height: 100%;
     border-radius: 6px;
     border: thin solid #b9b7b7;
     cursor: crosshair;
-    margin: 0 20px;
 }
 
 .eraser {

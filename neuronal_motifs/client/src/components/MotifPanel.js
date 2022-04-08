@@ -15,6 +15,8 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import _ from 'lodash';
+
 import {CollapsableTableRow} from './CollapsableTableRow'
 
 
@@ -40,7 +42,7 @@ function MotifPanel() {
 
     const handleSubmit = () => {
         console.log('handle submit clicked')
-        fetchMotifs()
+        return fetchMotifs()
     }
 
     const handleMotifSelection = (motif) => {
@@ -85,7 +87,7 @@ function MotifPanel() {
                     <div className="formRow">
                         <SketchPanel/>
                     </div>
-                    <div className="formRow" style={{ marginTop: "10px"}}>
+                    <div className="formRow" style={{marginTop: "10px"}}>
                         <div className="formColumn">
                             <FormControl sx={{m: 1, minWidth: 120}}>
                                 <InputLabel id="node-attr-label">Node Attribute</InputLabel>
@@ -123,7 +125,7 @@ function MotifPanel() {
                             </FormControl>
                         </div>
                     </div>
-                    <div className="formRow" >
+                    <div className="formRow">
                         <div className="formColumn">
                             <TextField
                                 id="outlined-number"
@@ -134,7 +136,7 @@ function MotifPanel() {
                                 }}
                                 margin="normal"
                                 defaultValue={1}
-                                onChange={event => setNumber(event.target.value)}
+                                onChange={event => setNumber(_.toNumber(event.target.value))}
                             />
                         </div>
                         <div className="formColumn">
@@ -142,7 +144,7 @@ function MotifPanel() {
                                 Search
                             </Button>
                         </div>
-                    </div >
+                    </div>
                 </div>
 
 
