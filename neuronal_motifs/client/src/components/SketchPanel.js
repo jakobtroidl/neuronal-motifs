@@ -1,12 +1,17 @@
 import React, {useState, useEffect, useContext} from 'react';
 import './SketchPanel.css'
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faUpDownLeftRight, faEraser} from "@fortawesome/free-solid-svg-icons";
+// import {faUpDownLeftRight, faEraser, } from "@fortawesome/free-solid-svg-icons";
+import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
+import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
+import PanToolIcon from '@mui/icons-material/PanTool';
+import DeleteIcon from '@mui/icons-material/Delete';
 import paper from 'paper'
 import {std, mean, distance} from 'mathjs'
 import {AppContext} from "../contexts/GlobalContext";
 import {getRandomColor} from "../utils/rendering";
 import _ from 'lodash';
+import {Grid, IconButton, Tooltip} from "@material-ui/core";
 
 function Arrow(mouseDownPoint) {
     this.start = mouseDownPoint;
@@ -172,10 +177,9 @@ function SketchPanel() {
             currentPath.smooth({type: 'continuous'});
         }
         pencil.onMouseUp = function (event) {
-             if (drawingLine?.length === 2){
+            if (drawingLine?.length === 2) {
 
-             }
-             else if (drawingCircle) {
+            } else if (drawingCircle) {
                 let circle = currentPath.clone();
                 circle.strokeColor = '#1C1C1CFF'
                 circle.strokeWidth = 1;
@@ -256,13 +260,38 @@ function SketchPanel() {
 
     return (
         <div className={'sketch-panel-style'}>
-            <div className="eraser">
-                <FontAwesomeIcon icon={faEraser} onClick={((e) => clearSketch(e))}/>
+            <div className="canvas-wrapper">
+                <Grid
+                    container
+                    direction="column"
+                    justifyContent="flex-end"
+                    alignItems="flex-end"
+                    style={{position: 'absolute', left: 0, top: 0, padding: "0 20px"}}>
+                    <Tooltip title="Draw Node">
+                        <IconButton color="primary">
+                            <CircleTwoToneIcon fontSize="small"/>
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Draw Edge">
+                        <IconButton color="disabled">
+                            <ArrowRightAltIcon fontSize="small"/>
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Move Node">
+                        <IconButton color="disabled" tooltip="Move Node">
+                            <PanToolIcon fontSize="small"/>
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete Element">
+                        <IconButton color="disabled" tooltip="Delete Element">
+                            <DeleteIcon fontSize="small"/>
+                        </IconButton>
+                    </Tooltip>
+                </Grid>
+                <canvas id={sketchPanelId}></canvas>
             </div>
-            <canvas id={sketchPanelId}></canvas>
         </div>
-    );
-
+    )
 }
 
 export default SketchPanel;
