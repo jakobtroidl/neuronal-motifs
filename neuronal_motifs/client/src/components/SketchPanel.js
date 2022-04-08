@@ -6,6 +6,7 @@ import paper from 'paper'
 import {std, mean, distance} from 'mathjs'
 import {AppContext} from "../contexts/GlobalContext";
 import {getRandomColor} from "../utils/rendering";
+import _ from 'lodash';
 
 function Arrow(mouseDownPoint) {
     this.start = mouseDownPoint;
@@ -47,51 +48,11 @@ function SketchPanel() {
 
     const sketchPanelId = "sketch-panel";
     // Keeps track of the most recent thing drawn
-    let [path, setPath] = useState();
     let [nodes, setNodes] = useState([])
     let [edges, setEdges] = useState([])
     let [pencil, setPencil] = useState();
     // We track the overall motif in the global context
     const context = useContext(AppContext);
-
-
-    // Checks to see if the points in a path are roughly circular,
-    // if so draw a circle that resembles them
-    const isCircle = (p) => {
-        let points = p?.segments.map(segment => {
-            return [segment.point._x, segment.point._y]
-        })
-        let pointMean = mean(points, 0)
-        let pointDistances = points.map(e => distance(e, pointMean))
-
-        let distancesMean = mean(pointDistances);
-        let distancesStd = std(pointDistances);
-        if ((distancesMean / distancesStd) > 3) {
-            let numNodes = nodes?.length || 0
-            let color = numNodes <= context.colors.length ? context.colors[numNodes] : '#000000';
-            let circle = new paper.Path.Circle(pointMean, distancesMean)
-            circle.strokeColor = 'black';
-            circle.fillColor = color;
-            let textPoint = [pointMean[0], pointMean[1] - distancesMean - 3]
-            let label = new paper.PointText({
-                point: textPoint,
-                justification: 'center',
-                fontSize: 20
-            });
-
-            let labelLetter = String.fromCharCode(65 + (numNodes))
-
-            setNodes(nodes => [...nodes, circle]);
-            label.content = labelLetter;
-
-            let tmp_edges = [...edges];
-            tmp_edges.push([]);
-            setEdges(tmp_edges);
-
-            return true;
-        }
-
-    }
 
     // Checks to see if a path intersects exatly two nodes, and is thus an edge
     const isLine = (p) => {
@@ -122,7 +83,6 @@ function SketchPanel() {
                 drawEdge = tmp_edges
                 startNode = circleA;
                 endNode = circleB;
-
             }
 
 
@@ -159,32 +119,115 @@ function SketchPanel() {
 
     const bindPencilEvents = () => {
         let mouseCircle, currentPath;
+        let drawingCircle, drawingLine = false;
+
         console.log('rebinding', nodes);
         pencil.onMouseDown = function (event) {
             console.log('down', nodes);
-            let intersections = nodes.map(n=>{
+            let intersections = _.findLastIndex(nodes.map(n => {
                 return n.contains(event.point)
-            })
-            console.log('Intersections', intersections)
+            }), e => e === true);
+            console.log(intersections);
+            if (intersections !== -1) {
+                drawingLine = [nodes[intersections]];
+            }
             currentPath = new paper.Path();
-
             currentPath.strokeColor = '#A9A9A9';
-            currentPath.strokeWidth = 5
+            currentPath.strokeWidth = 3
             currentPath.add(event.point);
             mouseCircle = new paper.Path.Circle(event.point, 7);
             mouseCircle.strokeColor = '#f41f23';
         }
         pencil.onMouseDrag = function (event) {
+            let point = new paper.Point(event.point);
+            mouseCircle.position = point;
+            console.log('dragging', drawingCircle);
+            if (drawingLine) {
+                if (drawingLine.length === 2) return
+                if (currentPath.segments?.length === 1) {
+                    currentPath.add(point);
+                } else {
+                    currentPath.segments[1].point = point;
+                }
+                currentPath.segments[0].point = drawingLine[0].getNearestPoint(event.point);
+                let intersections = _.findLastIndex(nodes.map(n => {
+                    return n.contains(event.point)
+                }), e => e === true);
+                if (intersections !== -1 && nodes[intersections] !== drawingLine[0]) {
+                    drawingLine.push(nodes[intersections]);
+                    currentPath.segments[1].point = drawingLine[1].getNearestPoint(drawingLine[0].position);
+                }
+                return;
+            }
+            if (drawingCircle) return;
             currentPath.add(event.point);
+            if (currentPath.segments?.length > 15 && currentPath.segments[0].point.getDistance(event.point) < 10) {
+                drawingCircle = true;
+                mouseCircle.strokeColor = null;
+                currentPath.add(currentPath.segments[0].point);
+                let circle = drawCircle(currentPath);
+                currentPath?.remove();
+                currentPath = circle;
+            }
             currentPath.smooth({type: 'continuous'});
-            mouseCircle.position = new paper.Point(event.point);
         }
         pencil.onMouseUp = function (event) {
-            setPath(currentPath);
-            mouseCircle.remove()
+             if (drawingLine?.length === 2){
+
+             }
+             else if (drawingCircle) {
+                let circle = currentPath.clone();
+                circle.strokeColor = '#1C1C1CFF'
+                circle.strokeWidth = 1;
+                setNodes(nodes => [...nodes, circle]);
+                let tmp_edges = [...edges];
+                tmp_edges.push([]);
+                setEdges(tmp_edges);
+            }
+            drawingCircle = false;
+            currentPath?.removeSegments();
+            currentPath?.remove();
+            currentPath = null;
+            mouseCircle?.remove()
             mouseCircle = null;
         }
+    }
 
+    const drawCircle = (path) => {
+        let numNodes = nodes?.length || 0;
+        let color = numNodes <= context.colors.length ? context.colors[numNodes] : '#000000';
+        let points = path?.segments.map(segment => {
+            return [segment.point.x, segment.point.y];
+        })
+        let pointMean = mean(points, 0);
+        let distancesMean = mean(points.map(e => distance(e, pointMean)));
+        let destinationPoints = path?.segments.map(s => {
+            const dy = s.point.y - pointMean[1];
+            const dx = s.point.x - pointMean[0];
+            const theta = Math.atan2(dy, dx); // range (-PI, PI]
+            const newY = (distancesMean * Math.sin(theta)) + pointMean[1];
+            const newX = (distancesMean * Math.cos(theta)) + pointMean[0];
+            return [newX, newY]
+            // return theta;
+        });
+        path?.segments?.forEach((p, i, arr) => {
+            arr[i].point.x = destinationPoints[i][0]
+            arr[i].point.y = destinationPoints[i][1]
+            console.log(i, p);
+        })
+        let circle = new paper.Path.Circle(pointMean, distancesMean)
+        circle.strokeColor = '#A9A9A9';
+        circle.strokeWidth = 3;
+        circle.fillColor = color;
+        let textPoint = [pointMean[0], pointMean[1] - distancesMean - 3]
+        let label = new paper.PointText({
+            point: textPoint,
+            justification: 'center',
+            fontSize: 20
+        });
+        let labelLetter = String.fromCharCode(65 + numNodes);
+        label.content = labelLetter;
+        return circle;
     }
     useEffect(() => {
         if (pencil) {
@@ -196,19 +239,11 @@ function SketchPanel() {
 
     // On init set up our paperjs
     useEffect(() => {
-        let scope = paper.setup(sketchPanelId);
+        paper.setup(sketchPanelId);
         console.log('Setting up Pencil')
         setPencil(new paper.Tool());
     }, []);
 
-
-    // Check if our path is node or edge
-    useEffect(() => {
-        if (path) {
-            isLine(path) || isCircle(path);
-            path?.remove()
-        }
-    }, [path])
 
     // Update global motif tracker
     useEffect(() => {
