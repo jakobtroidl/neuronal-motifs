@@ -1,26 +1,37 @@
 import networkx as nx
 import pickle as pkl
-
+import pathlib
 from neuronal_motifs.server.models.motif import MyMotif
 from neuronal_motifs.server.utils.data_conversion import *
+
+
+def test_generator():
+    yield 's'
+    yield 'i'
+    yield 'm'
+    yield 'o'
+    yield 'n'
 
 
 def get_motif(ids, motif):
     # ids = [1001453586, 1003474104, 5813091420]
     # motif = [[1], [2], [0]]
     filename = get_cache_filename(ids)
-    filepath = "cache/data/" + filename + ".pkl"
-    try:  # try to load from cache
-        f = open(filepath)
-        f.close()
-    except FileNotFoundError:
-        compute_motif_data(ids, motif)  # download data if not available
-        f = open(filepath)
-    finally:
-        f = open(filepath, "rb")
-        motif = pkl.load(f)
-        f.close()
-        return motif.as_json()
+    filepath = Path("cache/data/" + filename + ".pkl")
+    # if filepath.is_file() is False:
+    if True:
+        yield {'status': 202, 'message': 'Downloading Motif'}
+        try:
+            motif_data_generator = compute_motif_data(ids, motif)
+            for val in motif_data_generator:
+                yield {'status': 202, 'message': val}
+        except StopIteration:
+            yield {'status': 202, 'message': 'Download Complete'}
+    yield {'status': 202, 'message': 'Motif Cached'}
+    f = open(filepath, "rb")
+    motif = pkl.load(f)
+    f.close()
+    yield {'status': 200, 'payload': motif.as_json()}
 
 
 def get_example_motif():
@@ -54,11 +65,16 @@ def get_example_motif():
 #         return motif.as_json()
 
 def compute_motif_data(body_ids, motif):
+    yield 'Beginning Computation'
     adjacency = apply_ids_to_motif_adjacency(body_ids, motif)
+    yield 'Creating Motif Graph'
     motif_graph = nx.DiGraph(adjacency)
-
+    yield 'Downloading Neurons and Synapses'
     motif = MyMotif(body_ids, motif_graph)
+    yield 'Computing Motif Path'
     motif.compute_motif_paths()
+    yield 'Computing Motif Abstraction'
+    motif.compute_motif_abstraction()
 
     filename = get_cache_filename(body_ids)
 
