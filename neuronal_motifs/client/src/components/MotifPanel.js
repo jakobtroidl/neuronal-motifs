@@ -49,9 +49,10 @@ function MotifPanel() {
         const encodedMotif = JSON.stringify(context.motifQuery);
 
         console.log(encodedMotif);
-
+        context.setLoadingMessage('Searching for Motifs')
         const res = await axios(`http://localhost:5050/search/motif=${encodedMotif}&lim=${number}`);
         const motifs = res.data;
+        context.setLoadingMessage(null)
         setSearchedMotifs(motifs)
     }
     useEffect(() => {
@@ -104,7 +105,7 @@ function MotifPanel() {
                 </div>
 
 
-            {resultRows?.length > 0 &&
+                {resultRows?.length > 0 &&
                 < div className='results'>
                     <TableContainer component={Paper} sx={{backgroundColor: 'rgba(255, 255, 255, 0.0)'}}>
                         <Table aria-label="collapsible table">
@@ -117,14 +118,15 @@ function MotifPanel() {
                             <TableBody>
                                 {
                                     resultRows.map((row) => (
-                                        <CollapsableTableRow key={row.name} row={row} handleClick={handleMotifSelection}/>
+                                        <CollapsableTableRow key={row.name} row={row}
+                                                             handleClick={handleMotifSelection}/>
                                     ))
                                 }
                             </TableBody>
                         </Table>
                     </TableContainer>
                 </div>
-            }
+                }
             </div>
         </div>
     )
