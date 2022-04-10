@@ -25,8 +25,7 @@ function SketchPanel() {
     let [pencil, setPencil] = useState();
     let [testCircle, setTestCircle] = useState();
     let [open, setOpen] = React.useState(true);
-    const [anchorEl, setAnchorEl] = React.useState(null);
-    let canvasNodeRef = React.useRef(null);
+    const [popperLocation, setPopperLocation] = React.useState({top: 0, left: 0})
     let circleRadius = 20;
     let currentPath;
     let currentNode;
@@ -154,7 +153,11 @@ function SketchPanel() {
                 currentNode = null;
                 currentPath = null;
             } else if (mouseState == 'edit') {
-                console.log('Selected', selected);
+                console.log('Selected', selected, event);
+                setPopperLocation({
+                    top: _.toNumber(event?.event?.clientY) + 20,
+                    left: _.toNumber(event?.event?.clientX)
+                })
             }
         }
         pencil.onMouseUp = function (event) {
@@ -249,24 +252,21 @@ function SketchPanel() {
 
     }, [edges])
 
-    useEffect(() => {
-        setAnchorEl(canvasNodeRef.current);
-    }, [canvasNodeRef]);
-
 
     return (
         <div className='sketch-panel-style'>
             <Grid container className="canvas-wrapper" spacing={0}>
-                <Grid item xs={11} ref={canvasNodeRef}>
+                <Grid item xs={11}>
                     <div className="sketch-canvas">
                         <canvas id={sketchPanelId}></canvas>
-                        <Popover
+                        {popperLocation &&
+                        < Popover
                             anchorReference="anchorPosition"
                             open={true}
                             hideBackdrop={true}
                             className={'sketch-popover'}
                             disableEnforceFocus={true}
-                            anchorPosition={{top: 200, left: 400}}
+                            anchorPosition={popperLocation}
                             anchorOrigin={{
                                 vertical: 'top',
                                 horizontal: 'left',
@@ -278,6 +278,7 @@ function SketchPanel() {
                         >
                             <Typography sx={{p: 2}}>The content of the Popover.</Typography>
                         </Popover>
+                        }
                     </div>
                 </Grid>
                 <Grid item xs={1}>
