@@ -7,7 +7,7 @@ import {AppContext} from "../contexts/GlobalContext";
 import SketchPanel from "./SketchPanel";
 import SearchIcon from "@mui/icons-material/Search";
 import Button from "@mui/material/Button";
-import {TextField, FormHelperText, InputLabel, Select, MenuItem, FormControl} from '@mui/material';
+import {TextField, FormHelperText, InputLabel, Select, MenuItem, FormControl, Grid} from '@mui/material';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -88,63 +88,69 @@ function MotifPanel() {
                         <SketchPanel/>
                     </div>
                     <div className="formRow" style={{marginTop: "10px"}}>
-                        <div className="formColumn">
-                            <FormControl sx={{m: 1, minWidth: 120}}>
-                                <InputLabel id="node-attr-label">Node Attribute</InputLabel>
-                                <Select
-                                    value={{nodeAttribute}}
-                                    id="node-attr-select"
-                                    label="Node Attribute"
-                                    onChange={event => setNodeAttribute(event.target.value)}
-                                >
-                                    <MenuItem value="">
-                                        <em>None</em>
-                                    </MenuItem>
-                                    {nodeAttributeProperties.map(attr => {
-                                        return <MenuItem value={attr}>{attr}</MenuItem>
-                                    })}
-                                </Select>
-                            </FormControl>
-                        </div>
-                        <div className="formColumn">
-                            <FormControl sx={{m: 1, minWidth: 120}}>
-                                <InputLabel id="edge-attr-label">Edge Attribute</InputLabel>
-                                <Select
-                                    value={{edgeAttribute}}
-                                    id="edge-attr-select"
-                                    label="Edge Attribute"
-                                    onChange={event => setEdgeAttribute(event.target.value)}
-                                >
-                                    <MenuItem value="">
-                                        <em>None</em>
-                                    </MenuItem>
-                                    {edgeAttributeProperties.map(attr => {
-                                        return <MenuItem value={attr}>{attr}</MenuItem>
-                                    })}
-                                </Select>
-                            </FormControl>
-                        </div>
+                        <Grid
+                            container
+                            direction="row"
+                            justifyContent="space-between"
+                            alignItems="flex-start"
+                        >
+                            <Grid item>
+                                <FormControl sx={{m: 1, minWidth: 100}}>
+                                    <InputLabel id="node-attr-label">Node Attribute</InputLabel>
+                                    <Select
+                                        value={{nodeAttribute}}
+                                        id="node-attr-select"
+                                        label="Node Attribute"
+                                        onChange={event => setNodeAttribute(event.target.value)}
+                                    >
+                                        <MenuItem value="">
+                                            <em>None</em>
+                                        </MenuItem>
+                                        {nodeAttributeProperties.map(attr => {
+                                            return <MenuItem value={attr}>{attr}</MenuItem>
+                                        })}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl sx={{m: 1, minWidth: 100}}>
+                                    <InputLabel id="edge-attr-label">Edge Attribute</InputLabel>
+                                    <Select
+                                        value={{edgeAttribute}}
+                                        id="edge-attr-select"
+                                        label="Edge Attribute"
+                                        onChange={event => setEdgeAttribute(event.target.value)}
+                                    >
+                                        <MenuItem value="">
+                                            <em>None</em>
+                                        </MenuItem>
+                                        {edgeAttributeProperties.map(attr => {
+                                            return <MenuItem value={attr}>{attr}</MenuItem>
+                                        })}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl sx={{m: 1, maxWidth: 80}}>
+                                    <TextField
+                                        id="outlined-number"
+                                        label="Number"
+                                        type="number"
+                                        InputLabelProps={{
+                                            shrink: true,
+                                        }}
+                                        margin="normal"
+                                        style={{marginTop: 0}}
+                                        defaultValue={1}
+                                        onChange={event => setNumber(_.toNumber(event.target.value))}
+                                    />
+                                </FormControl>
+                            </Grid>
+                        </Grid>
                     </div>
-                    <div className="formRow">
-                        <div className="formColumn">
-                            <TextField
-                                id="outlined-number"
-                                label="Number"
-                                type="number"
-                                InputLabelProps={{
-                                    shrink: true,
-                                }}
-                                margin="normal"
-                                defaultValue={1}
-                                onChange={event => setNumber(_.toNumber(event.target.value))}
-                            />
-                        </div>
-                        <div className="formColumn">
-                            <Button variant="contained" startIcon={<SearchIcon/>} onClick={handleSubmit}>
-                                Search
-                            </Button>
-                        </div>
-                    </div>
+                    <Button variant="contained" startIcon={<SearchIcon/>} onClick={handleSubmit}>
+                        Search
+                    </Button>
                 </div>
 
 

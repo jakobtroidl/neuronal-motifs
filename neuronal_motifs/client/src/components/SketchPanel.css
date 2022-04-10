@@ -24,3 +24,11 @@ canvas, .canvas-wrapper {
     top: 5px;
     right: 5px;
 }
+
+.MuiPopover-root {
+    pointer-events: none
+}
+
+.MuiPopover-paper {
+    pointer-events: auto !important;
+}
