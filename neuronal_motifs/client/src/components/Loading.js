@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useContext} from 'react';
 import './Loading.css'
 import {AppContext} from "../contexts/GlobalContext";
-import {Card, CircularProgress, Grid} from "@mui/material";
+import {Card, LinearProgress, Grid} from "@mui/material";
 import * as PropTypes from "prop-types";
 
 function Item(props) {
@@ -17,17 +17,17 @@ function Loading() {
         <div id={loadingId}>
             {context.loadingMessage &&
             <Card variant="outlined">
-                <Grid container
-                      align="left"
-                      justify="left"
+                <Grid
+                    container
+                    direction="column"
+                    justifyContent="flex-start"
+                    alignItems="stretch"
                 >
-                    <Grid item xs={11}>
-                        <span style={{
-                            marginRight: 0, marginTop: 0, marginBottom: 0, marginLeft: '10px'
-                        }}>{context.loadingMessage}</span>
+                    <Grid item>
+                        <LinearProgress/>
                     </Grid>
-                    <Grid item xs={1}>
-                        <CircularProgress size={20}/>
+                    <Grid item>
+                        <span>{context.loadingMessage}</span>
                     </Grid>
                 </Grid>
             </Card>
