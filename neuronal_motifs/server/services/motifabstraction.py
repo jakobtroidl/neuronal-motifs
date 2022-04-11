@@ -16,6 +16,7 @@ def get_motif(ids, motif):
     except FileNotFoundError:
         compute_motif_data(ids, motif)  # download data if not available
         f = open(filepath)
+        f.close()
     finally:
         f = open(filepath, "rb")
         motif = pkl.load(f)
@@ -59,6 +60,7 @@ def compute_motif_data(body_ids, motif):
 
     motif = MyMotif(body_ids, motif_graph)
     motif.compute_motif_paths()
+    motif.get_distances()
 
     filename = get_cache_filename(body_ids)
 
