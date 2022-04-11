@@ -1,5 +1,6 @@
 import json
 import time
+import navis
 
 import pandas as pd
 from networkx.readwrite import json_graph
@@ -9,10 +10,11 @@ from neuronal_motifs.server.services.data_access import DataAccess
 
 
 class MyMotif:
-    def __init__(self, neuron_ids=None, graph=None):
+    def __init__(self, neuron_ids=None, graph=None, distances=None):
         self.data_access = DataAccess()
         self.graph = graph  # networkx graph of the motif
         self.neurons = self.data_access.get_neurons(neuron_ids)
+        self.distances = distances
         self.download_synapses()
 
     def as_json(self):
@@ -89,3 +91,17 @@ class MyMotif:
             neighbors = [n for n in graph.neighbors(neuron.id)]
             adjacency[neuron.id] = neighbors
         return adjacency
+
+    def get_distances(self): 
+        """
+        Generates geodesic distance matrix across all nodes in motif
+        The graph is directed to preserve presynaptic/postsynaptic distances
+        """
+        distances = {}
+        for neuron in self.neurons: # can be optimized
+            neighbors = [n.id for n in self.graph.neighbors(neuron.id)]
+            distances[neuron.id] = navis.geodesic_matrix(neuron, from_=neighbors)
+            print(distances[neuron.id])
+        
+        self.distances = distances
+
