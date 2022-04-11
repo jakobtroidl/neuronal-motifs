@@ -23,7 +23,11 @@ import Paper from '@mui/material/Paper';
 import _ from 'lodash';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import {CollapsableTableRow} from './CollapsableTableRow'
+<<<<<<< HEAD
 import {NodeFields} from "../config/NodeFields";
+=======
+
+>>>>>>> 008c71b... i think i got the geodesic distances?
 
 function MotifPanel() {
     const [number, setNumber] = useState(1);
