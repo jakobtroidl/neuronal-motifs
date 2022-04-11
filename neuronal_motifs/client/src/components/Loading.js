@@ -16,21 +16,21 @@ function Loading() {
     return (
         <div id={loadingId}>
             {context.loadingMessage &&
-            <Card variant="outlined">
-                <Grid
-                    container
-                    direction="column"
-                    justifyContent="flex-start"
-                    alignItems="stretch"
-                >
-                    <Grid item>
-                        <LinearProgress/>
-                    </Grid>
-                    <Grid item>
-                        <span>{context.loadingMessage}</span>
-                    </Grid>
+            // <Card variant="outlined">
+            <Grid
+                container
+                direction="column"
+                justifyContent="flex-start"
+                alignItems="stretch"
+            >
+                <Grid item>
+                    <LinearProgress/>
                 </Grid>
-            </Card>
+                <Grid item style={{alignContent: 'flex-end', textAlign: 'right', paddingRight: '5px'}}>
+                    <span>{context.loadingMessage}</span>
+                </Grid>
+            </Grid>
+                // </Card>
             }
         </div>
 
