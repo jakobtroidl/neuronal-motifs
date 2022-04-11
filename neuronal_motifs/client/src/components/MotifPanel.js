@@ -55,9 +55,10 @@ function MotifPanel() {
         const encodedMotif = JSON.stringify(context.motifQuery);
 
         console.log(encodedMotif);
-
+        context.setLoadingMessage('Searching for Motifs')
         const res = await axios(`http://localhost:5050/search/motif=${encodedMotif}&lim=${number}`);
         const motifs = res.data;
+        context.setLoadingMessage(null)
         setSearchedMotifs(motifs)
     }
     useEffect(() => {

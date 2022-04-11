@@ -1,5 +1,6 @@
 import logo from './logo.svg';
 import Viewer from './components/Viewer'
+import Loading from './components/Loading'
 import MotifPanel from './components/MotifPanel'
 import DraggableView from "./views/DraggableView";
 import {ContextWrapper} from "./contexts/GlobalContext";
@@ -11,6 +12,7 @@ function App() {
     return (
         <ContextWrapper>
             <div>
+                <Loading></Loading>
                 <Viewer/>
                 <DraggableView/>
             </div>

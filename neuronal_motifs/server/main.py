@@ -1,6 +1,10 @@
 import json
+import asyncio
+import time
 from typing import Optional, List
 from fastapi import FastAPI
+from fastapi import Request
+from fastapi import WebSocket
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
@@ -52,6 +56,56 @@ def get_motif_data(ids, motif):
     ids = json.loads(ids)
     motif = json.loads(motif)
     return motifabstraction.get_motif(ids, motif)
+
+
+# http://localhost:5050/display_motif/bodyIDs=[1001453586,5813032887,5813091420]&motif=[[2],[0],[1,0]]
+@app.websocket("/ws_display_motif/bodyIDs={ids}&motif={motif}")
+async def ws_get_motif_data(websocket: WebSocket, ids: str, motif: str):
+    await websocket.accept()
+    timer = time.time()
+    ids = json.loads(ids)
+    motif = json.loads(motif)
+    get_motif_generator = motifabstraction.get_motif(ids, motif)
+    try:
+        for val in get_motif_generator:
+            payload = val
+            await websocket.send_json(payload)
+    except StopIteration:
+        print('Done Fetching Motif')
+
+
+# http://localhost:5050/display_motif/bodyIDs=[1001453586,5813032887,5813091420]&motif=[[2],[0],[1,0]]
+# /bodyIDs={ids}&motif={motif}
+@app.websocket_route("/display_motif_ws/")
+async def ws_get_motif_data(websocket: WebSocket):
+    await websocket.accept()
+    data = await websocket.receive_json()
+    timer = time.time()
+    ids = json.loads(data['bodyIDs'])
+    motif = json.loads(data['motif'])
+    get_motif_generator = motifabstraction.get_motif(ids, motif)
+    try:
+        for val in get_motif_generator:
+            payload = val
+            print('a', time.time() - timer)
+            await websocket.send_json(payload)
+            await websocket.receive_text()
+            print('b', time.time() - timer)
+    except StopIteration:
+        print('Done Fetching Motif')
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    timer = time.time()
+    generator = motifabstraction.test_generator()
+    while val := next(generator):
+        await asyncio.sleep(2)
+        payload = val
+        print('a', time.time() - timer)
+        await websocket.send_json(payload)
+        print('b', time.time() - timer)
 
 
 @app.get("/get_swc")
