@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import axios from "axios";
 import { InteractionManager } from "three.interactive";
 
+import Draggable from 'react-draggable';
 
 function Viewer() {
     const [motif, setMotif] = React.useState()
@@ -22,14 +23,12 @@ function Viewer() {
     // for synapse selecting & highlighting
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
-
     let intersected = null;
     const [currColor, setCurrColor] = useState(0xffffff);
 
     // calculate pointer position in normalized device coordinates
     // (-1 to +1) for both components
     function onPointerMove(e) {
-        return;
         pointer.x = ( e.clientX / window.innerWidth ) * 2 - 1;
         pointer.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
     }
@@ -182,6 +181,9 @@ function Viewer() {
 
             let neurons = motif.neurons;
             const orange = new THREE.Color("rgb(255,154,0)");
+
+            // update the synapse picking ray with the camera and pointer position
+            raycaster.setFromCamera(pointer, sharkViewerInstance.camera);
 
             neurons.forEach(neuron => {
                 let synapses = neuron.synapses;
@@ -350,7 +352,7 @@ function Viewer() {
     }
 
     return (
-        <div id={id} className={className}></div>
+        <div id={id} className={className} onMouseMove={onPointerMove}></div>
     );
 
 }
