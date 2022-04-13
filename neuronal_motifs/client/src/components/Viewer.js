@@ -180,6 +180,7 @@ function Viewer() {
             let interactionManager = sharkViewerInstance.scene.interactionManager;
 
             let neurons = motif.neurons;
+            console.log(motif.neurons)
             const orange = new THREE.Color("rgb(255,154,0)");
 
             // update the synapse picking ray with the camera and pointer position
