@@ -37,3 +37,12 @@ def search_hemibrain_motif(motif_specs, lim):
     motif = Motif(motif_source)
     results = E.find(motif, limit=lim)
     return results.to_dict('records')
+
+
+def get_sample_node():
+    E = NeuPrintExecutor(host='https://neuprint.janelia.org/', dataset='hemibrain:v1.2.1',
+                         token=get_access_token('neuprint'))
+    motif_source = adjacency_list_to_motif_string([[], [0]])
+    motif = Motif(motif_source)
+    results = E.find(motif, limit=1)
+    return results.to_dict('records')

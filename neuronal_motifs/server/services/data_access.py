@@ -1,4 +1,5 @@
 import navis.interfaces.neuprint as neu
+import navis
 
 from neuronal_motifs.server.models.neuron import Neuron
 from neuronal_motifs.server.utils.authentication import *
@@ -7,6 +8,12 @@ from neuronal_motifs.server.utils.authentication import *
 class DataAccess:
     def __init__(self):
         neu.Client(get_data_server(), dataset=get_data_version(), token=get_access_token('neuprint'))
+
+    def get_neuron_metadata(self):
+        n = navis.example_neurons(n=1, kind='skeleton')
+        test = ''
+
+
 
     def get_neurons(self, body_ids):
         """

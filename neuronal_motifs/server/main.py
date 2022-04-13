@@ -51,6 +51,12 @@ def search_motif(q: str, n: int):  # search one motif at a time
     return motif_search.search_hemibrain_motif(q, n)
 
 
+@app.get("/get_sample_node")
+def get_sample_node():  # search one motif at a time
+    return motif_search.get_sample_node()
+
+
+
 @app.get("/display_motif/bodyIDs={ids}&motif={motif}")
 def get_motif_data(ids, motif):
     ids = json.loads(ids)
