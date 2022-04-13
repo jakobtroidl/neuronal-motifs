@@ -250,7 +250,11 @@ function SketchPanel() {
     useEffect(() => {
         if (edges) {
             console.log('Edges', edges);
-            //     context.setMotifQuery(edges);
+            let edgeList = nodes.map(() => []);
+            edges.forEach(e=>{
+                edgeList[e.indices[0]].push(e.indices[1])
+            })
+            context.setMotifQuery(edgeList);
         }
 
     }, [edges])
