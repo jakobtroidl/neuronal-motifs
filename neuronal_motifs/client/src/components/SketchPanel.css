@@ -1,19 +1,34 @@
 /* Scale canvas with resize attribute to full size */
-canvas {
-    height: 30vh;
-    width: 25vw;
-
+canvas, .canvas-wrapper {
+    height: 100%;
+    width: 100%;
 }
 
-.sketch-panel-style{
+
+.sketch-panel-style {
+    height: 30vh;
+    width: 25vw;
+    margin: 0 0 0 20px;
+}
+
+.sketch-canvas {
+    width: 100%;
+    height: 100%;
     border-radius: 6px;
     border: thin solid #b9b7b7;
     cursor: crosshair;
-    margin-left: 23px;
-    margin-right: 20px;
 }
+
 .eraser {
     position: absolute;
     top: 5px;
     right: 5px;
 }
+/*TODO*/
+/*.MuiPopover-root {*/
+/*    pointer-events: none*/
+/*}*/
+
+/*.MuiPopover-paper {*/
+/*    pointer-events: auto !important;*/
+/*}*/

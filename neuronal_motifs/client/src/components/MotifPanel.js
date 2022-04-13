@@ -7,7 +7,7 @@ import {AppContext} from "../contexts/GlobalContext";
 import SketchPanel from "./SketchPanel";
 import SearchIcon from "@mui/icons-material/Search";
 import Button from "@mui/material/Button";
-import TextField from '@mui/material/TextField';
+import {TextField, FormHelperText, InputLabel, Select, MenuItem, FormControl, Grid} from '@mui/material';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -15,6 +15,8 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import _ from 'lodash';
+
 import {CollapsableTableRow} from './CollapsableTableRow'
 
 
@@ -28,6 +30,10 @@ import {CollapsableTableRow} from './CollapsableTableRow'
 
 function MotifPanel() {
     const [number, setNumber] = useState(1);
+    const [nodeAttribute, setNodeAttribute] = useState("");
+    const [nodeAttributeProperties, setNodeAttributeProperties] = useState([]);
+    const [edgeAttribute, setEdgeAttribute] = useState("");
+    const [edgeAttributeProperties, edgeNodeAttributeProperties] = useState([]);
     const [searchedMotifs, setSearchedMotifs] = useState({});
     const [resultRows, setResultRows] = useState([]);
     const motifPanelId = 'motif-panel-div'
@@ -36,7 +42,7 @@ function MotifPanel() {
 
     const handleSubmit = () => {
         console.log('handle submit clicked')
-        fetchMotifs()
+        return fetchMotifs()
     }
 
     const handleMotifSelection = (motif) => {
@@ -82,26 +88,41 @@ function MotifPanel() {
                     <div className="formRow">
                         <SketchPanel/>
                     </div>
-                    <div className="formRow">
-                        <div className="formColumn">
-                            <TextField
-                                id="outlined-number"
-                                label="Number"
-                                type="number"
-                                InputLabelProps={{
-                                    shrink: true,
-                                }}
-                                margin="normal"
-                                defaultValue={1}
-                                onChange={event => setNumber(event.target.value)}
-                            />
-                        </div>
-                        <div className="formColumn">
-                            <Button variant="contained" startIcon={<SearchIcon/>} onClick={handleSubmit}>
-                                Search
-                            </Button>
-                        </div>
+                    <div className="formRow" style={{marginTop: "10px"}}>
+                        <Grid
+                            container
+                            direction="row"
+                            justifyContent="space-between"
+                            alignItems="flex-start"
+                        >
+                            <Grid item>
+                                <FormControl sx={{m: 1, maxWidth: 80}}>
+                                    <TextField
+                                        id="outlined-number"
+                                        label="Number"
+                                        type="number"
+                                        InputLabelProps={{
+                                            shrink: true,
+                                        }}
+                                        margin="normal"
+                                        style={{marginTop: 0}}
+                                        defaultValue={1}
+                                        onChange={event => setNumber(_.toNumber(event.target.value))}
+                                    />
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl sx={{m: 1, minWidth: 100}}>
+                                    <Button style={{height:52}}variant="contained" startIcon={<SearchIcon/>}
+                                            onClick={handleSubmit}>
+                                        Search
+                                    </Button>
+                                </FormControl>
+                            </Grid>
+
+                        </Grid>
                     </div>
+
                 </div>
 
 
