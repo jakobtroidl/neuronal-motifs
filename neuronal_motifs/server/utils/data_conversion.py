@@ -11,6 +11,7 @@ def get_cache_filename(ids):
     """
     return "_".join(map(str, ids))
 
+
 def apply_ids_to_motif_adjacency(body_ids, motif):
     """
     TODO
@@ -26,6 +27,7 @@ def apply_ids_to_motif_adjacency(body_ids, motif):
             adj[i].append(mapped)
 
     return dict(zip(body_ids, adj))
+
 
 def treeneurons_list_to_swc_string_list(skeletons):
     """
@@ -58,7 +60,7 @@ def treeneuron_to_swc_string(neuron_skeleton):
     return {'swc': out, 'map': map_new_to_old}
 
 
-def adjacency_list_to_motif_string(adjacency_list):
+def adjacency_list_to_motif_string(adjacency_list, ignore_orphans=True):
     print(adjacency_list)
     output = "\n "
     for i in range(0, len(adjacency_list)):
@@ -67,6 +69,11 @@ def adjacency_list_to_motif_string(adjacency_list):
             for neighbor in adjacency_list[i]:
                 second = chr(65 + int(neighbor))
                 output += first + " -> " + second + " \n"
+
+        if ignore_orphans:
+            output += first + '.status = "Traced" \n'
+
+    #              A.status = "Traced"
     return output
 
 
