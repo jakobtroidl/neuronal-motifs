@@ -46,6 +46,7 @@ function MotifPanel() {
         const motifs = res.data;
         setSearchedMotifs(motifs)
     }
+    
     useEffect(() => {
         if (searchedMotifs && searchedMotifs?.length > 0) {
             let rows = searchedMotifs.map((motif, j) => {

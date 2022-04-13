@@ -1,4 +1,5 @@
 import React, {useState, useEffect, useContext, useRef} from 'react';
+import ReactTooltip from 'react-tooltip';
 import SharkViewer, {swcParser} from '@janelia/sharkviewer';
 import {AppContext} from "../contexts/GlobalContext";
 import './Viewer.css'
@@ -134,6 +135,7 @@ function Viewer() {
     useEffect(() => {
         if (motif && sharkViewerInstance) {
             let neurons = motif.neurons;
+            console.log(motif.neurons)
             const orange = new THREE.Color("rgb(255,154,0)");
 
             // update the synapse picking ray with the camera and pointer position
@@ -149,6 +151,13 @@ function Viewer() {
                     let mesh = new THREE.Mesh(geometry, material);
 
                     mesh.geometry.name = "synapse";
+                    if (mesh.geometry.userData.length == 0) {
+                        mesh.geometry.userData = { neurons: [neuron.id] }
+                        console.log("made a new thing")
+                    } else {
+                        mesh.geometry.userData.neurons.push(neuron.id)
+                        console.log("tried to push")
+                    }
 
                     mesh.position.x = syn.x;
                     mesh.position.y = syn.y;
@@ -166,7 +175,6 @@ function Viewer() {
     //     if (motif && sharkViewerInstance) {
     //         let neurons = motif.neurons;
     //         let scene = sharkViewerInstance.scene;
-    //         // let synapses = neuron.synapses; 
 
     //         // update the synapse picking ray with the camera and pointer position
     //         raycaster.setFromCamera(pointer, sharkViewerInstance.camera);
@@ -175,33 +183,41 @@ function Viewer() {
 	//         const intersects = raycaster.intersectObjects(scene.children);
 
     //         if (intersects.length > 0) {
-    //             // color handling
-    //             if (intersected != intersects[0].object) { // highlight only the first thing your ray intersects
-    //                 if (intersected) {
-    //                     // return the color of the object in old intersected back to original
-    //                     // need to do something more complicated with state stuff
-    //                     intersected.material.color.setHex(currColor);
-    //                 }
-
-    //                 setIntersected(intersects[0].object);
-
-    //                 // set color to the current color of the intersected object
-    //                 setCurrColor(intersected.material.color.getHex());
-
-    //                 // need to do something more complicated with state stuff
-    //                 intersects[0].object.material.color.setHex(0xff0000);
-    //             }
-
-    //             // display logic handling
+    //             // go through logic only if synapse 
     //             if (intersects[0].object.geometry.name == "synapse") {
-    //                 synapseView();
-    //             } else {
-    //                 neuronView();
+    //                 if (intersected != intersects[0].object) {
+    //                     // load in geodesic distances
+    //                     synapseView();
+
+    //                     // return the color of the object in old intersected back to original
+    //                     if (intersected) {
+    //                         let prevNeurons = intersected.geometry.userData.neurons;
+    //                         for (let i = 0; i < prevNeurons.length; i++) {
+    //                             // this is an opacity change
+    //                             sharkViewerInstance.setNeuronDisplayLevel(prevNeurons[i], 1);
+    //                         }
+    //                     }
+
+    //                     setIntersected(intersects[0].object);
+
+    //                     // // set color to the current color of the intersected object
+    //                     // setCurrColor(intersected.material.color.getHex());
+
+    //                     // change neuron color
+    //                     let connectedNeurons = intersects[0].object.geometry.userData.neurons;
+    //                     for (let i = 0; i < connectedNeurons.length; i++) {
+    //                         // make the neuron less opacity -- can change to set color or whatever
+    //                         sharkViewerInstance.setNeuronDisplayLevel(connectedNeurons[i], 0.5);
+    //                     }
+    //                 }
     //             }
     //         } else {
     //             if (intersected) {
-    //                 // need to do something more complicated with state stuff
-    //                 intersected.material.color.setHex(currColor);
+    //                 let prevNeurons = intersected.geometry.userData.neurons;
+    //                 for (let i = 0; i < prevNeurons.length; i++) {
+    //                     // this is an opacity change
+    //                     sharkViewerInstance.setNeuronDisplayLevel(prevNeurons[i], 1);
+    //                 }
     //             }
                 
     //             setIntersected(null);
@@ -209,22 +225,10 @@ function Viewer() {
     //     }
     // }, [motif, sharkViewerInstance])
 
+    // // displays data about presynaptic and postsynaptic distance
     // function synapseView() {
-    //     // load in data about the presynaptic and postsynaptic distance
-    //     // need neurons that synapse connects
-    //         // possibly need to give each synapse a field as well
-    //     // some styling to make it show up right next to pointer
     //     return (
-    //         <Draggable></Draggable>
-    //     )
-    // }
-
-    // function neuronView() {
-    //     // blah blah blah
-    //     // info about the neurons
-    //     // some styling to make it show up right next to pointer
-    //     return (
-    //         <Draggable></Draggable>
+    //         <ReactTooltip place="top"></ReactTooltip>
     //     )
     // }
 
