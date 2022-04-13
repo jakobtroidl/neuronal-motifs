@@ -24,8 +24,8 @@ function SketchPanel() {
     let [mouseState, setMouseState] = useState('node');
     let [pencil, setPencil] = useState();
     let [testCircle, setTestCircle] = useState();
-    let [open, setOpen] = React.useState(true);
-    const [popperLocation, setPopperLocation] = React.useState({top: 0, left: 0})
+    // let [open, setOpen] = React.useState(true);
+    // const [popperLocation, setPopperLocation] = React.useState({top: 0, left: 0})
     let circleRadius = 20;
     let currentPath;
     let currentNode;
@@ -154,10 +154,11 @@ function SketchPanel() {
                 currentPath = null;
             } else if (mouseState == 'edit') {
                 console.log('Selected', selected, event);
-                setPopperLocation({
-                    top: _.toNumber(event?.event?.clientY) + 20,
-                    left: _.toNumber(event?.event?.clientX)
-                })
+                // TODO
+                // setPopperLocation({
+                //     top: _.toNumber(event?.event?.clientY) + 20,
+                //     left: _.toNumber(event?.event?.clientX)
+                // })
             }
         }
         pencil.onMouseUp = function (event) {
@@ -181,32 +182,21 @@ function SketchPanel() {
         let oppositeEdge = _.findIndex(edges, (e) => {
             return _.isEqual(e.indices, [indices[1], indices[0]]);
         })
-        let toPoint = _.cloneDeep(edgeLine.segments[0].point);
-        let fromPoint = _.cloneDeep(edgeLine.segments[1].point);
-        let oppositeEdgeMidpoints = null;
-        if (oppositeEdge !== -1) {
-            let midpoint = new paper.Point([(toPoint.x + fromPoint.x) / 2, (toPoint.y + fromPoint.y) / 2])
-            let circle1 = new paper.Path.Circle(midpoint, 4);
-            let circle2 = new paper.Path.Circle(circle1.getIntersections(edges[oppositeEdge].edgeLine)[0].point,
-                Math.sqrt(4 ** 2 + 4 ** 2));
-            oppositeEdgeMidpoints = circle2.getIntersections(circle1).map(e => e.point);
-            circle2.remove()
-            circle1.remove();
-            circle2 = null;
-            circle1 = null;
-            edges[oppositeEdge].edgeLine.add(edges[oppositeEdge].edgeLine.segments[1].point);
-            edges[oppositeEdge].edgeLine.segments[1].point = oppositeEdgeMidpoints[0];
-            edgeObj.edgeLine.add(edgeObj.edgeLine.segments[1].point);
-            edgeObj.edgeLine.segments[1].point = oppositeEdgeMidpoints[1];
-        }
+        let origToPoint = _.cloneDeep(edgeLine.segments[0].point);
+        let testCircle = new paper.Path.Circle(origToPoint, 8);
+        testCircle.remove()
+        let toPoint = edgeLine.segments[0].point = testCircle.getIntersections(edgeLine)[0].point;
+        let origFromPoint = _.cloneDeep(edgeLine.segments[1].point);
+        testCircle = new paper.Path.Circle(origFromPoint, 8);
+        testCircle.remove()
+        let fromPoint = edgeLine.segments[1].point = testCircle.getIntersections(edgeLine)[0].point;
         const dy = toPoint.y - fromPoint.y;
         const dx = toPoint.x - fromPoint.x;
-        const slope = (dy / dx);
         const theta = Math.atan2(dy, dx); // range (-PI, PI]
-        const newY = (10 * Math.sin(theta)) + fromPoint.y;
-        const newX = (10 * Math.cos(theta)) + fromPoint.x;
-        let circle = new paper.Path.Circle([newX, newY], 10)
-        let secondCircle = new paper.Path.Circle(circle.getNearestPoint(toPoint), 10)
+        const newY = (7 * Math.sin(theta)) + fromPoint.y;
+        const newX = (7 * Math.cos(theta)) + fromPoint.x;
+        let circle = new paper.Path.Circle([newX, newY], 7)
+        let secondCircle = new paper.Path.Circle(circle.getNearestPoint(toPoint), 7)
         let intersections = secondCircle.getIntersections(circle).map(intersection => intersection.point);
         intersections.splice(1, 0, fromPoint)
         let trianglePath = new paper.Path(intersections);
@@ -216,6 +206,19 @@ function SketchPanel() {
         edgeObj['lineGroup'] = new paper.Group([trianglePath, edgeObj.edgeLine]);
         secondCircle?.remove();
         circle?.remove();
+        // If edges go in opposite directions, shift them to be parallel and distinguishable
+        if (oppositeEdge !== -1) {
+            let midpoint = new paper.Point([(toPoint.x + fromPoint.x) / 2, (toPoint.y + fromPoint.y) / 2])
+            let circle1 = new paper.Path.Circle(midpoint, 5);
+            let circle2 = new paper.Path.Circle(circle1.getIntersections(edges[oppositeEdge].edgeLine)[0].point,
+                Math.sqrt(5 ** 2 + 5 ** 2));
+            let pointDelta = circle2.getIntersections(circle1).map(e => e.point).sort((a, b) => {
+                return a.y - b.y;
+            }).map(pt => new paper.Point([midpoint.x - pt.x, midpoint.y - pt.y]))
+            edgeObj['lineGroup'].translate(pointDelta[0]);
+            edges[oppositeEdge]['lineGroup'].translate(pointDelta[1]);
+        }
+
         setEdges([...edges, edgeObj])
 
 
@@ -259,26 +262,27 @@ function SketchPanel() {
                 <Grid item xs={11}>
                     <div className="sketch-canvas">
                         <canvas id={sketchPanelId}></canvas>
-                        {popperLocation &&
-                        < Popover
-                            anchorReference="anchorPosition"
-                            open={true}
-                            hideBackdrop={true}
-                            className={'sketch-popover'}
-                            disableEnforceFocus={true}
-                            anchorPosition={popperLocation}
-                            anchorOrigin={{
-                                vertical: 'top',
-                                horizontal: 'left',
-                            }}
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'left',
-                            }}
-                        >
-                            <Typography sx={{p: 2}}>The content of the Popover.</Typography>
-                        </Popover>
-                        }
+                        {/*TODO*/}
+                        {/*{popperLocation &&*/}
+                        {/*< Popover*/}
+                        {/*    anchorReference="anchorPosition"*/}
+                        {/*    open={true}*/}
+                        {/*    hideBackdrop={true}*/}
+                        {/*    className={'sketch-popover'}*/}
+                        {/*    disableEnforceFocus={true}*/}
+                        {/*    anchorPosition={popperLocation}*/}
+                        {/*    anchorOrigin={{*/}
+                        {/*        vertical: 'top',*/}
+                        {/*        horizontal: 'left',*/}
+                        {/*    }}*/}
+                        {/*    transformOrigin={{*/}
+                        {/*        vertical: 'top',*/}
+                        {/*        horizontal: 'left',*/}
+                        {/*    }}*/}
+                        {/*>*/}
+                        {/*    <Typography sx={{p: 2}}>The content of the Popover.</Typography>*/}
+                        {/*</Popover>*/}
+                        {/*}*/}
                     </div>
                 </Grid>
                 <Grid item xs={1}>
@@ -320,7 +324,7 @@ function SketchPanel() {
                             </IconButton>
                         </Tooltip>
 
-                        <Tooltip title="Edit Properties" placement="right">
+                        <Tooltip title="Select" placement="right">
                             <IconButton value='edit' color={mouseState === 'edit' ? "primary" : "default"}
                                         onClick={() => {
                                             currentPath?.remove();

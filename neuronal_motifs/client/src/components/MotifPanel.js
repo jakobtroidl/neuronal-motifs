@@ -96,42 +96,6 @@ function MotifPanel() {
                             alignItems="flex-start"
                         >
                             <Grid item>
-                                <FormControl sx={{m: 1, minWidth: 100}}>
-                                    <InputLabel id="node-attr-label">Node Attribute</InputLabel>
-                                    <Select
-                                        value={{nodeAttribute}}
-                                        id="node-attr-select"
-                                        label="Node Attribute"
-                                        onChange={event => setNodeAttribute(event.target.value)}
-                                    >
-                                        <MenuItem value="">
-                                            <em>None</em>
-                                        </MenuItem>
-                                        {nodeAttributeProperties.map(attr => {
-                                            return <MenuItem value={attr}>{attr}</MenuItem>
-                                        })}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                            <Grid item>
-                                <FormControl sx={{m: 1, minWidth: 100}}>
-                                    <InputLabel id="edge-attr-label">Edge Attribute</InputLabel>
-                                    <Select
-                                        value={{edgeAttribute}}
-                                        id="edge-attr-select"
-                                        label="Edge Attribute"
-                                        onChange={event => setEdgeAttribute(event.target.value)}
-                                    >
-                                        <MenuItem value="">
-                                            <em>None</em>
-                                        </MenuItem>
-                                        {edgeAttributeProperties.map(attr => {
-                                            return <MenuItem value={attr}>{attr}</MenuItem>
-                                        })}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                            <Grid item>
                                 <FormControl sx={{m: 1, maxWidth: 80}}>
                                     <TextField
                                         id="outlined-number"
@@ -147,11 +111,18 @@ function MotifPanel() {
                                     />
                                 </FormControl>
                             </Grid>
+                            <Grid item>
+                                <FormControl sx={{m: 1, minWidth: 100}}>
+                                    <Button style={{height:52}}variant="contained" startIcon={<SearchIcon/>}
+                                            onClick={handleSubmit}>
+                                        Search
+                                    </Button>
+                                </FormControl>
+                            </Grid>
+
                         </Grid>
                     </div>
-                    <Button variant="contained" startIcon={<SearchIcon/>} onClick={handleSubmit}>
-                        Search
-                    </Button>
+
                 </div>
 
 
