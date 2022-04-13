@@ -51,6 +51,7 @@ function MotifPanel() {
         context.setLoadingMessage(null)
         setSearchedMotifs(motifs)
     }
+    
     useEffect(() => {
         if (searchedMotifs && searchedMotifs?.length > 0) {
             let rows = searchedMotifs.map((motif, j) => {
