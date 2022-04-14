@@ -1,11 +1,10 @@
 import React, {useState, useEffect, useContext} from 'react';
 import axios from "axios";
 import './MotifPanel.css'
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faEraser, faUpDownLeftRight} from "@fortawesome/free-solid-svg-icons";
 import {AppContext} from "../contexts/GlobalContext";
 import SketchPanel from "./SketchPanel";
 import SearchIcon from "@mui/icons-material/Search";
+import DragHandleIcon from '@mui/icons-material/DragHandle';
 import Button from "@mui/material/Button";
 import {TextField, FormHelperText, InputLabel, Select, MenuItem, FormControl, Grid} from '@mui/material';
 import Table from '@mui/material/Table';
@@ -82,7 +81,7 @@ function MotifPanel() {
         <div id={motifPanelId}>
             <div className='form'>
                 <div className="handle">
-                    <FontAwesomeIcon icon={faUpDownLeftRight}/>
+                    <DragHandleIcon/>
                 </div>
                 <div id='motif-panel-wrapper'>
                     <div className="formRow">

@@ -8,7 +8,7 @@ canvas, .canvas-wrapper {
 .sketch-panel-style {
     height: 30vh;
     width: 25vw;
-    margin: 0 0 0 20px;
+    margin: 0 0 0 30px;
 }
 
 .sketch-canvas {
@@ -24,11 +24,15 @@ canvas, .canvas-wrapper {
     top: 5px;
     right: 5px;
 }
-/*TODO*/
-/*.MuiPopover-root {*/
-/*    pointer-events: none*/
-/*}*/
 
-/*.MuiPopover-paper {*/
-/*    pointer-events: auto !important;*/
-/*}*/
+.MuiPopover-root {
+    pointer-events: none
+}
+
+.MuiPopover-paper {
+    pointer-events: auto !important;
+}
+
+.group--children {
+    padding-right: 10px !important;
+}
