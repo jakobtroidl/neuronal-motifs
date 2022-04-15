@@ -20,12 +20,9 @@ def apply_ids_to_motif_adjacency(body_ids, motif):
     @return:
     """
 
-    adj = [[] for i in range(len(motif))]  # map motif adjacency to node ids
-    for i in range(0, len(motif)):
-        for connection in motif[i]:
-            mapped = body_ids[connection]
-            adj[i].append(mapped)
-
+    adj = [[] for i in range(len(motif['nodes']))]  # map motif adjacency to node ids
+    for edge in motif['edges']:
+        adj[edge['indices'][0]].append(body_ids[edge['indices'][1]])
     return dict(zip(body_ids, adj))
 
 
