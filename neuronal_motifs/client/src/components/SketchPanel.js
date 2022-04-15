@@ -45,8 +45,6 @@ function SketchPanel() {
     }
     const bindPencilEvents = () => {
         currentPath = null;
-        console.log('rebinding', nodes);
-        // Deselect Everything
         pencil.onMouseMove = function (event) {
             let point = new paper.Point(event.point);
             testCircle.position = point;
@@ -92,7 +90,6 @@ function SketchPanel() {
                     return n.circle.contains(event.point)
                 }), e => e === true);
                 if (intersections !== -1) {
-                    // context.setSelectedSketchElement(nodes[intersections]);
                     currentSelection = nodes[intersections];
                     return;
                 }
@@ -126,7 +123,6 @@ function SketchPanel() {
                 label.content = labelLetter;
                 currentPath?.remove();
                 currentPath = null;
-                console.log('Nodes', nodes);
                 setNodes(nodes => [...nodes, {circle: circle, label: labelLetter, properties: null, type: 'node'}]);
             } else if (mouseState == 'edge') {
                 let intersections = _.findLastIndex(nodes.map(n => {
@@ -176,16 +172,13 @@ function SketchPanel() {
         pencil.onMouseUp = function (event) {
         }
     }
-
     const addEdge = ((fromNode, toNode, edgeLine) => {
 
         let indices = [_.findLastIndex(nodes, fromNode), _.findLastIndex(nodes, toNode)];
         let edgeObj = {'indices': indices, 'toNode': toNode, 'fromNode': fromNode, 'edgeLine': edgeLine}
         let matchingEdge = _.findIndex(edges, (e) => {
-            console.log('indices', indices);
             return _.isEqual(e.indices, indices);
         })
-        console.log('matching edge', matchingEdge);
         if (matchingEdge !== -1) {
             edgeLine.remove();
             return;
@@ -236,14 +229,12 @@ function SketchPanel() {
 
 
     })
-
     useEffect(() => {
         if (pencil && mouseState) {
             // Rebind the pencil events whenever new nodes are drawn
             bindPencilEvents();
         }
     }, [pencil, mouseState, nodes, edges])
-
     useEffect(() => {
         setPopperLocation(null);
         setShowPopper(false);
@@ -252,11 +243,8 @@ function SketchPanel() {
         }
 
     }, [mouseState])
-
-
     useEffect(() => {
         if (context.selectedSketchElement) {
-            console.log('update', context.selectedSketchElement)
             let paperElement = context.selectedSketchElement?.circle || context?.selectedSketchElement?.edgeLine;
             let position = paperElement.getPosition();
             let boundingRect = paper.view.element.getBoundingClientRect();
@@ -267,27 +255,23 @@ function SketchPanel() {
                 })
             }
             if (context.selectedSketchElement.type === 'edge') {
-                let tmpEdges = edges.map(e => {
+                setEdges(edges.map(e => {
                     if (_.isEqual(e.edgeLine, context.selectedSketchElement.edgeLine)) {
                         e.tree = context.selectedSketchElement.tree;
                         e.query = context.selectedSketchElement.query;
                     }
                     return e
-                })
-                setEdges(tmpEdges);
+                }));
             } else {
-                let tmpNodes = nodes.map(n => {
+                setNodes(nodes.map(n => {
                     if (_.isEqual(n.circle, context.selectedSketchElement.circle)) {
                         n.tree = context.selectedSketchElement.tree;
                         n.query = context.selectedSketchElement.query;
                     }
                     return n
-                })
-                setNodes(tmpNodes);
-
+                }));
             }
         } else {
-            console.log('disappear')
             setPopperLocation(null);
         }
     }, [context.selectedSketchElement])
@@ -299,12 +283,8 @@ function SketchPanel() {
         tempCircle.strokeWidth = 1;
         tempCircle.strokeColor = 'green';
         setTestCircle(tempCircle);
-
-        console.log('Setting up Pencil')
         setPencil(new paper.Tool());
     }, []);
-
-
     // Update global motif tracker
     useEffect(() => {
         if (edges) {
@@ -312,7 +292,6 @@ function SketchPanel() {
         }
 
     }, [edges])
-
 
     return (
         <div className='sketch-panel-style'>

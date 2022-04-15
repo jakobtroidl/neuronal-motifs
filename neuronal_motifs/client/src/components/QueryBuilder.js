@@ -2,27 +2,18 @@ import React, {useState, useEffect, useContext} from 'react';
 import {AppContext} from "../contexts/GlobalContext";
 import {NodeFields} from "../config/NodeFields";
 import {EdgeFields} from "../config/EdgeFields";
-import {Query, Builder, BasicConfig, Utils as QbUtils} from 'react-awesome-query-builder';
-import './QueryBuilder.css'
-
-import 'antd/dist/antd.css'; // or import "react-awesome-query-builder/css/antd.less";
-// For MUI 4/5 widgets only:
-
+import {Query, Builder, Utils as QbUtils} from 'react-awesome-query-builder';
 import MuiConfig from 'react-awesome-query-builder/lib/config/mui';
-
-
 import 'react-awesome-query-builder/lib/css/styles.css';
 import 'react-awesome-query-builder/lib/css/compact_styles.css';
-import DragHandleIcon from "@mui/icons-material/DragHandle";
-import Slider from "@mui/material/Slider"; //optional, for more compact styles
+import './QueryBuilder.css'
 
-let InitialConfig = MuiConfig; // or MaterialConfig or MuiConfig or BootstrapConfig or BasicConfig
+
+let InitialConfig = MuiConfig;
 delete InitialConfig['conjunctions']['OR']
 InitialConfig['settings']['showNot'] = false;
 InitialConfig['settings']['groupOperators'] = false
 InitialConfig['settings']['canAddGroup'] = false;
-
-// You can load query value from your backend storage (for saving see `Query.onChange()`)
 
 
 function QueryBuilder() {
@@ -69,10 +60,6 @@ function QueryBuilder() {
         <div>
             {tree && context?.selectedSketchElement?.type === 'node' &&
             <Query
-                // config={() ? {...config, fields: EdgeFields} : {
-                //     ...config,
-                //     fields: NodeFields
-                // }}
                 {...InitialConfig}
                 fields={NodeFields}
                 value={context.selectedSketchElement.tree || tree}
