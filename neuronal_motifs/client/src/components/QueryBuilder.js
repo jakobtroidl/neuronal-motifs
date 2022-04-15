@@ -1,4 +1,7 @@
-import React, {Component} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
+import {AppContext} from "../contexts/GlobalContext";
+import {NodeFields} from "../data/NodeFields";
+import {EdgeFields} from "../data/EdgeFields";
 import {Query, Builder, BasicConfig, Utils as QbUtils} from 'react-awesome-query-builder';
 import './QueryBuilder.css'
 
@@ -10,99 +13,86 @@ import MuiConfig from 'react-awesome-query-builder/lib/config/mui';
 
 import 'react-awesome-query-builder/lib/css/styles.css';
 import 'react-awesome-query-builder/lib/css/compact_styles.css';
-import AbstractionSlider from "./AbstractionSlider"; //optional, for more compact styles
+import DragHandleIcon from "@mui/icons-material/DragHandle";
+import Slider from "@mui/material/Slider"; //optional, for more compact styles
 
-// Choose your skin (ant/material/vanilla):
-const InitialConfig = MuiConfig; // or MaterialConfig or MuiConfig or BootstrapConfig or BasicConfig
-
-// You need to provide your own config. See below 'Config format'
-const config = {
-    ...InitialConfig,
-    fields: {
-        qty: {
-            label: 'Qty',
-            type: 'number',
-            fieldSettings: {
-                min: 0,
-            },
-            valueSources: ['value'],
-            preferWidgets: ['number'],
-        },
-        price: {
-            label: 'Price',
-            type: 'number',
-            valueSources: ['value'],
-            fieldSettings: {
-                min: 10,
-                max: 100,
-            },
-            preferWidgets: ['slider', 'rangeslider'],
-        },
-        color: {
-            label: 'Color',
-            type: 'select',
-            valueSources: ['value'],
-            fieldSettings: {
-                listValues: [
-                    {value: 'yellow', title: 'Yellow'},
-                    {value: 'green', title: 'Green'},
-                    {value: 'orange', title: 'Orange'}
-                ],
-            }
-        },
-        is_promotion: {
-            label: 'Promo?',
-            type: 'boolean',
-            operators: ['equal'],
-            valueSources: ['value'],
-        },
-    }
-};
-
-delete config['conjunctions']['OR']
-config['settings']['showNot'] = false;
-config['settings']['groupOperators'] = false
-config['settings']['canAddGroup'] = false;
+let InitialConfig = MuiConfig; // or MaterialConfig or MuiConfig or BootstrapConfig or BasicConfig
+delete InitialConfig['conjunctions']['OR']
+InitialConfig['settings']['showNot'] = false;
+InitialConfig['settings']['groupOperators'] = false
+InitialConfig['settings']['canAddGroup'] = false;
 
 // You can load query value from your backend storage (for saving see `Query.onChange()`)
-const queryValue = {"id": QbUtils.uuid(), "type": "group"};
 
 
-class QueryBuilder extends Component {
+function QueryBuilder() {
+    let [tree, setTree] = useState()
+    const context = useContext(AppContext);
 
-    state = {
-        tree: QbUtils.checkTree(QbUtils.loadTree(queryValue), config),
-        config: config
-    };
-
-    render = () => (
-        <div>
-            <Query
-                {...config}
-                value={this.state.tree}
-                onChange={this.onChange}
-                renderBuilder={this.renderBuilder}
-            />
-        </div>
+    useEffect(() => {
+            const queryValue = {"id": QbUtils.uuid(), "type": "group"};
+            setTree(QbUtils.checkTree(QbUtils.loadTree(queryValue), {...InitialConfig, fields: NodeFields}));
+        },
+        []
     )
 
-    renderBuilder = (props) => (
+    useEffect(() => {
+        const queryValue = {"id": QbUtils.uuid(), "type": "group"};
+        if (context.selectedSketchElement && context.selectedSketchElement.type === 'edge') {
+            setTree(QbUtils.checkTree(QbUtils.loadTree(queryValue), {...InitialConfig, fields: EdgeFields}));
+        } else {
+            setTree(QbUtils.checkTree(QbUtils.loadTree(queryValue), {...InitialConfig, fields: NodeFields}));
+
+        }
+    }, [context.selectedSketchElement])
+
+    const renderBuilder = (props) => (
         <div className="query-builder-container" style={{padding: 0, minWidth: 300}}>
             <div className="query-builder qb-lite" style={{margin: 0}}>
                 <Builder {...props} />
             </div>
         </div>
     )
-
-
-    onChange = (immutableTree, config) => {
+    const onChange = (immutableTree, config) => {
         // Tip: for better performance you can apply `throttle` - see `examples/demo`
-        this.setState({tree: immutableTree, config: config});
-
-        const jsonTree = QbUtils.getTree(immutableTree);
-        console.log(jsonTree);
-        // `jsonTree` can be saved to backend, and later loaded to `queryValue`
+        // this.setState({, config: config});
+        let query = QbUtils.mongodbFormat(immutableTree, config);
+        setTree(immutableTree);
+        let updatedElem = {
+            ...context.selectedSketchElement,
+            tree: immutableTree,
+            query: query
+        };
+        context.setSelectedSketchElement(updatedElem);
     }
+    return (
+        <div>
+            {tree && context?.selectedSketchElement?.type === 'node' &&
+            <Query
+                // config={() ? {...config, fields: EdgeFields} : {
+                //     ...config,
+                //     fields: NodeFields
+                // }}
+                {...InitialConfig}
+                fields={NodeFields}
+                value={context.selectedSketchElement.tree || tree}
+                onChange={onChange}
+                renderBuilder={renderBuilder}
+            />
+            }
+
+            {tree && context?.selectedSketchElement?.type === 'edge' &&
+            <Query
+                {...InitialConfig}
+                fields={EdgeFields}
+                value={context.selectedSketchElement.tree || tree}
+                onChange={onChange}
+                renderBuilder={renderBuilder}
+            />
+            }
+        </div>
+    );
 }
+
 
 export default QueryBuilder;
