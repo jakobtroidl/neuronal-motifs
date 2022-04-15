@@ -197,13 +197,12 @@ function SketchPanel() {
             return _.isEqual(e.indices, [indices[1], indices[0]]);
         })
         let origToPoint = _.cloneDeep(edgeLine.segments[0].point);
-        let testCircle = new paper.Path.Circle(origToPoint, 8);
-        let toPoint = edgeLine.segments[0].point = testCircle.getIntersections(edgeLine)[0].point;
-        testCircle.remove()
+        let circ = new paper.Path.Circle(origToPoint, 8);
+        let toPoint = edgeLine.segments[0].point = circ.getIntersections(edgeLine)[0].point;
+        circ.remove()
         let origFromPoint = _.cloneDeep(edgeLine.segments[1].point);
-        testCircle = new paper.Path.Circle(origFromPoint, 8);
-        let fromPoint = edgeLine.segments[1].point = testCircle.getIntersections(edgeLine)[0].point;
-        testCircle.remove()
+        circ = new paper.Path.Circle(origFromPoint, 8);
+        let fromPoint = edgeLine.segments[1].point = circ.getIntersections(edgeLine)[0].point;
         const dy = toPoint.y - fromPoint.y;
         const dx = toPoint.x - fromPoint.x;
         const theta = Math.atan2(dy, dx); // range (-PI, PI]
@@ -297,8 +296,7 @@ function SketchPanel() {
         paper.setup(sketchPanelId);
         let tempCircle = new paper.Path.Circle([0, 0], 6);
         tempCircle.fill = 'none';
-        tempCircle.strokeWidth = 1;
-        tempCircle.strokeColor = 'green';
+        tempCircle.strokeWidth = 0;
         setTestCircle(tempCircle);
         setPencil(new paper.Tool());
     }, []);
