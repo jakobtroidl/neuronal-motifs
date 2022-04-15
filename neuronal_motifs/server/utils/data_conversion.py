@@ -56,12 +56,13 @@ def treeneuron_to_swc_string(neuron_skeleton):
 
     return {'swc': out, 'map': map_new_to_old}
 
-
+# Converts Query Builder Mongo-esque parameters to dotmotif query format
 def nodes_and_edges_to_motif_string(motif):
     print(motif)
     edges = motif['edges']
     nodes = motif['nodes']
     output = "\n "
+    # First list every edge like A -> B [weight > x]
     for edge in edges:
         edge_str = edge['label']
         if 'properties' in edge:
@@ -79,6 +80,7 @@ def nodes_and_edges_to_motif_string(motif):
             edge_str += ']'
         edge_str += ' \n'
         output += edge_str
+    # Now list every node property like A['prop'] == True
     for node in nodes:
         node_str = str(node['label']) + '.status = "Traced" \n'
         if 'properties' in node and node['properties'] is not None:

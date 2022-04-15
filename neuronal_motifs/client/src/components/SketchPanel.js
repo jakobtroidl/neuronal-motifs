@@ -5,12 +5,9 @@ import QueryBuilder from './QueryBuilder'
 import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import EditIcon from '@mui/icons-material/Edit';
-import PanToolIcon from '@mui/icons-material/PanTool';
 import DeleteIcon from '@mui/icons-material/Delete';
 import paper from 'paper'
-import {std, mean, distance} from 'mathjs'
 import {AppContext} from "../contexts/GlobalContext";
-import {getRandomColor} from "../utils/rendering";
 import _ from 'lodash';
 import {Box, Fade, Grid, IconButton, Popover, Tooltip, Typography} from '@mui/material';
 
@@ -18,12 +15,14 @@ import {Box, Fade, Grid, IconButton, Popover, Tooltip, Typography} from '@mui/ma
 function SketchPanel() {
 
     const sketchPanelId = "sketch-panel";
-    // Keeps track of the most recent thing drawn
     let [nodes, setNodes] = useState([])
     let [edges, setEdges] = useState([])
+    // States are node (add nodes), edge (add edges), edit(change node/edge properties)
     let [mouseState, setMouseState] = useState('node');
     let [pencil, setPencil] = useState();
+    // Checks for mouse intersections
     let [testCircle, setTestCircle] = useState();
+    // Edit properties with boolean query builder
     const [popperLocation, setPopperLocation] = React.useState()
     const [showPopper, setShowPopper] = React.useState(false);
     let circleRadius = 20;
@@ -52,6 +51,7 @@ function SketchPanel() {
                 if (context.selectedSketchElement) context.setSelectedSketchElement(null);
                 let numNodes = nodes?.length || 0;
                 let color = numNodes <= context.colors.length ? context.colors[numNodes] : '#000000';
+                // Create new Circle
                 if (!currentPath) {
                     currentPath = new paper.Path.Circle(point, circleRadius);
                     currentPath.strokeColor = '#000000';
@@ -60,11 +60,13 @@ function SketchPanel() {
                     currentPath.opacity = 0.5;
 
                 } else {
+                    // Move existing circle
                     currentPath.position = point;
                 }
             } else if (mouseState === 'edge') {
                 if (context.selectedSketchElement) context.setSelectedSketchElement(null);
                 if (!currentPath) {
+                    // Displays a little line on the cursor
                     currentPath = new paper.Path();
                     currentPath.strokeColor = '#000000';
                     currentPath.strokeWidth = 3
@@ -75,13 +77,16 @@ function SketchPanel() {
                 let intersections = _.findLastIndex(nodes.map(n => {
                     return n.circle.contains(event.point)
                 }), e => e === true);
+                // Starting Point of Edge
                 if (intersections === -1 && currentNode) {
                     currentPath.segments[0].point = currentNode.circle.getNearestPoint(point);
                     currentPath.segments[1].point = point;
-                } else if (intersections !== -1 && currentNode && !_.isEqual(currentNode, nodes[intersections])) {
+                }   //    Ending Point of Edge
+                else if (intersections !== -1 && currentNode && !_.isEqual(currentNode, nodes[intersections])) {
                     currentPath.segments[0].point = currentNode.circle.getNearestPoint(nodes[intersections].circle.position);
                     currentPath.segments[1].point = nodes[intersections].circle.getNearestPoint(currentNode.circle.position);
-                } else {
+                }  // Otherwise move the line glyph
+                else {
                     currentPath.segments[0].point = new paper.Point([point.x - 10, point.y]);
                     currentPath.segments[1].point = new paper.Point([point.x + 10, point.y]);
                 }
@@ -90,6 +95,7 @@ function SketchPanel() {
                 let intersections = _.findLastIndex(nodes.map(n => {
                     return n.circle.contains(event.point)
                 }), e => e === true);
+                // Check with intersections with nodes
                 if (intersections !== -1) {
                     currentSelection = nodes[intersections];
                     return;
@@ -109,6 +115,7 @@ function SketchPanel() {
             let point = new paper.Point(event.point);
             if (mouseState === 'node') {
                 if (!currentPath) return;
+                // Create new node
                 let numNodes = nodes?.length || 0;
                 let circle = currentPath.clone();
                 circle.opacity = 1;
@@ -135,12 +142,12 @@ function SketchPanel() {
                     return;
                 } else if (currentPath && intersections !== -1) {
                     if (!_.isEqual(currentNode, nodes[intersections])) {
+                        // If line intersects with two nodes, draw edge
                         currentPath.segments[0].point = currentNode.circle.getNearestPoint(nodes[intersections].circle.position)
                         currentPath.segments[1].point = nodes[intersections].circle.getNearestPoint(currentNode.circle.position);
                         let edge = currentPath.clone();
                         edge.opacity = 1;
                         addEdge(currentNode, nodes[intersections], edge);
-
                     }
                 }
                 currentPath?.remove();
@@ -155,15 +162,15 @@ function SketchPanel() {
                 let edgeIntersections = _.findLastIndex(edges.map(e => {
                     return !_.isEmpty(testCircle?.getIntersections(e.edgeLine));
                 }), e => e === true);
-
+                // select the clicked on element and show the popper
                 if (nodeIntersections !== -1 || edgeIntersections !== -1) {
                     context.setSelectedSketchElement(currentSelection);
                     let selectedElement = (currentSelection?.lineGroup || currentSelection?.circle)
                     paper.project.activeLayer.selected = false;
                     selectedElement.selected = true;
                     setShowPopper(true);
-
                 } else {
+                    // If they click out, make the popper go away
                     setShowPopper(false);
                     context.setSelectedSketchElement(null);
                     setPopperLocation(null);
@@ -180,6 +187,7 @@ function SketchPanel() {
         let matchingEdge = _.findIndex(edges, (e) => {
             return _.isEqual(e.indices, indices);
         })
+        // If this edge already exists, don't create it
         if (matchingEdge !== -1) {
             edgeLine.remove();
             return;
@@ -190,18 +198,19 @@ function SketchPanel() {
         })
         let origToPoint = _.cloneDeep(edgeLine.segments[0].point);
         let testCircle = new paper.Path.Circle(origToPoint, 8);
-        testCircle.remove()
         let toPoint = edgeLine.segments[0].point = testCircle.getIntersections(edgeLine)[0].point;
+        testCircle.remove()
         let origFromPoint = _.cloneDeep(edgeLine.segments[1].point);
         testCircle = new paper.Path.Circle(origFromPoint, 8);
-        testCircle.remove()
         let fromPoint = edgeLine.segments[1].point = testCircle.getIntersections(edgeLine)[0].point;
+        testCircle.remove()
         const dy = toPoint.y - fromPoint.y;
         const dx = toPoint.x - fromPoint.x;
         const theta = Math.atan2(dy, dx); // range (-PI, PI]
         const newY = (7 * Math.sin(theta)) + fromPoint.y;
         const newX = (7 * Math.cos(theta)) + fromPoint.x;
         let circle = new paper.Path.Circle([newX, newY], 7)
+        // Check where the arrow head points should be
         let secondCircle = new paper.Path.Circle(circle.getNearestPoint(toPoint), 7)
         let intersections = secondCircle.getIntersections(circle).map(intersection => intersection.point);
         intersections.splice(1, 0, fromPoint)
@@ -209,6 +218,7 @@ function SketchPanel() {
         trianglePath.strokeColor = 'black';
         trianglePath.strokeWidth = 3;
         trianglePath.strokeJoin = 'round';
+        // Create a big group with line and arrow
         edgeObj['lineGroup'] = new paper.Group([trianglePath, edgeObj.edgeLine]);
         secondCircle?.remove();
         circle?.remove();
@@ -240,6 +250,7 @@ function SketchPanel() {
         setShowPopper(false);
         if (paper?.project?.activeLayer) {
             paper.project.activeLayer.selected = false;
+            // Remove all undrawn shapes when you switch modes
             paper.project.activeLayer.children.forEach(child => {
                 if (child.opacity === 0.5) child.remove();
             })
@@ -249,6 +260,7 @@ function SketchPanel() {
     useEffect(() => {
         if (context.selectedSketchElement) {
             let paperElement = context.selectedSketchElement?.circle || context?.selectedSketchElement?.edgeLine;
+            // Calculate where on screen coordinates the popper should go
             let position = paperElement.getPosition();
             let boundingRect = paper.view.element.getBoundingClientRect();
             if (paperElement && position) {
@@ -259,6 +271,7 @@ function SketchPanel() {
             }
             if (context.selectedSketchElement.type === 'edge') {
                 setEdges(edges.map(e => {
+                    // Update the edge with the query properties
                     if (_.isEqual(e.edgeLine, context.selectedSketchElement.edgeLine)) {
                         e.tree = context.selectedSketchElement.tree;
                         e.properties = context.selectedSketchElement.properties;
@@ -268,6 +281,7 @@ function SketchPanel() {
             } else {
                 setNodes(nodes.map(n => {
                     if (_.isEqual(n.circle, context.selectedSketchElement.circle)) {
+                        // Update the node with the query properties
                         n.tree = context.selectedSketchElement.tree;
                         n.properties = context.selectedSketchElement.properties;
                     }
@@ -370,15 +384,6 @@ function SketchPanel() {
                                 <ArrowRightAltIcon fontSize="small"/>
                             </IconButton>
                         </Tooltip>
-                        {/*<Tooltip title="Move Node" placement="right">*/}
-                        {/*    <IconButton color={mouseState === 'move' ? "primary" : "default"}*/}
-                        {/*                onClick={() => {*/}
-                        {/*                    currentPath?.remove();*/}
-                        {/*                    setMouseState('move')*/}
-                        {/*                }}>*/}
-                        {/*        <PanToolIcon fontSize="small"/>*/}
-                        {/*    </IconButton>*/}
-                        {/*</Tooltip>*/}
                         <Tooltip title="Clear Sketch" placement="right">
                             <IconButton color="default"
                                         onClick={clearSketch}>
