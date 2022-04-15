@@ -1,16 +1,13 @@
 import React, {useState, useEffect, useContext} from 'react';
 import './SketchPanel.css'
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-// import {faUpDownLeftRight, faEraser, } from "@fortawesome/free-solid-svg-icons";
+
+import QueryBuilder from './QueryBuilder'
 import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import EditIcon from '@mui/icons-material/Edit';
-import PanToolIcon from '@mui/icons-material/PanTool';
 import DeleteIcon from '@mui/icons-material/Delete';
 import paper from 'paper'
-import {std, mean, distance} from 'mathjs'
 import {AppContext} from "../contexts/GlobalContext";
-import {getRandomColor} from "../utils/rendering";
 import _ from 'lodash';
 import {Box, Fade, Grid, IconButton, Popover, Tooltip, Typography} from '@mui/material';
 
@@ -18,18 +15,20 @@ import {Box, Fade, Grid, IconButton, Popover, Tooltip, Typography} from '@mui/ma
 function SketchPanel() {
 
     const sketchPanelId = "sketch-panel";
-    // Keeps track of the most recent thing drawn
     let [nodes, setNodes] = useState([])
     let [edges, setEdges] = useState([])
+    // States are node (add nodes), edge (add edges), edit(change node/edge properties)
     let [mouseState, setMouseState] = useState('node');
     let [pencil, setPencil] = useState();
+    // Checks for mouse intersections
     let [testCircle, setTestCircle] = useState();
-    // let [open, setOpen] = React.useState(true);
-    // const [popperLocation, setPopperLocation] = React.useState({top: 0, left: 0})
+    // Edit properties with boolean query builder
+    const [popperLocation, setPopperLocation] = React.useState()
+    const [showPopper, setShowPopper] = React.useState(false);
     let circleRadius = 20;
     let currentPath;
     let currentNode;
-    let selected;
+    let currentSelection;
     // We track the overall motif in the global context
     const context = useContext(AppContext);
 
@@ -45,26 +44,29 @@ function SketchPanel() {
     }
     const bindPencilEvents = () => {
         currentPath = null;
-        console.log('rebinding', nodes);
-        // Deselect Everything
-        paper.project.activeLayer.selected = false;
         pencil.onMouseMove = function (event) {
             let point = new paper.Point(event.point);
             testCircle.position = point;
             if (mouseState === 'node') {
+                if (context.selectedSketchElement) context.setSelectedSketchElement(null);
                 let numNodes = nodes?.length || 0;
                 let color = numNodes <= context.colors.length ? context.colors[numNodes] : '#000000';
+                // Create new Circle
                 if (!currentPath) {
                     currentPath = new paper.Path.Circle(point, circleRadius);
                     currentPath.strokeColor = '#000000';
                     currentPath.strokeWidth = 3;
                     currentPath.fillColor = color;
                     currentPath.opacity = 0.5;
+
                 } else {
+                    // Move existing circle
                     currentPath.position = point;
                 }
             } else if (mouseState === 'edge') {
+                if (context.selectedSketchElement) context.setSelectedSketchElement(null);
                 if (!currentPath) {
+                    // Displays a little line on the cursor
                     currentPath = new paper.Path();
                     currentPath.strokeColor = '#000000';
                     currentPath.strokeWidth = 3
@@ -73,27 +75,29 @@ function SketchPanel() {
                     currentPath.add([point.x + 10, point.y]);
                 }
                 let intersections = _.findLastIndex(nodes.map(n => {
-                    return n.contains(event.point)
+                    return n.circle.contains(event.point)
                 }), e => e === true);
+                // Starting Point of Edge
                 if (intersections === -1 && currentNode) {
-                    currentPath.segments[0].point = currentNode.getNearestPoint(point);
+                    currentPath.segments[0].point = currentNode.circle.getNearestPoint(point);
                     currentPath.segments[1].point = point;
-                } else if (intersections !== -1 && currentNode && currentNode !== nodes[intersections]) {
-                    currentPath.segments[0].point = currentNode.getNearestPoint(nodes[intersections].position);
-                    currentPath.segments[1].point = nodes[intersections].getNearestPoint(currentNode.position);
-                } else {
+                }   //    Ending Point of Edge
+                else if (intersections !== -1 && currentNode && !_.isEqual(currentNode, nodes[intersections])) {
+                    currentPath.segments[0].point = currentNode.circle.getNearestPoint(nodes[intersections].circle.position);
+                    currentPath.segments[1].point = nodes[intersections].circle.getNearestPoint(currentNode.circle.position);
+                }  // Otherwise move the line glyph
+                else {
                     currentPath.segments[0].point = new paper.Point([point.x - 10, point.y]);
                     currentPath.segments[1].point = new paper.Point([point.x + 10, point.y]);
                 }
             } else if (mouseState === 'edit') {
                 // Check with intersections with nodes
-                paper.project.activeLayer.selected = false;
                 let intersections = _.findLastIndex(nodes.map(n => {
-                    return n.contains(event.point)
+                    return n.circle.contains(event.point)
                 }), e => e === true);
+                // Check with intersections with nodes
                 if (intersections !== -1) {
-                    selected = nodes[intersections];
-                    nodes[intersections].selected = true;
+                    currentSelection = nodes[intersections];
                     return;
                 }
                 // Check with intersections with edges
@@ -101,19 +105,17 @@ function SketchPanel() {
                     return !_.isEmpty(testCircle?.getIntersections(e.edgeLine));
                 }), e => e === true);
                 if (intersections !== -1) {
-                    selected = edges[intersections]
-                    edges[intersections].lineGroup.selected = true;
+                    currentSelection = edges[intersections];
+                    return
                 }
-                // Deselect Everything
-
-
+                currentSelection = null;
             }
-
         }
         pencil.onMouseDown = function (event) {
             let point = new paper.Point(event.point);
             if (mouseState === 'node') {
                 if (!currentPath) return;
+                // Create new node
                 let numNodes = nodes?.length || 0;
                 let circle = currentPath.clone();
                 circle.opacity = 1;
@@ -129,51 +131,63 @@ function SketchPanel() {
                 label.content = labelLetter;
                 currentPath?.remove();
                 currentPath = null;
-                setNodes(nodes => [...nodes, circle]);
+                setNodes(nodes => [...nodes, {circle: circle, label: labelLetter, properties: null, type: 'node'}]);
             } else if (mouseState == 'edge') {
                 let intersections = _.findLastIndex(nodes.map(n => {
-                    return n.contains(event.point)
+                    return n.circle.contains(event.point)
                 }), e => e === true);
-                if (intersections !== -1 && !currentNode) {
+                if (intersections !== -1 && !currentNode && currentPath) {
                     currentNode = nodes[intersections]
-                    currentPath.segments[0].position = (currentNode.getNearestPoint(point));
+                    currentPath.segments[0].position = (currentNode.circle.getNearestPoint(point));
                     return;
                 } else if (currentPath && intersections !== -1) {
-                    if (currentNode !== nodes[intersections]) {
-                        currentPath.segments[0].point = currentNode.getNearestPoint(nodes[intersections].position)
-                        currentPath.segments[1].point = nodes[intersections].getNearestPoint(currentNode.position);
+                    if (!_.isEqual(currentNode, nodes[intersections])) {
+                        // If line intersects with two nodes, draw edge
+                        currentPath.segments[0].point = currentNode.circle.getNearestPoint(nodes[intersections].circle.position)
+                        currentPath.segments[1].point = nodes[intersections].circle.getNearestPoint(currentNode.circle.position);
                         let edge = currentPath.clone();
                         edge.opacity = 1;
                         addEdge(currentNode, nodes[intersections], edge);
-
                     }
                 }
                 currentPath?.remove();
-                if (currentNode) currentNode.selected = false;
                 currentNode = null;
                 currentPath = null;
             } else if (mouseState == 'edit') {
-                console.log('Selected', selected, event);
-                // TODO
-                // setPopperLocation({
-                //     top: _.toNumber(event?.event?.clientY) + 20,
-                //     left: _.toNumber(event?.event?.clientX)
-                // })
+
+                let nodeIntersections = _.findLastIndex(nodes.map(n => {
+                    return n.circle.contains(event.point)
+                }), e => e === true);
+
+                let edgeIntersections = _.findLastIndex(edges.map(e => {
+                    return !_.isEmpty(testCircle?.getIntersections(e.edgeLine));
+                }), e => e === true);
+                // select the clicked on element and show the popper
+                if (nodeIntersections !== -1 || edgeIntersections !== -1) {
+                    context.setSelectedSketchElement(currentSelection);
+                    let selectedElement = (currentSelection?.lineGroup || currentSelection?.circle)
+                    paper.project.activeLayer.selected = false;
+                    selectedElement.selected = true;
+                    setShowPopper(true);
+                } else {
+                    // If they click out, make the popper go away
+                    setShowPopper(false);
+                    context.setSelectedSketchElement(null);
+                    setPopperLocation(null);
+                }
             }
         }
         pencil.onMouseUp = function (event) {
         }
     }
-
     const addEdge = ((fromNode, toNode, edgeLine) => {
 
-        let indices = [nodes.indexOf(fromNode), nodes.indexOf(toNode)];
+        let indices = [_.findLastIndex(nodes, fromNode), _.findLastIndex(nodes, toNode)];
         let edgeObj = {'indices': indices, 'toNode': toNode, 'fromNode': fromNode, 'edgeLine': edgeLine}
         let matchingEdge = _.findIndex(edges, (e) => {
-            console.log('indices', indices);
             return _.isEqual(e.indices, indices);
         })
-        console.log('matching edge', matchingEdge);
+        // If this edge already exists, don't create it
         if (matchingEdge !== -1) {
             edgeLine.remove();
             return;
@@ -183,19 +197,19 @@ function SketchPanel() {
             return _.isEqual(e.indices, [indices[1], indices[0]]);
         })
         let origToPoint = _.cloneDeep(edgeLine.segments[0].point);
-        let testCircle = new paper.Path.Circle(origToPoint, 8);
-        testCircle.remove()
-        let toPoint = edgeLine.segments[0].point = testCircle.getIntersections(edgeLine)[0].point;
+        let circ = new paper.Path.Circle(origToPoint, 8);
+        let toPoint = edgeLine.segments[0].point = circ.getIntersections(edgeLine)[0].point;
+        circ.remove()
         let origFromPoint = _.cloneDeep(edgeLine.segments[1].point);
-        testCircle = new paper.Path.Circle(origFromPoint, 8);
-        testCircle.remove()
-        let fromPoint = edgeLine.segments[1].point = testCircle.getIntersections(edgeLine)[0].point;
+        circ = new paper.Path.Circle(origFromPoint, 8);
+        let fromPoint = edgeLine.segments[1].point = circ.getIntersections(edgeLine)[0].point;
         const dy = toPoint.y - fromPoint.y;
         const dx = toPoint.x - fromPoint.x;
         const theta = Math.atan2(dy, dx); // range (-PI, PI]
         const newY = (7 * Math.sin(theta)) + fromPoint.y;
         const newX = (7 * Math.cos(theta)) + fromPoint.x;
         let circle = new paper.Path.Circle([newX, newY], 7)
+        // Check where the arrow head points should be
         let secondCircle = new paper.Path.Circle(circle.getNearestPoint(toPoint), 7)
         let intersections = secondCircle.getIntersections(circle).map(intersection => intersection.point);
         intersections.splice(1, 0, fromPoint)
@@ -203,6 +217,7 @@ function SketchPanel() {
         trianglePath.strokeColor = 'black';
         trianglePath.strokeWidth = 3;
         trianglePath.strokeJoin = 'round';
+        // Create a big group with line and arrow
         edgeObj['lineGroup'] = new paper.Group([trianglePath, edgeObj.edgeLine]);
         secondCircle?.remove();
         circle?.remove();
@@ -218,47 +233,90 @@ function SketchPanel() {
             edgeObj['lineGroup'].translate(pointDelta[0]);
             edges[oppositeEdge]['lineGroup'].translate(pointDelta[1]);
         }
-
+        edgeObj['type'] = 'edge';
+        edgeObj['label'] = `${edgeObj.fromNode.label} -> ${edgeObj.toNode.label}`
         setEdges([...edges, edgeObj])
-
-
     })
-
     useEffect(() => {
         if (pencil && mouseState) {
             // Rebind the pencil events whenever new nodes are drawn
             bindPencilEvents();
         }
-    }, [pencil, nodes, mouseState, edges])
+    }, [pencil, mouseState, nodes, edges])
+    useEffect(() => {
+        currentPath?.remove();
+        setPopperLocation(null);
+        setShowPopper(false);
+        if (paper?.project?.activeLayer) {
+            paper.project.activeLayer.selected = false;
+            // Remove all undrawn shapes when you switch modes
+            paper.project.activeLayer.children.forEach(child => {
+                if (child.opacity === 0.5) child.remove();
+            })
+        }
 
-
+    }, [mouseState])
+    useEffect(() => {
+        if (context.selectedSketchElement) {
+            let paperElement = context.selectedSketchElement?.circle || context?.selectedSketchElement?.edgeLine;
+            // Calculate where on screen coordinates the popper should go
+            let position = paperElement.getPosition();
+            let boundingRect = paper.view.element.getBoundingClientRect();
+            if (paperElement && position) {
+                setPopperLocation({
+                    top: position.y + boundingRect.top + 30,
+                    left: position.x + boundingRect.left - 30
+                })
+            }
+            if (context.selectedSketchElement.type === 'edge') {
+                setEdges(edges.map(e => {
+                    // Update the edge with the query properties
+                    if (_.isEqual(e.edgeLine, context.selectedSketchElement.edgeLine)) {
+                        e.tree = context.selectedSketchElement.tree;
+                        e.properties = context.selectedSketchElement.properties;
+                    }
+                    return e
+                }));
+            } else {
+                setNodes(nodes.map(n => {
+                    if (_.isEqual(n.circle, context.selectedSketchElement.circle)) {
+                        // Update the node with the query properties
+                        n.tree = context.selectedSketchElement.tree;
+                        n.properties = context.selectedSketchElement.properties;
+                    }
+                    return n
+                }));
+            }
+        } else {
+            setPopperLocation(null);
+        }
+    }, [context.selectedSketchElement])
     // On init set up our paperjs
     useEffect(() => {
         paper.setup(sketchPanelId);
         let tempCircle = new paper.Path.Circle([0, 0], 6);
         tempCircle.fill = 'none';
-        tempCircle.strokeWidth = 1;
-        tempCircle.strokeColor = 'green';
+        tempCircle.strokeWidth = 0;
         setTestCircle(tempCircle);
-
-        console.log('Setting up Pencil')
         setPencil(new paper.Tool());
     }, []);
-
-
     // Update global motif tracker
     useEffect(() => {
         if (edges) {
             console.log('Edges', edges);
-            let edgeList = nodes.map(() => []);
-            edges.forEach(e=>{
-                edgeList[e.indices[0]].push(e.indices[1])
-            })
-            context.setMotifQuery(edgeList);
         }
 
     }, [edges])
-
+    // Encode the Nodes and Edges For Query
+    useEffect(() => {
+        let encodedNodes = nodes.map((n, i) => {
+            return {label: n.label, properties: n.properties, index: i}
+        });
+        let encodedEdges = edges.map((e, i) => {
+            return {label: e.label, properties: e.properties, index: i, indices: e.indices}
+        })
+        context.setMotifQuery({nodes: encodedNodes, edges: encodedEdges})
+    }, [nodes, edges])
 
     return (
         <div className='sketch-panel-style'>
@@ -266,27 +324,39 @@ function SketchPanel() {
                 <Grid item xs={11}>
                     <div className="sketch-canvas">
                         <canvas id={sketchPanelId}></canvas>
-                        {/*TODO*/}
-                        {/*{popperLocation &&*/}
-                        {/*< Popover*/}
-                        {/*    anchorReference="anchorPosition"*/}
-                        {/*    open={true}*/}
-                        {/*    hideBackdrop={true}*/}
-                        {/*    className={'sketch-popover'}*/}
-                        {/*    disableEnforceFocus={true}*/}
-                        {/*    anchorPosition={popperLocation}*/}
-                        {/*    anchorOrigin={{*/}
-                        {/*        vertical: 'top',*/}
-                        {/*        horizontal: 'left',*/}
-                        {/*    }}*/}
-                        {/*    transformOrigin={{*/}
-                        {/*        vertical: 'top',*/}
-                        {/*        horizontal: 'left',*/}
-                        {/*    }}*/}
-                        {/*>*/}
-                        {/*    <Typography sx={{p: 2}}>The content of the Popover.</Typography>*/}
-                        {/*</Popover>*/}
-                        {/*}*/}
+                        {showPopper && popperLocation && context.selectedSketchElement &&
+                        < Popover
+                            anchorReference="anchorPosition"
+                            open={true}
+                            hideBackdrop={true}
+                            className={'sketch-popover'}
+                            disableEnforceFocus={true}
+                            anchorPosition={popperLocation}
+                            anchorOrigin={{
+                                vertical: 'top',
+                                horizontal: 'left',
+                            }}
+                            transformOrigin={{
+                                vertical: 'top',
+                                horizontal: 'left',
+                            }}
+                        >
+                            <Grid
+                                container
+                                direction="column"
+                                justifyContent="center"
+                                alignItems="flex-start"
+                                style={{position: 'absolute', height: '40.75px'}}
+                            >
+                                    <span style={{paddingLeft: 10, fontWeight: 'bold', color: '#454545'}}>
+                                        {_.capitalize(context.selectedSketchElement.type)} {context.selectedSketchElement.label}
+                                    </span>
+
+                            </Grid>
+
+                            <QueryBuilder/>
+                        </Popover>
+                        }
                     </div>
                 </Grid>
                 <Grid item xs={1}>
@@ -312,15 +382,6 @@ function SketchPanel() {
                                 <ArrowRightAltIcon fontSize="small"/>
                             </IconButton>
                         </Tooltip>
-                        {/*<Tooltip title="Move Node" placement="right">*/}
-                        {/*    <IconButton color={mouseState === 'move' ? "primary" : "default"}*/}
-                        {/*                onClick={() => {*/}
-                        {/*                    currentPath?.remove();*/}
-                        {/*                    setMouseState('move')*/}
-                        {/*                }}>*/}
-                        {/*        <PanToolIcon fontSize="small"/>*/}
-                        {/*    </IconButton>*/}
-                        {/*</Tooltip>*/}
                         <Tooltip title="Clear Sketch" placement="right">
                             <IconButton color="default"
                                         onClick={clearSketch}>

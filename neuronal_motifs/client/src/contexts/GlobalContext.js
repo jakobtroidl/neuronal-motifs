@@ -11,24 +11,17 @@ export const ContextWrapper = (props) => {
     const [abstractionLevel, setAbstractionLevel] = useState();
     const [colors, setColors] = useState(['#7e2fd0', '#81D02F', '#34AFCB', '#CB5034', '#B3A94C', '#4C56B3', '#D9C226', '#263DD9']);
     const [loadingMessage, setLoadingMessage] = useState();
-
-    //const [clearViewer, setClearViewer] = useState(0);
-
-    // const [actions, setActions] = useState({
-    //     changeAbstractionLevel: level => setAbstractionLevel(level),
-    //     changeMotifQuery: query => setMotifQuery(query),
-    //     changeSelectedMotif: motif => setSelectedMotif(motif),
-    //     clearView: clear => setClearViewer(clearViewer + clear)
-    // });
+    const [selectedSketchElement, setSelectedSketchElement] = useState(null);
 
     return (
         <AppContext.Provider value={
             {
                 selectedMotif, setSelectedMotif,
+                selectedSketchElement, setSelectedSketchElement,
                 motifQuery, setMotifQuery,
                 abstractionLevel, setAbstractionLevel,
                 loadingMessage, setLoadingMessage,
-                colors, setColors
+                colors, setColors,
             }}>
             {props.children}
         </AppContext.Provider>

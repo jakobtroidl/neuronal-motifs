@@ -1,11 +1,10 @@
 import React, {useState, useEffect, useContext} from 'react';
 import axios from "axios";
 import './MotifPanel.css'
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faEraser, faUpDownLeftRight} from "@fortawesome/free-solid-svg-icons";
 import {AppContext} from "../contexts/GlobalContext";
 import SketchPanel from "./SketchPanel";
 import SearchIcon from "@mui/icons-material/Search";
+import DragHandleIcon from '@mui/icons-material/DragHandle';
 import Button from "@mui/material/Button";
 import {TextField, FormHelperText, InputLabel, Select, MenuItem, FormControl, Grid} from '@mui/material';
 import Table from '@mui/material/Table';
@@ -51,12 +50,11 @@ function MotifPanel() {
     }
 
     const fetchMotifs = async () => {
-        //const encodedMotif = encodeURIComponent(Object.keys(context.store.motifQuery).join('\n'));
-        const encodedMotif = JSON.stringify(context.motifQuery);
-
-        console.log(encodedMotif);
+        console.log('Fetch Motifs');
         context.setLoadingMessage('Searching for Motifs')
-        const res = await axios(`http://localhost:5050/search/motif=${encodedMotif}&lim=${number}`);
+        const res = await axios.post('http://localhost:5050/search',{
+            motif: context.motifQuery,
+            lim: number})
         const motifs = res.data;
         context.setLoadingMessage(null)
         setSearchedMotifs(motifs)
@@ -82,7 +80,7 @@ function MotifPanel() {
         <div id={motifPanelId}>
             <div className='form'>
                 <div className="handle">
-                    <FontAwesomeIcon icon={faUpDownLeftRight}/>
+                    <DragHandleIcon/>
                 </div>
                 <div id='motif-panel-wrapper'>
                     <div className="formRow">
@@ -113,7 +111,7 @@ function MotifPanel() {
                             </Grid>
                             <Grid item>
                                 <FormControl sx={{m: 1, minWidth: 100}}>
-                                    <Button style={{height:52}}variant="contained" startIcon={<SearchIcon/>}
+                                    <Button style={{height: 52}} variant="contained" startIcon={<SearchIcon/>}
                                             onClick={handleSubmit}>
                                         Search
                                     </Button>

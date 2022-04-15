@@ -20,12 +20,9 @@ def apply_ids_to_motif_adjacency(body_ids, motif):
     @return:
     """
 
-    adj = [[] for i in range(len(motif))]  # map motif adjacency to node ids
-    for i in range(0, len(motif)):
-        for connection in motif[i]:
-            mapped = body_ids[connection]
-            adj[i].append(mapped)
-
+    adj = [[] for i in range(len(motif['nodes']))]  # map motif adjacency to node ids
+    for edge in motif['edges']:
+        adj[edge['indices'][0]].append(body_ids[edge['indices'][1]])
     return dict(zip(body_ids, adj))
 
 
@@ -59,21 +56,44 @@ def treeneuron_to_swc_string(neuron_skeleton):
 
     return {'swc': out, 'map': map_new_to_old}
 
-
-def adjacency_list_to_motif_string(adjacency_list, ignore_orphans=True):
-    print(adjacency_list)
+# Converts Query Builder Mongo-esque parameters to dotmotif query format
+def nodes_and_edges_to_motif_string(motif):
+    print(motif)
+    edges = motif['edges']
+    nodes = motif['nodes']
     output = "\n "
-    for i in range(0, len(adjacency_list)):
-        first = chr(65 + int(i))
-        if len(adjacency_list[i]) > 0:
-            for neighbor in adjacency_list[i]:
-                second = chr(65 + int(neighbor))
-                output += first + " -> " + second + " \n"
-
-        if ignore_orphans:
-            output += first + '.status = "Traced" \n'
-
-    #              A.status = "Traced"
+    # First list every edge like A -> B [weight > x]
+    for edge in edges:
+        edge_str = edge['label']
+        if 'properties' in edge:
+            edge_str += ' ['
+            for i, prop in enumerate(list(edge['properties'].items())):
+                if i != 0:
+                    edge_str += ', '
+                edge_str += prop[0]
+                if type(prop[1]) == int or type(prop[1]) == float:
+                    edge_str += ' == ' + str(prop[1])
+                elif '$lt' in prop[1]:
+                    edge_str += ' < ' + str(prop[1]['$lt'])
+                elif '$gt' in prop[1]:
+                    edge_str += ' > ' + str(prop[1]['$gt'])
+            edge_str += ']'
+        edge_str += ' \n'
+        output += edge_str
+    # Now list every node property like A['prop'] == True
+    for node in nodes:
+        node_str = str(node['label']) + '.status = "Traced" \n'
+        if 'properties' in node and node['properties'] is not None:
+            for prop in list(node['properties'].items()):
+                if type(prop[1]) == bool or type(prop[1]) == int or type(prop[1]) == float:
+                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] = " + str(prop[1]) + '\n'
+                elif type(prop[1]) == str:
+                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] = " + '"' + str(prop[1]) + '"' + '\n'
+                elif '$lt' in prop[1]:
+                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] < " + str(prop[1]['$lt']) + '\n'
+                elif '$gt' in prop[1]:
+                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] > " + str(prop[1]['$gt']) + '\n'
+        output += node_str
     return output
 
 

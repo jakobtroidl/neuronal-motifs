@@ -67,6 +67,7 @@ def get_example_motif():
 def compute_motif_data(body_ids, motif):
     yield 'Beginning Computation'
     adjacency = apply_ids_to_motif_adjacency(body_ids, motif)
+    print('Adjacency Simon', adjacency)
     yield 'Creating Motif Graph'
     motif_graph = nx.DiGraph(adjacency)
     yield 'Downloading Neurons and Synapses'

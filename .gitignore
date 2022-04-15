@@ -1,6 +1,7 @@
 data/
 
 .idea/
+.ipynb_checkpoints/
 neuronal_motifs/client/node_modules/
 neuronal_motifs/server/utils/access_token.json
 
