@@ -58,6 +58,7 @@ function SketchPanel() {
                     currentPath.strokeWidth = 3;
                     currentPath.fillColor = color;
                     currentPath.opacity = 0.5;
+
                 } else {
                     currentPath.position = point;
                 }
@@ -128,7 +129,7 @@ function SketchPanel() {
                 let intersections = _.findLastIndex(nodes.map(n => {
                     return n.circle.contains(event.point)
                 }), e => e === true);
-                if (intersections !== -1 && !currentNode) {
+                if (intersections !== -1 && !currentNode && currentPath) {
                     currentNode = nodes[intersections]
                     currentPath.segments[0].position = (currentNode.circle.getNearestPoint(point));
                     return;
@@ -234,10 +235,14 @@ function SketchPanel() {
         }
     }, [pencil, mouseState, nodes, edges])
     useEffect(() => {
+        currentPath?.remove();
         setPopperLocation(null);
         setShowPopper(false);
         if (paper?.project?.activeLayer) {
             paper.project.activeLayer.selected = false;
+            paper.project.activeLayer.children.forEach(child => {
+                if (child.opacity === 0.5) child.remove();
+            })
         }
 
     }, [mouseState])

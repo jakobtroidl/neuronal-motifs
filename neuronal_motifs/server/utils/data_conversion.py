@@ -82,16 +82,20 @@ def nodes_and_edges_to_motif_string(motif):
             edge_str += ']'
         edge_str += ' \n'
         output += edge_str
-    # for node in nodes:
-
-    test = ''
-    # for i in range(0, len(adjacency_list)):
-    #     first = chr(65 + int(i))
-    #     if len(adjacency_list[i]) > 0:
-    #         for neighbor in adjacency_list[i]:
-    #             second = chr(65 + int(neighbor))
-    #             output += first + " -> " + second + " \n"
-    # return output
+    for node in nodes:
+        node_str = str(node['label']) + '.status = "Traced" \n'
+        if 'properties' in node and node['properties'] is not None:
+            for prop in list(node['properties'].items()):
+                if type(prop[1]) == bool or type(prop[1]) == int or type(prop[1]) == float:
+                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] = " + str(prop[1]) + '\n'
+                elif type(prop[1]) == str:
+                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] = " + '"' + str(prop[1]) + '"' + '\n'
+                elif '$lt' in prop[1]:
+                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] < " + str(prop[1]['$lt']) + '\n'
+                elif '$gt' in prop[1]:
+                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] > " + str(prop[1]['$gt']) + '\n'
+        output += node_str
+    return output
 
 
 def synapse_array_to_object(synapse_df):

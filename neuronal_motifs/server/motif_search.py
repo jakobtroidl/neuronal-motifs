@@ -15,25 +15,6 @@ def search_hemibrain_motif(motif_specs, lim):
 
     motif_source = nodes_and_edges_to_motif_string(motif_specs)
 
-    # motif_source = """
-    #     diedge(a, b) {
-    #                 a -> b
-    #                 b !> a
-    #                 a.type == "KCab-p"
-    #             }
-    #             diedge(A, B)
-    #             diedge(B, C)
-    #             diedge(C, D)
-    #             A !> C
-    #             C !> A
-    #             D !> B
-    #             B !> D
-    # """
-    #
-    # motif_source = """
-    #     input -> output
-    #     input.type == "KCab-p"
-    # """
     motif = Motif(motif_source)
     results = E.find(motif, limit=lim)
     return results.to_dict('records')
