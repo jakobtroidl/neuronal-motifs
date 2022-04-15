@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useContext} from 'react';
 import {AppContext} from "../contexts/GlobalContext";
-import {NodeFields} from "../data/NodeFields";
-import {EdgeFields} from "../data/EdgeFields";
+import {NodeFields} from "../config/NodeFields";
+import {EdgeFields} from "../config/EdgeFields";
 import {Query, Builder, BasicConfig, Utils as QbUtils} from 'react-awesome-query-builder';
 import './QueryBuilder.css'
 
