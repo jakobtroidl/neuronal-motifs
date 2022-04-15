@@ -160,7 +160,6 @@ function Viewer() {
     useEffect(() => {
         if (motif && sharkViewerInstance) {
             let neurons = motif.neurons;
-            console.log(motif.neurons)
             const orange = new THREE.Color("rgb(255,154,0)");
 
             // update the synapse picking ray with the camera and pointer position
@@ -176,12 +175,11 @@ function Viewer() {
                     let mesh = new THREE.Mesh(geometry, material);
 
                     mesh.geometry.name = "synapse";
-                    if (mesh.geometry.userData.length == 0) {
+                    if (!mesh.geometry.userData.neurons) {
                         mesh.geometry.userData = { neurons: [neuron.id] }
-                        console.log("made a new thing")
-                    } else {
+                    } else { // may need fixing because we seem to be creating "two" synapses
                         mesh.geometry.userData.neurons.push(neuron.id)
-                        console.log("tried to push")
+                        console.log("added neuron")
                     }
 
                     mesh.position.x = syn.x;
@@ -194,8 +192,8 @@ function Viewer() {
         }
     }, [motif, sharkViewerInstance])
 
-    // synapse picking
-    // neuron geometry is undefined; synapse geometry is SphereGeometry
+    // // synapse picking
+    // // neuron geometry is undefined; synapse geometry is SphereGeometry
     // useEffect(() => {
     //     if (motif && sharkViewerInstance) {
     //         let neurons = motif.neurons;
@@ -230,9 +228,11 @@ function Viewer() {
 
     //                     // change neuron color
     //                     let connectedNeurons = intersects[0].object.geometry.userData.neurons;
-    //                     for (let i = 0; i < connectedNeurons.length; i++) {
-    //                         // make the neuron less opacity -- can change to set color or whatever
-    //                         sharkViewerInstance.setNeuronDisplayLevel(connectedNeurons[i], 0.5);
+    //                     if (connectedNeurons.length > 0) {
+    //                         for (let i = 0; i < connectedNeurons.length; i++) {
+    //                             // make the neuron less opacity -- can change to set color or whatever
+    //                             sharkViewerInstance.setNeuronDisplayLevel(connectedNeurons[i], 0.5);
+    //                         }
     //                     }
     //                 }
     //             }
@@ -250,12 +250,12 @@ function Viewer() {
     //     }
     // }, [motif, sharkViewerInstance])
 
-    // // displays data about presynaptic and postsynaptic distance
-    // function synapseView() {
-    //     return (
-    //         <ReactTooltip place="top"></ReactTooltip>
-    //     )
-    // }
+    // displays data about presynaptic and postsynaptic distance
+    function synapseView() {
+        return (
+            <ReactTooltip place="top"></ReactTooltip>
+        )
+    }
 
     return (
         <div id={id} className={className} onMouseMove={onPointerMove}></div>
