@@ -52,7 +52,7 @@ function QueryBuilder() {
         let updatedElem = {
             ...context.selectedSketchElement,
             tree: immutableTree,
-            query: query
+            properties: query
         };
         context.setSelectedSketchElement(updatedElem);
     }

@@ -226,8 +226,6 @@ function SketchPanel() {
         edgeObj['type'] = 'edge';
         edgeObj['label'] = `${edgeObj.fromNode.label} -> ${edgeObj.toNode.label}`
         setEdges([...edges, edgeObj])
-
-
     })
     useEffect(() => {
         if (pencil && mouseState) {
@@ -258,7 +256,7 @@ function SketchPanel() {
                 setEdges(edges.map(e => {
                     if (_.isEqual(e.edgeLine, context.selectedSketchElement.edgeLine)) {
                         e.tree = context.selectedSketchElement.tree;
-                        e.query = context.selectedSketchElement.query;
+                        e.properties = context.selectedSketchElement.properties;
                     }
                     return e
                 }));
@@ -266,7 +264,7 @@ function SketchPanel() {
                 setNodes(nodes.map(n => {
                     if (_.isEqual(n.circle, context.selectedSketchElement.circle)) {
                         n.tree = context.selectedSketchElement.tree;
-                        n.query = context.selectedSketchElement.query;
+                        n.properties = context.selectedSketchElement.properties;
                     }
                     return n
                 }));
@@ -292,6 +290,16 @@ function SketchPanel() {
         }
 
     }, [edges])
+    // Encode the Nodes and Edges For Query
+    useEffect(() => {
+        let encodedNodes = nodes.map((n, i) => {
+            return {label: n.label, properties: n.properties, index: i}
+        });
+        let encodedEdges = edges.map((e, i) => {
+            return {label: e.label, properties: e.properties, index: i, indices: e.indices}
+        })
+        context.setMotifQuery({nodes: encodedNodes, edges: encodedEdges})
+    }, [nodes, edges])
 
     return (
         <div className='sketch-panel-style'>

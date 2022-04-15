@@ -13,15 +13,6 @@ export const ContextWrapper = (props) => {
     const [loadingMessage, setLoadingMessage] = useState();
     const [selectedSketchElement, setSelectedSketchElement] = useState(null);
 
-    //const [clearViewer, setClearViewer] = useState(0);
-
-    // const [actions, setActions] = useState({
-    //     changeAbstractionLevel: level => setAbstractionLevel(level),
-    //     changeMotifQuery: query => setMotifQuery(query),
-    //     changeSelectedMotif: motif => setSelectedMotif(motif),
-    //     clearView: clear => setClearViewer(clearViewer + clear)
-    // });
-
     return (
         <AppContext.Provider value={
             {

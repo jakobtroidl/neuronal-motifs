@@ -53,16 +53,10 @@ function Viewer() {
         if (context.selectedMotif) {
             let selectedMotif = context.selectedMotif;
             let bodyIds = selectedMotif.map(m => m.bodyId);
-
             bodyIds = JSON.stringify(bodyIds);
             let motifQuery = JSON.stringify(context.motifQuery);
-
             let id_ranges = Array.from({length: selectedMotif.length}, (_, i) => i * 1000);
             setLoadedNeurons(id_ranges);
-
-            // let res = await axios.get(`http://localhost:5050/display_motif/bodyIDs=${bodyIds}&motif=${motifQuery}`);
-            // //let res = await axios.get(`http://localhost:5050/get_test_motif`);
-
             const ws = new WebSocket(`ws://localhost:5050/display_motif_ws/`)
             ws.onopen = function (e) {
                 console.log("[open] Connection established", new Date().getSeconds());

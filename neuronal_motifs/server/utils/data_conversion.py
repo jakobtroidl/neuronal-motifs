@@ -11,6 +11,7 @@ def get_cache_filename(ids):
     """
     return "_".join(map(str, ids))
 
+
 def apply_ids_to_motif_adjacency(body_ids, motif):
     """
     TODO
@@ -26,6 +27,7 @@ def apply_ids_to_motif_adjacency(body_ids, motif):
             adj[i].append(mapped)
 
     return dict(zip(body_ids, adj))
+
 
 def treeneurons_list_to_swc_string_list(skeletons):
     """
@@ -58,16 +60,38 @@ def treeneuron_to_swc_string(neuron_skeleton):
     return {'swc': out, 'map': map_new_to_old}
 
 
-def adjacency_list_to_motif_string(adjacency_list):
-    print(adjacency_list)
+def nodes_and_edges_to_motif_string(motif):
+    print(motif)
+    edges = motif['edges']
+    nodes = motif['nodes']
     output = "\n "
-    for i in range(0, len(adjacency_list)):
-        first = chr(65 + int(i))
-        if len(adjacency_list[i]) > 0:
-            for neighbor in adjacency_list[i]:
-                second = chr(65 + int(neighbor))
-                output += first + " -> " + second + " \n"
-    return output
+    for edge in edges:
+        edge_str = edge['label']
+        if 'properties' in edge:
+            edge_str += ' ['
+            for i, prop in enumerate(list(edge['properties'].items())):
+                if i != 0:
+                    edge_str += ', '
+                edge_str += prop[0]
+                if type(prop[1]) == int or type(prop[1]) == float:
+                    edge_str += ' == ' + str(prop[1])
+                elif '$lt' in prop[1]:
+                    edge_str += ' < ' + str(prop[1]['$lt'])
+                elif '$gt' in prop[1]:
+                    edge_str += ' > ' + str(prop[1]['$gt'])
+            edge_str += ']'
+        edge_str += ' \n'
+        output += edge_str
+    # for node in nodes:
+
+    test = ''
+    # for i in range(0, len(adjacency_list)):
+    #     first = chr(65 + int(i))
+    #     if len(adjacency_list[i]) > 0:
+    #         for neighbor in adjacency_list[i]:
+    #             second = chr(65 + int(neighbor))
+    #             output += first + " -> " + second + " \n"
+    # return output
 
 
 def synapse_array_to_object(synapse_df):

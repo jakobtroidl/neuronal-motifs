@@ -50,12 +50,11 @@ function MotifPanel() {
     }
 
     const fetchMotifs = async () => {
-        //const encodedMotif = encodeURIComponent(Object.keys(context.store.motifQuery).join('\n'));
-        const encodedMotif = JSON.stringify(context.motifQuery);
-
-        console.log(encodedMotif);
+        console.log('Fetch Motifs');
         context.setLoadingMessage('Searching for Motifs')
-        const res = await axios(`http://localhost:5050/search/motif=${encodedMotif}&lim=${number}`);
+        const res = await axios.post('http://localhost:5050/search',{
+            motif: context.motifQuery,
+            lim: number})
         const motifs = res.data;
         context.setLoadingMessage(null)
         setSearchedMotifs(motifs)
@@ -112,7 +111,7 @@ function MotifPanel() {
                             </Grid>
                             <Grid item>
                                 <FormControl sx={{m: 1, minWidth: 100}}>
-                                    <Button style={{height:52}}variant="contained" startIcon={<SearchIcon/>}
+                                    <Button style={{height: 52}} variant="contained" startIcon={<SearchIcon/>}
                                             onClick={handleSubmit}>
                                         Search
                                     </Button>
