@@ -214,21 +214,22 @@ function SketchPanel() {
                 console.log('grab', currentNode);
 
                 let nodeIndex = _.findLastIndex(nodes.map(n => n.label === currentNode.label));
-
                 // // list of edges including this edge
                 let tmpEdges = _.clone(edges);
                 let edgesToAddAgain = []
                 let filteredEdges = tmpEdges.filter(e => {
                     if (e.indices.includes(nodeIndex)) {
-                        edgesToAddAgain.push(_.cloneDeep(e));
+                        edgesToAddAgain.push(e);
                         return false;
                     }
                     return true;
                 })
-                setEdges(filteredEdges);
-                edgesToAddAgain.forEach(e => {
-                    addEdge(e.fromNode, e.toNode, e.edgeLine, e.oppositeEdge, true);
+                let newEdges = edgesToAddAgain.map(e => {
+                    e.edgeLine.opacity = 1;
+                    return createEdge(e.fromNode, e.toNode, e.edgeLine, e.indices);
                 })
+
+                setEdges([...newEdges, ...filteredEdges]);
 
 
                 setCursor('grab');
@@ -236,7 +237,6 @@ function SketchPanel() {
         }
         pencil.onMouseDrag = function (event) {
             if (mouseState === 'move') {
-
                 let intersections = _.findLastIndex(nodes.map(n => {
                     return n.circle.contains(event.point)
                 }), e => e === true);
@@ -245,22 +245,23 @@ function SketchPanel() {
                 nodes[intersections].circleGroup.position = new paper.Point(event.point);
                 currentNode = nodes[intersections]
 
-                edges.forEach((e, i, arr) => {
+                edges.forEach((e, i) => {
                         if (e.indices.includes(intersections)) {
                             if (e.lineGroup) {
-                                arr[i].lineGroup.remove();
-                                arr[i].edgeLine.remove()
-                                arr[i].edgeLine = null;
-                                arr[i].edgeLine = null;
-                                arr[i].edgeLine = new paper.Path();
-                                arr[i].edgeLine.strokeColor = '#000000';
-                                arr[i].edgeLine.strokeWidth = 3
-                                arr[i].edgeLine.opacity = 0.5;
-                                arr[i].edgeLine.add([0, 0]);
-                                arr[i].edgeLine.add([0, 0]);
+                                edges[i].edgeLine.remove()
+                                edges[i].lineGroup.remove();
+                                edges[i].edgeLine = null;
+                                edges[i].edgeLine = null;
+                                edges[i].oppositeEdge = null;
+                                edges[i].edgeLine = new paper.Path();
+                                edges[i].edgeLine.strokeColor = '#000000';
+                                edges[i].edgeLine.strokeWidth = 3
+                                edges[i].edgeLine.opacity = 0.5;
+                                edges[i].edgeLine.add([0, 0]);
+                                edges[i].edgeLine.add([0, 0]);
                             }
-                            arr[i].edgeLine.segments[0].point = nodes[e.indices[0]].circle.getNearestPoint(nodes[e.indices[1]].circle.position)
-                            arr[i].edgeLine.segments[1].point = nodes[e.indices[1]].circle.getNearestPoint(nodes[e.indices[0]].circle.position)
+                            edges[i].edgeLine.segments[0].point = nodes[e.indices[0]].circle.getNearestPoint(nodes[e.indices[1]].circle.position)
+                            edges[i].edgeLine.segments[1].point = nodes[e.indices[1]].circle.getNearestPoint(nodes[e.indices[0]].circle.position)
                         }
                     }
                 )
@@ -268,24 +269,27 @@ function SketchPanel() {
             }
         }
     }
-    const addEdge = ((fromNode, toNode, edgeLine, oppositeEdge = null, ignoreDuplicate = false) => {
-        let indices = [_.findLastIndex(nodes, fromNode), _.findLastIndex(nodes, toNode)];
-        let edgeObj = {'indices': indices, 'toNode': toNode, 'fromNode': fromNode, 'edgeLine': edgeLine}
+    const addEdge = ((fromNode, toNode, edgeLine) => {
+        let nodeIndices = [_.findLastIndex(nodes, fromNode), _.findLastIndex(nodes, toNode)];
         let matchingEdge = _.findIndex(edges, (e) => {
-            return _.isEqual(e.indices, indices);
+            return _.isEqual(e.indices, nodeIndices);
         })
-        // If this edge already exists, don't create it
-        if (matchingEdge !== -1 && !ignoreDuplicate) {
+        if (matchingEdge !== -1) {
             console.log('Edge Exists')
             edgeLine.remove();
             return;
         }
+        const newEdgeObj = createEdge(fromNode, toNode, edgeLine, nodeIndices);
+
+        setEdges([...edges, newEdgeObj])
+    })
+
+    const createEdge = ((fromNode, toNode, edgeLine, nodeIndices) => {
+
+        let edgeObj = {'indices': nodeIndices, 'toNode': toNode, 'fromNode': fromNode, 'edgeLine': edgeLine}
+        // If this edge already exists, don't create it
+
         // Checks from an edge going the opposite direction between the same two nodes
-        if (!oppositeEdge) {
-            oppositeEdge = _.findIndex(edges, (e) => {
-                return _.isEqual(e.indices, [indices[1], indices[0]]);
-            })
-        }
         let origToPoint = _.cloneDeep(edgeLine.segments[0].point);
         let circ = new paper.Path.Circle(origToPoint, 8);
         let toPoint = edgeLine.segments[0].point = circ.getIntersections(edgeLine)[0].point;
@@ -308,32 +312,44 @@ function SketchPanel() {
         trianglePath.strokeWidth = 3;
         trianglePath.strokeJoin = 'round';
         // Create a big group with line and arrow
+        edgeObj['toPoint'] = toPoint;
+        edgeObj['fromPoint'] = fromPoint;
         edgeObj['lineGroup'] = new paper.Group([trianglePath, edgeObj.edgeLine]);
         secondCircle?.remove();
         circle?.remove();
-        // If edges go in opposite directions, shift them to be parallel and distinguishable
-        if (oppositeEdge !== -1) {
-            let midpoint = new paper.Point([(toPoint.x + fromPoint.x) / 2, (toPoint.y + fromPoint.y) / 2])
-            let circle1 = new paper.Path.Circle(midpoint, 5);
-            let circle2 = new paper.Path.Circle(circle1.getIntersections(edges[oppositeEdge].edgeLine)[0].point,
-                Math.sqrt(5 ** 2 + 5 ** 2));
-            let pointDelta = circle2.getIntersections(circle1).map(e => e.point).sort((a, b) => {
-                return a.y - b.y;
-            }).map(pt => new paper.Point([midpoint.x - pt.x, midpoint.y - pt.y]))
-            edgeObj['lineGroup'].translate(pointDelta[0]);
-            edgeObj['oppositeEdge'] = oppositeEdge;
-            edges[oppositeEdge]['oppositeEdge'] = _.size(edges);
-            edges[oppositeEdge]['lineGroup'].translate(pointDelta[1]);
-        }
         edgeObj['type'] = 'edge';
         edgeObj['label'] = `${edgeObj.fromNode.label} -> ${edgeObj.toNode.label}`
-        setEdges([...edges, edgeObj])
+        return edgeObj
     })
+
     const getNodeLocations = () => {
         return nodes.map(n => {
             return {'label': n.label, 'position': n.circle.position}
         });
     }
+
+    // Checks for edges going opposite to each other and offsets them so they are distinguishable
+    useEffect(() => {
+        if (!edges) return;
+        edges.forEach((e, i) => {
+            let oppositeEdge = _.findIndex(edges, (oppE) => {
+                return _.isEqual(oppE.indices, [e.indices[1], e.indices[0]]);
+            });
+            if (oppositeEdge !== -1 && !e.oppositeEdge && oppositeEdge > i) {
+                let midpoint = new paper.Point([(e.toPoint.x + e.fromPoint.x) / 2, (e.toPoint.y + e.fromPoint.y) / 2])
+                let circle1 = new paper.Path.Circle(midpoint, 5);
+                let circle2 = new paper.Path.Circle(circle1.getIntersections(edges[oppositeEdge].edgeLine)[0].point,
+                    Math.sqrt(5 ** 2 + 5 ** 2));
+                let pointDelta = circle2.getIntersections(circle1).map(e => e.point).sort((a, b) => {
+                    return a.y - b.y;
+                }).map(pt => new paper.Point([midpoint.x - pt.x, midpoint.y - pt.y]));
+                e['lineGroup'].translate(pointDelta[0]);
+                edges[oppositeEdge]['lineGroup'].translate(pointDelta[1]);
+                edges[oppositeEdge]['oppositeEdge'] = i;
+                e['oppositeEdge'] = oppositeEdge;
+            }
+        })
+    }, [edges])
 
     useEffect(() => {
         if (pencil && mouseState) {
