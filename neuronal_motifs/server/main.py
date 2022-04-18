@@ -94,10 +94,8 @@ async def ws_get_motif_data(websocket: WebSocket):
     try:
         for val in get_motif_generator:
             payload = val
-            print('a', time.time() - timer)
             await websocket.send_json(payload)
             await websocket.receive_text()
-            print('b', time.time() - timer)
     except StopIteration:
         print('Done Fetching Motif')
 

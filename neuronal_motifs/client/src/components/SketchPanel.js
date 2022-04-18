@@ -525,7 +525,7 @@ function SketchPanel() {
                                             currentPath?.remove();
                                             setMouseState('move');
                                         }}>
-                                <FontAwesomeIcon style={{height: '95%', width: '95%'}} icon={faHand}/>
+                                <FontAwesomeIcon style={{height: '0.95em', width: '0.95em'}} icon={faHand}/>
                             </IconButton>
                         </Tooltip>
                     </Grid>
