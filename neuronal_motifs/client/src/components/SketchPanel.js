@@ -1,6 +1,5 @@
 import React, {useState, useEffect, useContext} from 'react';
 import './SketchPanel.css'
-
 import QueryBuilder from './QueryBuilder'
 import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
@@ -9,7 +8,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import paper from 'paper'
 import {AppContext} from "../contexts/GlobalContext";
 import _ from 'lodash';
-import {Box, Fade, Grid, IconButton, Popover, Tooltip, Typography} from '@mui/material';
+import {Grid, Icon, IconButton, Popover, Tooltip} from '@mui/material';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
+import {faHand} from '@fortawesome/free-solid-svg-icons'
 
 
 function SketchPanel() {
@@ -19,6 +20,7 @@ function SketchPanel() {
     let [edges, setEdges] = useState([])
     // States are node (add nodes), edge (add edges), edit(change node/edge properties)
     let [mouseState, setMouseState] = useState('node');
+    let [cursor, setCursor] = useState('crosshair');
     let [pencil, setPencil] = useState();
     // Checks for mouse intersections
     let [testCircle, setTestCircle] = useState();
@@ -29,6 +31,7 @@ function SketchPanel() {
     let currentPath;
     let currentNode;
     let currentSelection;
+
     // We track the overall motif in the global context
     const context = useContext(AppContext);
 
@@ -66,7 +69,6 @@ function SketchPanel() {
             } else if (mouseState === 'edge') {
                 if (context.selectedSketchElement) context.setSelectedSketchElement(null);
                 if (!currentPath) {
-                    // Displays a little line on the cursor
                     currentPath = new paper.Path();
                     currentPath.strokeColor = '#000000';
                     currentPath.strokeWidth = 3
@@ -109,6 +111,18 @@ function SketchPanel() {
                     return
                 }
                 currentSelection = null;
+            } else if (mouseState === 'move') {
+                let intersections = _.findLastIndex(nodes.map(n => {
+                    return n.circle.contains(event.point)
+                }), e => e === true);
+                // Check with intersections with nodes
+                if (intersections !== -1) {
+                    currentSelection = nodes[intersections];
+                    nodes[intersections].circle.selected = true;
+                } else {
+                    currentSelection = null;
+                    paper.project.activeLayer.selected = false;
+                }
             }
         }
         pencil.onMouseDown = function (event) {
@@ -131,7 +145,14 @@ function SketchPanel() {
                 label.content = labelLetter;
                 currentPath?.remove();
                 currentPath = null;
-                setNodes(nodes => [...nodes, {circle: circle, label: labelLetter, properties: null, type: 'node'}]);
+                let circleGroup = new paper.Group([circle, label]);
+                setNodes(nodes => [...nodes, {
+                    circle: circle,
+                    label: labelLetter,
+                    properties: null,
+                    type: 'node',
+                    circleGroup: circleGroup
+                }]);
             } else if (mouseState == 'edge') {
                 let intersections = _.findLastIndex(nodes.map(n => {
                     return n.circle.contains(event.point)
@@ -175,27 +196,100 @@ function SketchPanel() {
                     context.setSelectedSketchElement(null);
                     setPopperLocation(null);
                 }
+            } else if (mouseState === 'move') {
+                let intersections = _.findLastIndex(nodes.map(n => {
+                    return n.circle.contains(event.point)
+                }), e => e === true);
+                // Check with intersections with nodes
+                if (intersections !== -1) {
+                    currentSelection = nodes[intersections];
+                }
+                if (currentSelection) {
+                    setCursor('grabbing')
+                }
             }
         }
         pencil.onMouseUp = function (event) {
+            if (mouseState === 'move') {
+                console.log('grab', currentNode);
+
+                let nodeIndex = _.findLastIndex(nodes.map(n => n.label === currentNode.label));
+                // // list of edges including this edge
+                let tmpEdges = _.clone(edges);
+                let edgesToAddAgain = []
+                let filteredEdges = tmpEdges.filter(e => {
+                    if (e.indices.includes(nodeIndex)) {
+                        edgesToAddAgain.push(e);
+                        return false;
+                    }
+                    return true;
+                })
+                let newEdges = edgesToAddAgain.map(e => {
+                    e.edgeLine.opacity = 1;
+                    return createEdge(e.fromNode, e.toNode, e.edgeLine, e.indices);
+                })
+
+                setEdges([...newEdges, ...filteredEdges]);
+
+
+                setCursor('grab');
+            }
+        }
+        pencil.onMouseDrag = function (event) {
+            if (mouseState === 'move') {
+                let intersections = _.findLastIndex(nodes.map(n => {
+                    return n.circle.contains(event.point)
+                }), e => e === true);
+                // Check with intersections with nodes
+                if (intersections === -1) return;
+                nodes[intersections].circleGroup.position = new paper.Point(event.point);
+                currentNode = nodes[intersections]
+
+                edges.forEach((e, i) => {
+                        if (e.indices.includes(intersections)) {
+                            if (e.lineGroup) {
+                                edges[i].edgeLine.remove()
+                                edges[i].lineGroup.remove();
+                                edges[i].edgeLine = null;
+                                edges[i].edgeLine = null;
+                                edges[i].oppositeEdge = null;
+                                edges[i].edgeLine = new paper.Path();
+                                edges[i].edgeLine.strokeColor = '#000000';
+                                edges[i].edgeLine.strokeWidth = 3
+                                edges[i].edgeLine.opacity = 0.5;
+                                edges[i].edgeLine.add([0, 0]);
+                                edges[i].edgeLine.add([0, 0]);
+                            }
+                            edges[i].edgeLine.segments[0].point = nodes[e.indices[0]].circle.getNearestPoint(nodes[e.indices[1]].circle.position)
+                            edges[i].edgeLine.segments[1].point = nodes[e.indices[1]].circle.getNearestPoint(nodes[e.indices[0]].circle.position)
+                        }
+                    }
+                )
+
+            }
         }
     }
     const addEdge = ((fromNode, toNode, edgeLine) => {
-
-        let indices = [_.findLastIndex(nodes, fromNode), _.findLastIndex(nodes, toNode)];
-        let edgeObj = {'indices': indices, 'toNode': toNode, 'fromNode': fromNode, 'edgeLine': edgeLine}
+        let nodeIndices = [_.findLastIndex(nodes, fromNode), _.findLastIndex(nodes, toNode)];
         let matchingEdge = _.findIndex(edges, (e) => {
-            return _.isEqual(e.indices, indices);
+            return _.isEqual(e.indices, nodeIndices);
         })
-        // If this edge already exists, don't create it
         if (matchingEdge !== -1) {
+            console.log('Edge Exists')
             edgeLine.remove();
             return;
         }
+        const newEdgeObj = createEdge(fromNode, toNode, edgeLine, nodeIndices);
+
+        setEdges([...edges, newEdgeObj])
+    })
+
+    const createEdge = ((fromNode, toNode, edgeLine, nodeIndices) => {
+
+        let edgeObj = {'indices': nodeIndices, 'toNode': toNode, 'fromNode': fromNode, 'edgeLine': edgeLine}
+        // If this edge already exists, don't create it
+
         // Checks from an edge going the opposite direction between the same two nodes
-        let oppositeEdge = _.findIndex(edges, (e) => {
-            return _.isEqual(e.indices, [indices[1], indices[0]]);
-        })
         let origToPoint = _.cloneDeep(edgeLine.segments[0].point);
         let circ = new paper.Path.Circle(origToPoint, 8);
         let toPoint = edgeLine.segments[0].point = circ.getIntersections(edgeLine)[0].point;
@@ -218,25 +312,45 @@ function SketchPanel() {
         trianglePath.strokeWidth = 3;
         trianglePath.strokeJoin = 'round';
         // Create a big group with line and arrow
+        edgeObj['toPoint'] = toPoint;
+        edgeObj['fromPoint'] = fromPoint;
         edgeObj['lineGroup'] = new paper.Group([trianglePath, edgeObj.edgeLine]);
         secondCircle?.remove();
         circle?.remove();
-        // If edges go in opposite directions, shift them to be parallel and distinguishable
-        if (oppositeEdge !== -1) {
-            let midpoint = new paper.Point([(toPoint.x + fromPoint.x) / 2, (toPoint.y + fromPoint.y) / 2])
-            let circle1 = new paper.Path.Circle(midpoint, 5);
-            let circle2 = new paper.Path.Circle(circle1.getIntersections(edges[oppositeEdge].edgeLine)[0].point,
-                Math.sqrt(5 ** 2 + 5 ** 2));
-            let pointDelta = circle2.getIntersections(circle1).map(e => e.point).sort((a, b) => {
-                return a.y - b.y;
-            }).map(pt => new paper.Point([midpoint.x - pt.x, midpoint.y - pt.y]))
-            edgeObj['lineGroup'].translate(pointDelta[0]);
-            edges[oppositeEdge]['lineGroup'].translate(pointDelta[1]);
-        }
         edgeObj['type'] = 'edge';
         edgeObj['label'] = `${edgeObj.fromNode.label} -> ${edgeObj.toNode.label}`
-        setEdges([...edges, edgeObj])
+        return edgeObj
     })
+
+    const getNodeLocations = () => {
+        return nodes.map(n => {
+            return {'label': n.label, 'position': n.circle.position}
+        });
+    }
+
+    // Checks for edges going opposite to each other and offsets them so they are distinguishable
+    useEffect(() => {
+        if (!edges) return;
+        edges.forEach((e, i) => {
+            let oppositeEdge = _.findIndex(edges, (oppE) => {
+                return _.isEqual(oppE.indices, [e.indices[1], e.indices[0]]);
+            });
+            if (oppositeEdge !== -1 && !e.oppositeEdge && oppositeEdge > i) {
+                let midpoint = new paper.Point([(e.toPoint.x + e.fromPoint.x) / 2, (e.toPoint.y + e.fromPoint.y) / 2])
+                let circle1 = new paper.Path.Circle(midpoint, 5);
+                let circle2 = new paper.Path.Circle(circle1.getIntersections(edges[oppositeEdge].edgeLine)[0].point,
+                    Math.sqrt(5 ** 2 + 5 ** 2));
+                let pointDelta = circle2.getIntersections(circle1).map(e => e.point).sort((a, b) => {
+                    return a.y - b.y;
+                }).map(pt => new paper.Point([midpoint.x - pt.x, midpoint.y - pt.y]));
+                e['lineGroup'].translate(pointDelta[0]);
+                edges[oppositeEdge]['lineGroup'].translate(pointDelta[1]);
+                edges[oppositeEdge]['oppositeEdge'] = i;
+                e['oppositeEdge'] = oppositeEdge;
+            }
+        })
+    }, [edges])
+
     useEffect(() => {
         if (pencil && mouseState) {
             // Rebind the pencil events whenever new nodes are drawn
@@ -322,7 +436,7 @@ function SketchPanel() {
         <div className='sketch-panel-style'>
             <Grid container className="canvas-wrapper" spacing={0}>
                 <Grid item xs={11}>
-                    <div className="sketch-canvas">
+                    <div className="sketch-canvas" style={{cursor: cursor || 'crosshair'}}>
                         <canvas id={sketchPanelId}></canvas>
                         {showPopper && popperLocation && context.selectedSketchElement &&
                         < Popover
@@ -368,6 +482,7 @@ function SketchPanel() {
                             <IconButton value='node' color={mouseState === 'node' ? "primary" : "default"}
                                         onClick={() => {
                                             currentPath?.remove();
+                                            setCursor('crosshair')
                                             setMouseState('node')
                                         }}>
                                 <CircleTwoToneIcon fontSize="small"/>
@@ -377,6 +492,7 @@ function SketchPanel() {
                             <IconButton color={mouseState === 'edge' ? "primary" : "default"}
                                         onClick={() => {
                                             currentPath?.remove();
+                                            setCursor('crosshair')
                                             setMouseState('edge')
                                         }}>
                                 <ArrowRightAltIcon fontSize="small"/>
@@ -384,7 +500,10 @@ function SketchPanel() {
                         </Tooltip>
                         <Tooltip title="Clear Sketch" placement="right">
                             <IconButton color="default"
-                                        onClick={clearSketch}>
+                                        onClick={() => {
+                                            setCursor('crosshair')
+                                            clearSketch()
+                                        }}>
                                 <DeleteIcon fontSize="small"/>
                             </IconButton>
                         </Tooltip>
@@ -392,10 +511,21 @@ function SketchPanel() {
                         <Tooltip title="Select" placement="right">
                             <IconButton value='edit' color={mouseState === 'edit' ? "primary" : "default"}
                                         onClick={() => {
+                                            setCursor('pointer')
                                             currentPath?.remove();
                                             setMouseState('edit');
                                         }}>
                                 <EditIcon fontSize="small"/>
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Move" placement="right">
+                            <IconButton value='edit' color={mouseState === 'move' ? "primary" : "default"}
+                                        onClick={() => {
+                                            setCursor('grab')
+                                            currentPath?.remove();
+                                            setMouseState('move');
+                                        }}>
+                                <FontAwesomeIcon style={{height: '95%', width: '95%'}} icon={faHand}/>
                             </IconButton>
                         </Tooltip>
                     </Grid>
