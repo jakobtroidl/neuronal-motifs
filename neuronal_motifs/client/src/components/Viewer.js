@@ -16,7 +16,12 @@ const getVisibleNeurons = (scene) => {
 }
 
 
-const createMoveAnimation = ({ mesh, startPosition, endPosition }) => {
+const my_render = () => {
+    console.log(this.animatedMesh);
+}
+
+
+const createMoveAnimation = ({ mesh, startPosition, endPosition, renderer }) => {
   mesh.userData.mixer = new THREE.AnimationMixer(mesh);
   let track = new THREE.VectorKeyframeTrack(
     '.position',
@@ -35,7 +40,15 @@ const createMoveAnimation = ({ mesh, startPosition, endPosition }) => {
   animationAction.setLoop(THREE.LoopOnce);
   animationAction.play();
   mesh.userData.clock = new THREE.Clock();
-  //animationsObjects.push(mesh);
+
+  return mesh;
+
+  // for(let i=0; i < 1000000; i++)
+  // {
+  //     mesh.userData.mixer.update(mesh.userData.clock.getDelta());
+  //     console.log(renderer);
+  //     renderer.render();
+  // }
 };
 
 
@@ -169,12 +182,30 @@ function Viewer() {
             })
 
             if(slider_value > 0.8) {
+
+                sharkViewerInstance.animated = true;
+                let render_func = sharkViewerInstance.render;
+                sharkViewerInstance.render = my_render;
+                sharkViewerInstance.render.bind(sharkViewerInstance);
+
+
+
                 let scene = sharkViewerInstance.scene;
+                console.log(sharkViewerInstance);
                 let visibleNeurons = getVisibleNeurons(scene);
                 console.log(visibleNeurons);
-                // createMoveAnimation({
-                //     mesh:
-                // })
+                let animated_meshes = [];
+                visibleNeurons.forEach(neuron => {
+                    console.log(neuron.position);
+                    let animated_mesh = createMoveAnimation({
+                        mesh: neuron,
+                        startPosition: neuron.position,
+                        endPosition: new THREE.Vector3(10000, 10000, 10000),
+                        sharkViewer: sharkViewerInstance
+                    })
+                    animated_meshes.push(animated_mesh);
+                })
+                sharkViewerInstance.animatedMesh = animated_meshes;
             }
 
         }
