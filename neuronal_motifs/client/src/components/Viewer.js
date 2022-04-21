@@ -5,6 +5,39 @@ import './Viewer.css'
 import * as THREE from 'three';
 import axios from "axios";
 
+const getVisibleNeurons = (scene) => {
+    let visibleMeshes = [];
+    scene.traverseVisible(mesh => {
+        if(mesh.isNeuron){
+            visibleMeshes.push(mesh);
+        }
+    })
+    return visibleMeshes;
+}
+
+
+const createMoveAnimation = ({ mesh, startPosition, endPosition }) => {
+  mesh.userData.mixer = new THREE.AnimationMixer(mesh);
+  let track = new THREE.VectorKeyframeTrack(
+    '.position',
+    [0, 1],
+    [
+      startPosition.x,
+      startPosition.y,
+      startPosition.z,
+      endPosition.x,
+      endPosition.y,
+      endPosition.z,
+    ]
+  );
+  const animationClip = new THREE.AnimationClip(null, 5, [track]);
+  const animationAction = mesh.userData.mixer.clipAction(animationClip);
+  animationAction.setLoop(THREE.LoopOnce);
+  animationAction.play();
+  mesh.userData.clock = new THREE.Clock();
+  //animationsObjects.push(mesh);
+};
+
 
 function Viewer() {
     const [motif, setMotif] = React.useState()
@@ -15,7 +48,6 @@ function Viewer() {
     const className = 'shark_viewer';
     // Global context holds abstraction state
     const context = useContext(AppContext);
-
 
     // Instantiates the viewer, will only run once on init
     useEffect(() => {
@@ -85,9 +117,6 @@ function Viewer() {
                     console.log('[close] Connection died', new Date().getSeconds());
                 }
             };
-
-
-            // setMotif(res.data);
         }
 
     }, [context.selectedMotif]);
@@ -125,8 +154,8 @@ function Viewer() {
         if (motif && sharkViewerInstance) {
             let neurons = motif.neurons;
             let neuron_number = 0;
+            let slider_value = context.abstractionLevel;
             neurons.forEach(n => {
-                let slider_value = context.abstractionLevel;
                 let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value);
                 let load_id = loadedNeurons[neuron_number] + level;
                 let unload_id = loadedNeurons[neuron_number] + prevSliderValue;
@@ -138,6 +167,16 @@ function Viewer() {
                 setPrevSliderValue(level);
                 neuron_number += 1;
             })
+
+            if(slider_value > 0.8) {
+                let scene = sharkViewerInstance.scene;
+                let visibleNeurons = getVisibleNeurons(scene);
+                console.log(visibleNeurons);
+                // createMoveAnimation({
+                //     mesh:
+                // })
+            }
+
         }
     }, [context.abstractionLevel])
 
@@ -155,6 +194,7 @@ function Viewer() {
                     let material = new THREE.MeshBasicMaterial({color: orange});
                     let mesh = new THREE.Mesh(geometry, material);
 
+                    mesh.name = "syn-" + syn.x + "-" + syn.y + "-" + syn.z;
                     mesh.position.x = syn.x;
                     mesh.position.y = syn.y;
                     mesh.position.z = syn.z;
