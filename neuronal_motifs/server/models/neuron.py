@@ -109,10 +109,17 @@ class Neuron:
             'skeleton_swc': swc_object['swc'],
             'node_map': swc_object['map'],
             'skeleton_labels': self.skeleton_labels.tolist(),
-            'skeleton_abstractions': abstraction_export
+            'skeleton_abstractions': abstraction_export,
+            'center': self.get_center()
         }
 
         return neuron
+
+    def get_center(self):
+        x = int(self.skeleton.nodes['x'].mean())
+        y = int(self.skeleton.nodes['y'].mean())
+        z = int(self.skeleton.nodes['z'].mean())
+        return [x, y, z]
 
     def set_mesh(self, mesh):
         """
