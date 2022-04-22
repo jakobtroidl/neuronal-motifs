@@ -12,6 +12,14 @@ const setLineVisibility = (scene, visible) => {
     })
 }
 
+const setSynapseVisibility = (scene, visible) => {
+  scene.children.forEach(child => {
+        if(typeof child.name == 'string' && child.name.includes('syn')){
+             child.visible = visible;
+        }
+    })
+}
+
 
 /* max count = 10 */
 const getTranslationVectors = (count) => {
@@ -232,9 +240,11 @@ function Viewer() {
 
                     if (slider_value > 1.0){
                         setLineVisibility(scene, true);
+                        setSynapseVisibility(scene, false);
                     }
                     else {
                         setLineVisibility(scene, false);
+                        setSynapseVisibility(scene, true);
                     }
 
             })
