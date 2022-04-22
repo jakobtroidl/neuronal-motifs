@@ -18,8 +18,8 @@ def get_motif(ids, motif):
     # motif = [[1], [2], [0]]
     filename = get_cache_filename(ids)
     filepath = Path("cache/data/" + filename + ".pkl")
-    # if filepath.is_file() is False:
-    if True:
+    if filepath.is_file() is False:
+    # if True:
         yield {'status': 202, 'message': 'Downloading Motif'}
         try:
             motif_data_generator = compute_motif_data(ids, motif)

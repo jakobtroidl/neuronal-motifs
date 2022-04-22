@@ -257,12 +257,12 @@ function Viewer() {
 
                     console.log(syn);
 
-                    // mesh.name = "syn-" + syn.x + "-" + syn.y + "-" + syn.z;
-                    // mesh.position.x = syn.x;
-                    // mesh.position.y = syn.y;
-                    // mesh.position.z = syn.z;
-                    //
-                    // scene.add(mesh);
+                    mesh.name = "syn-" + syn.post.x + "-" + syn.post.y + "-" + syn.post.z;
+                    mesh.position.x = (syn.post.x + syn.pre.x) / 2.0;
+                    mesh.position.y = (syn.post.y + syn.pre.y) / 2.0;
+                    mesh.position.z = (syn.post.z + syn.pre.z) / 2.0;
+
+                    scene.add(mesh);
                 })
             })
         }
