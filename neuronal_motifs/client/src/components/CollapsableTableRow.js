@@ -10,7 +10,7 @@ import TableBody from "@mui/material/TableBody";
 import PropTypes from "prop-types";
 
 export function CollapsableTableRow(props) {
-    const {row, handleClick} = props;
+    const {row, handleClick, columns} = props;
     const [open, setOpen] = React.useState(false);
 
     return (
@@ -32,30 +32,31 @@ export function CollapsableTableRow(props) {
                 </TableCell>
             </TableRow>
             <TableRow>
-                <TableCell style={{paddingBottom: 0, paddingTop: 0}} colSpan={6} onClick={() => {handleClick(row)}} className={"motif-selection-div"}>
+                <TableCell style={{paddingBottom: 0, paddingTop: 0}} colSpan={6} onClick={() => {
+                    handleClick(row)
+                }} className={"motif-selection-div"}>
                     <Collapse in={open}>
                         <Box sx={{margin: 1}}>
-                            {/*<Typography variant="h6" gutterBottom component="div">*/}
-                            {/*    History*/}
-                            {/*</Typography>*/}
-                            <Table size="small" aria-label="purchases">
+                            <Table size="small" aria-label="motifs">
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell>Node</TableCell>
-                                        <TableCell>Body ID</TableCell>
-                                        <TableCell>Instance</TableCell>
-                                        <TableCell>Status</TableCell>
+                                        {columns.filter(e => e[1]).map(col => {
+                                            return <TableCell
+                                                key={col[0]}
+                                            >{col[0]}</TableCell>
+                                        })
+                                        }
                                     </TableRow>
                                 </TableHead>
-                                <TableBody>
+                                <TableBody style={{overFlowX: 'scroll'}}>
                                     {row.neurons.map((neuron) => (
                                         <TableRow key={neuron.nodeKey}>
-                                            <TableCell component="th" scope="row">
-                                                {neuron?.nodeKey}
-                                            </TableCell>
-                                            <TableCell>{neuron?.bodyId}</TableCell>
-                                            <TableCell align="right">{neuron?.instance}</TableCell>
-                                            <TableCell align="right">{neuron?.status}</TableCell>
+                                            {columns.filter(e => e[1]).map(col => {
+                                                return <TableCell
+                                                    key={col[0]}
+                                                >{neuron[col[0]]}</TableCell>
+                                            })
+                                            }
                                         </TableRow>
                                     ))}
                                 </TableBody>
