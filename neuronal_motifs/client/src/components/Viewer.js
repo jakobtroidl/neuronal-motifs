@@ -23,11 +23,12 @@ function Viewer() {
     const pointer = new THREE.Vector2();
 
     let intersected = null;
-    const [currColor, setCurrColor] = useState("#ffffff");
+    const [currColor, setCurrColor] = useState(0xffffff);
 
     // calculate pointer position in normalized device coordinates
     // (-1 to +1) for both components
     function onPointerMove(e) {
+        return;
         pointer.x = ( e.clientX / window.innerWidth ) * 2 - 1;
         pointer.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
     }
@@ -51,7 +52,7 @@ function Viewer() {
             }
             updateLoop();
 
-            sharkViewerInstance.animate()
+            sharkViewerInstance.animate();
         }
         setPrevSliderValue(0)
     }, [sharkViewerInstance])
@@ -144,12 +145,13 @@ function Viewer() {
     useEffect(() => {
         if (motif && sharkViewerInstance) {
             if (!sharkViewerInstance.scene.interactionManager) {
-                sharkViewerInstance.scene.interactionManager =new InteractionManager(
+                sharkViewerInstance.scene.interactionManager = new InteractionManager(
                     sharkViewerInstance.renderer,
                     sharkViewerInstance.camera,
                     sharkViewerInstance.renderer.domElement
                 );
             }
+
             /** @type {InteractionManager} */
             let interactionManager = sharkViewerInstance.scene.interactionManager;
 
@@ -159,6 +161,7 @@ function Viewer() {
             neurons.forEach(neuron => {
                 let synapses = neuron.synapses;
                 let scene = sharkViewerInstance.scene;
+
                 synapses.forEach(syn => {
                     // create a sphere shape
                     let geometry = new THREE.SphereGeometry(400, 16, 16);
@@ -167,7 +170,7 @@ function Viewer() {
 
                     mesh.geometry.name = "synapse";
                     if (!mesh.geometry.userData.neurons) {
-                        mesh.geometry.userData = { neurons: [neuron.id] }
+                        mesh.geometry.userData = { neurons: [neuron.id] } // need to change what this is
                     } else { // may need fixing because we seem to be creating "two" synapses
                         mesh.geometry.userData.neurons.push(neuron.id)
                         console.log("added neuron")
@@ -176,14 +179,51 @@ function Viewer() {
                     mesh.position.x = syn.x;
                     mesh.position.y = syn.y;
                     mesh.position.z = syn.z;
+
                     mesh.addEventListener("mouseover", (event) => {
                         event.target.material.color.set(0xff0000);
                         document.body.style.cursor = "pointer";
+                        synapseView();
+
+                        // change the colors of the neurons
+                        let currNeurons;
+                        if (event.target.geometry.userData) {
+                            currNeurons = event.target.geometry.userData.neurons;
+                        }
+
+                        for (let i = 0; i < currNeurons.length; i++) {
+                            // this is an opacity change
+                            const newNeuron = scene.getObjectByName(currNeurons[i]); // need to fix name7
+
+                            newNeuron.children.forEach(child => {
+                                    child.material.opacity = 0.5
+                                }
+                            )
+
+                            // setCurrColor(newNeuron.material.color.getHex());
+                        }
                     });
+
                     mesh.addEventListener("mouseout", (event) => {
-                        event.target.material.color.set(0x000000);
+                        event.target.material.color.set(orange);
                         document.body.style.cursor = "default";
+
+                        // change the colors of the neurons back
+                        let prevNeurons;
+                        if (event.target.geometry.userData) {
+                            prevNeurons = event.target.geometry.userData.neurons;
+                        }
+
+                        for (let i = 0; i < prevNeurons.length; i++) {
+                            // this is an opacity change
+                            const oldNeuron = scene.getObjectByName(prevNeurons[i]);
+
+                            oldNeuron.children.forEach(child => {
+                                child.material.opacity = 1
+                            })
+                        }
                     });
+
                     scene.add(mesh);
                     interactionManager.add(mesh);
                 })
@@ -193,7 +233,7 @@ function Viewer() {
 
     // synapse picking
     // neuron geometry is undefined; synapse geometry is SphereGeometry
-    // this may be superfluous now
+    // a lot of this may be superfluous now
     useEffect(() => {
         return;
         if (motif && sharkViewerInstance) {
@@ -278,7 +318,9 @@ function Viewer() {
     // displays data about presynaptic and postsynaptic distance
     function synapseView() {
         return (
-            <ReactTooltip place="top"></ReactTooltip>
+            <div>
+                <ReactTooltip place="top">jfdslkfjskdlfjsl</ReactTooltip>
+            </div>
         )
     }
 
