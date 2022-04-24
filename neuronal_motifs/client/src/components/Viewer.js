@@ -7,7 +7,6 @@ import * as THREE from 'three';
 import axios from "axios";
 import { InteractionManager } from "three.interactive";
 
-
 function Viewer() {
     const [motif, setMotif] = React.useState()
     /** @type {SharkViewer, function} */
