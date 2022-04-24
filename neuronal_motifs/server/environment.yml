@@ -7,10 +7,10 @@ dependencies:
   - h5py
   - numba
   - pandas
-  - uvicorn
   - pip
   - pip:
       - PyQt5==5.15.6
-      - dotmotif
+      - dotmotif==0.11.0
       - navis
       - neuprint-python==0.4.16
+      - uvicorn[standard]

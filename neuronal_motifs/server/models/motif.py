@@ -49,6 +49,11 @@ class MyMotif:
             neuron.compute_skeleton_labels(nodes)
             print("Done. Took {} sec".format(time.time() - t))
 
+    def compute_motif_abstraction(self):
+        """
+        Computes the levels of abstraction for the motif path
+        """
+        for neuron in self.neurons:
             print("Compute Motif Abstraction for Neuron {} ...".format(neuron.id))
             t = time.time()
             neuron.set_skeleton_abstractions(7)

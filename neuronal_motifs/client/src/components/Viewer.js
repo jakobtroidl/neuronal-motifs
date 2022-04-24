@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import axios from "axios";
 import Draggable from 'react-draggable';
 
+
 function Viewer() {
     const [motif, setMotif] = React.useState()
     const [sharkViewerInstance, setSharkViewerInstance] = useState();
@@ -64,20 +65,44 @@ function Viewer() {
 
     // Fetches the data, only runs on init
     useEffect(async () => {
-        if (context.selectedMotif)
-        {
+        if (context.selectedMotif) {
             let selectedMotif = context.selectedMotif;
             let bodyIds = selectedMotif.map(m => m.bodyId);
-
             bodyIds = JSON.stringify(bodyIds);
             let motifQuery = JSON.stringify(context.motifQuery);
-
             let id_ranges = Array.from({length: selectedMotif.length}, (_, i) => i * 1000);
             setLoadedNeurons(id_ranges);
+            const ws = new WebSocket(`ws://localhost:5050/display_motif_ws/`)
+            ws.onopen = function (e) {
+                console.log("[open] Connection established", new Date().getSeconds());
+                console.log("Sending to server", new Date().getSeconds());
+                ws.send(JSON.stringify({'bodyIDs': bodyIds, 'motif': motifQuery}));
+            };
 
-            let res = await axios.get(`http://localhost:5050/display_motif/bodyIDs=${bodyIds}&motif=${motifQuery}`);
-            //let res = await axios.get(`http://localhost:5050/get_test_motif`);
-            setMotif(res.data);
+            ws.onmessage = function (event) {
+                console.log(`[message] Data received from server: ${event.data}`, new Date().getSeconds());
+                let data = JSON.parse(event.data);
+                if (data?.status === 200) {
+                    setMotif(data.payload);
+                    context.setLoadingMessage(null)
+                } else {
+                    context.setLoadingMessage(data?.message || 'Error');
+                }
+                ws.send(null);
+            };
+
+            ws.onclose = function (event) {
+                if (event.wasClean) {
+                    console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`, new Date().getSeconds());
+                } else {
+                    // e.g. server process killed or network down
+                    // event.code is usually 1006 in this case
+                    console.log('[close] Connection died', new Date().getSeconds());
+                }
+            };
+
+
+            // setMotif(res.data);
         }
 
     }, [context.selectedMotif]);

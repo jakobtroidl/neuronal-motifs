@@ -1,8 +1,7 @@
 import React, {useState, useEffect, useContext} from 'react';
 import {AppContext} from "../contexts/GlobalContext";
 import './Viewer.css'
-import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import {faUpDownLeftRight} from '@fortawesome/free-solid-svg-icons'
+import DragHandleIcon from '@mui/icons-material/DragHandle';
 import Slider from '@mui/material/Slider';
 import './AbstractionSlider.css'
 
@@ -13,6 +12,7 @@ function AbstractionSlider() {
     function valueLabelFormat(value) {
         return `Level ${value}`
     }
+
     // Global context holds abstraction state
     const context = useContext(AppContext);
     // Updates the state when it changes
@@ -26,7 +26,7 @@ function AbstractionSlider() {
         <div id={abstractionSliderId}>
             {/*Drag Handler*/}
             <div className="handle">
-                <FontAwesomeIcon icon={faUpDownLeftRight}/>
+                <DragHandleIcon/>
             </div>
             <div id='abstraction-slider-wrapper'>
                 <div className='item title-wrapper'>

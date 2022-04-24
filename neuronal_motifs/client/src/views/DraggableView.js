@@ -3,21 +3,16 @@ import Draggable from 'react-draggable';
 import './DraggableView.css'
 import AbstractionSlider from "../components/AbstractionSlider";
 import MotifPanel from "../components/MotifPanel";
+import SliderView from "./SliderView";
+import PanelView from "./PanelView";
 
 function DraggableView() {
-    const viewId = 'draggable-view'
+    const viewId = 'draggable-view';
+    const nodeRef = React.useRef(null);
     return (
         <div id={viewId}>
-            <Draggable handle=".handle">
-                <div className='drag-overlay'>
-                    <AbstractionSlider/>
-                </div>
-            </Draggable>
-            <Draggable handle=".handle">
-                <div className='drag-overlay'>
-                    <MotifPanel/>
-                </div>
-            </Draggable>
+            <SliderView></SliderView>
+            <PanelView></PanelView>
         </div>
     );
 }
