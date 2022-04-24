@@ -275,6 +275,8 @@ function Viewer() {
                     if (intersected != intersects[0].object) {
                         // load in geodesic distances
                         if (intersects[0].object.geometry.name === "synapse") {
+                            synapseView();   
+                        }
 
                         // return the color of the object in old intersected back to original
                         if (intersected) {
@@ -347,7 +349,7 @@ function Viewer() {
     }
 
     return (
-        <div id={id} className={className} onMouseMove={onPointerMove}></div>
+        <div id={id} className={className}></div>
     );
 
 }
