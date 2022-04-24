@@ -5,11 +5,12 @@ import {AppContext} from "../contexts/GlobalContext";
 import './Viewer.css'
 import * as THREE from 'three';
 import axios from "axios";
-import Draggable from 'react-draggable';
+import { InteractionManager } from "three.interactive";
 
 
 function Viewer() {
     const [motif, setMotif] = React.useState()
+    /** @type {SharkViewer, function} */
     const [sharkViewerInstance, setSharkViewerInstance] = useState();
     const [loadedNeurons, setLoadedNeurons] = useState()
     const [prevSliderValue, setPrevSliderValue] = useState()
@@ -22,8 +23,8 @@ function Viewer() {
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
 
-    let intersected;
-    const [currColor, setCurrColor] = useState("0xffffff");
+    let intersected = null;
+    const [currColor, setCurrColor] = useState("#ffffff");
 
     // calculate pointer position in normalized device coordinates
     // (-1 to +1) for both components
@@ -44,7 +45,14 @@ function Viewer() {
     useEffect(() => {
         if (sharkViewerInstance) {
             sharkViewerInstance.init();
-            sharkViewerInstance.animate();
+
+            const updateLoop = () => {
+                requestAnimationFrame(updateLoop);
+                sharkViewerInstance.scene?.interactionManager?.update();
+            }
+            updateLoop();
+
+            sharkViewerInstance.animate()
         }
         setPrevSliderValue(0)
     }, [sharkViewerInstance])
@@ -160,6 +168,16 @@ function Viewer() {
 
     useEffect(() => {
         if (motif && sharkViewerInstance) {
+            if (!sharkViewerInstance.scene.interactionManager) {
+                sharkViewerInstance.scene.interactionManager =new InteractionManager(
+                    sharkViewerInstance.renderer,
+                    sharkViewerInstance.camera,
+                    sharkViewerInstance.renderer.domElement
+                );
+            }
+            /** @type {InteractionManager} */
+            let interactionManager = sharkViewerInstance.scene.interactionManager;
+
             let neurons = motif.neurons;
             const orange = new THREE.Color("rgb(255,154,0)");
 
@@ -168,7 +186,7 @@ function Viewer() {
                 let scene = sharkViewerInstance.scene;
                 synapses.forEach(syn => {
                     // create a sphere shape
-                    let geometry = new THREE.SphereGeometry(90, 16, 16);
+                    let geometry = new THREE.SphereGeometry(400, 16, 16);
                     let material = new THREE.MeshBasicMaterial({color: orange});
                     let mesh = new THREE.Mesh(geometry, material);
 
@@ -183,8 +201,16 @@ function Viewer() {
                     mesh.position.x = syn.x;
                     mesh.position.y = syn.y;
                     mesh.position.z = syn.z;
-
+                    mesh.addEventListener("mouseover", (event) => {
+                        event.target.material.color.set(0xff0000);
+                        document.body.style.cursor = "pointer";
+                    });
+                    mesh.addEventListener("mouseout", (event) => {
+                        event.target.material.color.set(0x000000);
+                        document.body.style.cursor = "default";
+                    });
                     scene.add(mesh);
+                    interactionManager.add(mesh);
                 })
             })
         }
@@ -192,7 +218,9 @@ function Viewer() {
 
     // synapse picking
     // neuron geometry is undefined; synapse geometry is SphereGeometry
+    // this may be superfluous now
     useEffect(() => {
+        return;
         if (motif && sharkViewerInstance) {
             let scene = sharkViewerInstance.scene;
 
@@ -204,10 +232,10 @@ function Viewer() {
 
             if (intersects.length > 0) {
                 // go through logic only if synapse 
-                // if (intersects[0].object.geometry.name == "synapse") {
+                if (intersects[0].object.geometry.name === "synapse") {
                     if (intersected != intersects[0].object) {
                         // load in geodesic distances
-                        if (intersects[0].object.geometry.name == "synapse") {
+                        if (intersects[0].object.geometry.name === "synapse") {
                             synapseView();   
                         }
 
@@ -236,7 +264,8 @@ function Viewer() {
                         console.log(intersected)
 
                         // set color to the current color of the intersected object
-                        setCurrColor(intersected.material.color.getHex().toString(16));
+                        setCurrColor("#" + intersected.material.color.getHex().toString(16));
+                        console.log(currColor)
 
                         // change neuron color
                         let connectedNeurons = intersected.geometry.userData.neurons;
@@ -247,12 +276,12 @@ function Viewer() {
 
                                 if (newNeuron) {
                                     // console.log(newNeuron)
-                                    newNeuron.material.color.setHex("0xff0000");
+                                    newNeuron.material.color.setHex("#ff0000");
                                 }
                             }
                         }
                     }
-                // }
+                }
             } else {
                 if (intersected) {
                     let prevNeurons = intersected.geometry.userData.neurons;
@@ -279,7 +308,7 @@ function Viewer() {
     }
 
     return (
-        <div id={id} className={className} onMouseMove={onPointerMove}></div>
+        <div id={id} className={className}></div>
     );
 
 }
