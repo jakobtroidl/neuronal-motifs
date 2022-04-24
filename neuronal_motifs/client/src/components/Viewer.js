@@ -22,7 +22,7 @@ function Viewer() {
     const pointer = new THREE.Vector2();
 
     let intersected;
-    const [currColor, setCurrColor] = useState(0xffffff);
+    const [currColor, setCurrColor] = useState("0xffffff");
 
     // calculate pointer position in normalized device coordinates
     // (-1 to +1) for both components
@@ -190,16 +190,18 @@ function Viewer() {
                         if (intersected) {
                             let prevNeurons;
                             if (intersected.geometry.userData) {
-                                console.log(intersected.geometry.userData)
+                                // console.log(intersected.geometry.userData)
                                 prevNeurons = intersected.geometry.userData.neurons;
                             }
+
+                            // console.log(prevNeurons)
                         
                             for (let i = 0; i < prevNeurons.length; i++) {
                                 // this is an opacity change
                                 const oldNeuron = scene.getObjectByName(prevNeurons[i]);
 
                                 if (oldNeuron) {
-                                    console.log(oldNeuron)
+                                    // console.log(oldNeuron)
                                     oldNeuron.material.color.setHex(currColor);
                                 }
                             }
@@ -209,7 +211,7 @@ function Viewer() {
                         console.log(intersected)
 
                         // set color to the current color of the intersected object
-                        setCurrColor(intersected.material.color.getHex());
+                        setCurrColor(intersected.material.color.getHex().toString(16));
 
                         // change neuron color
                         let connectedNeurons = intersected.geometry.userData.neurons;
@@ -219,8 +221,8 @@ function Viewer() {
                                 const newNeuron = scene.getObjectByName(connectedNeurons[i]);
 
                                 if (newNeuron) {
-                                    console.log(newNeuron)
-                                    newNeuron.material.color.setHex(0xff0000);
+                                    // console.log(newNeuron)
+                                    newNeuron.material.color.setHex("0xff0000");
                                 }
                             }
                         }
