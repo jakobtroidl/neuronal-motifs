@@ -29,6 +29,7 @@ function Viewer() {
     // calculate pointer position in normalized device coordinates
     // (-1 to +1) for both components
     function onPointerMove(e) {
+        return;
         pointer.x = ( e.clientX / window.innerWidth ) * 2 - 1;
         pointer.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
     }
