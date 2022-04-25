@@ -149,6 +149,7 @@ function Viewer() {
     // Updates the motifs, runs when data, viewer, or abstraction state change
     useEffect(() => {
         if (motif && sharkViewerInstance) {
+            console.log(motif)
             let neurons = motif.neurons;
             let neuron_number = 0;
             neurons.forEach(n => {
@@ -196,6 +197,10 @@ function Viewer() {
                     mesh.geometry.name = "synapse";
                     if (!mesh.geometry.userData.neurons) {
                         mesh.geometry.userData = { neurons: [neuron.id] } // need to change what this is
+                        // n neurons with complexity level that are set to visible or set to invisible
+                        // enabling the visibility of each of those. many objects in the threejs scene that correspond to what the neuron is
+                        // highlight the right neuron for the current abstraction level
+                        // each neuron has the same id space, the original neuron is id=0, id=1
                     } else { // may need fixing because we seem to be creating "two" synapses
                         mesh.geometry.userData.neurons.push(neuron.id)
                         console.log("added neuron")
@@ -218,7 +223,8 @@ function Viewer() {
 
                         for (let i = 0; i < currNeurons.length; i++) {
                             // this is an opacity change
-                            const newNeuron = scene.getObjectByName(currNeurons[i]); // need to fix name
+                            // const newNeuron = scene.getObjectByName(currNeurons[i]); // need to fix name
+                            const newNeuron = scene.getObjectByName(0);
 
                             newNeuron.children.forEach(child => {
                                     child.material.opacity = 0.5
@@ -234,19 +240,19 @@ function Viewer() {
                         document.body.style.cursor = "default";
 
                         // change the colors of the neurons back
-                        let prevNeurons;
-                        if (event.target.geometry.userData) {
-                            prevNeurons = event.target.geometry.userData.neurons;
-                        }
-
-                        for (let i = 0; i < prevNeurons.length; i++) {
-                            // this is an opacity change
-                            const oldNeuron = scene.getObjectByName(prevNeurons[i]);
-
-                            oldNeuron.children.forEach(child => {
-                                child.material.opacity = 1
-                            })
-                        }
+                        // let prevNeurons;
+                        // if (event.target.geometry.userData) {
+                        //     prevNeurons = event.target.geometry.userData.neurons;
+                        // }
+                        //
+                        // for (let i = 0; i < prevNeurons.length; i++) {
+                        //     // this is an opacity change
+                        //     const oldNeuron = scene.getObjectByName(prevNeurons[i]);
+                        //
+                        //     oldNeuron.children.forEach(child => {
+                        //         child.material.opacity = 1
+                        //     })
+                        // }
                     });
 
                     scene.add(mesh);
