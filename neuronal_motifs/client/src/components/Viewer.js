@@ -226,10 +226,14 @@ function Viewer() {
                             // const newNeuron = scene.getObjectByName(currNeurons[i]); // need to fix name
                             const newNeuron = scene.getObjectByName(0);
 
+                            console.log(newNeuron)
+
                             newNeuron.children.forEach(child => {
                                     child.material.opacity = 0.5
                                 }
                             )
+
+                            console.log(newNeuron)
 
                             // setCurrColor(newNeuron.material.color.getHex());
                         }
@@ -262,92 +266,9 @@ function Viewer() {
         }
     }, [motif, sharkViewerInstance])
 
-    // synapse picking
-    // neuron geometry is undefined; synapse geometry is SphereGeometry
-    // a lot of this may be superfluous now
-    useEffect(() => {
-        return;
-        if (motif && sharkViewerInstance) {
-            let scene = sharkViewerInstance.scene;
-
-            // update the synapse picking ray with the camera and pointer position
-            raycaster.setFromCamera(pointer, sharkViewerInstance.camera);
-
-            // calculate objects intersecting the picking ray
-	        const intersects = raycaster.intersectObjects(scene.children);
-
-            if (intersects.length > 0) {
-                // go through logic only if synapse
-                if (intersects[0].object.geometry.name === "synapse") {
-                    if (intersected != intersects[0].object) {
-                        // load in geodesic distances
-                        if (intersects[0].object.geometry.name === "synapse") {
-                            synapseView();   
-                        }
-
-                        // return the color of the object in old intersected back to original
-                        if (intersected) {
-                            let prevNeurons;
-                            if (intersected.geometry.userData) {
-                                // console.log(intersected.geometry.userData)
-                                prevNeurons = intersected.geometry.userData.neurons;
-                            }
-
-                            // console.log(prevNeurons)
-                        
-                            for (let i = 0; i < prevNeurons.length; i++) {
-                                // this is an opacity change
-                                const oldNeuron = scene.getObjectByName(prevNeurons[i]);
-
-                                if (oldNeuron) {
-                                    // console.log(oldNeuron)
-                                    oldNeuron.material.color.setHex(currColor);
-                                }
-                            }
-                        }
-
-                        intersected = intersects[0].object;
-                        console.log(intersected)
-
-                        // set color to the current color of the intersected object
-                        setCurrColor("#" + intersected.material.color.getHex().toString(16));
-                        console.log(currColor)
-
-                        // change neuron color
-                        let connectedNeurons = intersected.geometry.userData.neurons;
-                        if (connectedNeurons.length > 0) {
-                            for (let i = 0; i < connectedNeurons.length; i++) {
-                                // set color of neuron
-                                const newNeuron = scene.getObjectByName(connectedNeurons[i]);
-
-                                if (newNeuron) {
-                                    // console.log(newNeuron)
-                                    newNeuron.material.color.setHex("#ff0000");
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                if (intersected) {
-                    let prevNeurons = intersected.geometry.userData.neurons;
-                    for (let i = 0; i < prevNeurons.length; i++) {
-                        // this is an opacity change
-                        const neuron = scene.getObjectByName(prevNeurons[i]);
-
-                        if (neuron) {
-                            neuron.material.color.setHex(currColor);
-                        }
-                    }
-                }
-                
-                intersected = null;
-            }
-        }
-    }, [motif, sharkViewerInstance])
-
     // displays data about presynaptic and postsynaptic distance
     function synapseView() {
+        // console.log("here")
         return (
             <div>
                 <ReactTooltip place="top">jfdslkfjskdlfjsl</ReactTooltip>
