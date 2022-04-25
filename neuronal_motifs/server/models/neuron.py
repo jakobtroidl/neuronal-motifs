@@ -91,6 +91,7 @@ class Neuron:
         self.id = id
         self.skeleton = skeleton
         self.mesh = mesh
+        self.distances = None
         self.synapses = synapses
         self.skeleton_labels = skeleton_labels
 

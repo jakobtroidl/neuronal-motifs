@@ -4,6 +4,7 @@ import navis
 
 import pandas as pd
 from networkx.readwrite import json_graph
+import json 
 from line_profiler_pycharm import profile
 
 from neuronal_motifs.server.services.data_access import DataAccess
@@ -25,11 +26,13 @@ class MyMotif:
 
         neuron_json = []
         for neuron in self.neurons:
+            print(neuron.distances)
             neuron_json.append(neuron.as_json())
 
         motif = {
             'graph': json_graph.node_link_data(self.graph),
-            'neurons': neuron_json
+            'neurons': neuron_json,
+            'distances': json.dumps(self.distances)
         }
 
         return motif
@@ -99,9 +102,14 @@ class MyMotif:
         """
         distances = {}
         for neuron in self.neurons: # can be optimized
-            neighbors = [n.id for n in self.graph.neighbors(neuron.id)]
-            distances[neuron.id] = navis.geodesic_matrix(neuron, from_=neighbors)
-            print(distances[neuron.id])
+            n = neuron.skeleton
+            end = n.nodes[n.nodes.type == 'end'].node_id.values[0]
+
+            if n.soma is not None:
+                print(navis.dist_between(n, n.soma, end) )
+                distances[neuron.id] = navis.dist_between(n, n.soma, end) 
+                neuron.distances = navis.dist_between(n, n.soma, end) 
+                print(distances[neuron.id])
         
         self.distances = distances
-
+        return distances
