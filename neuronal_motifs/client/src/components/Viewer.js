@@ -1,5 +1,8 @@
 import React, {useState, useEffect, useContext, useRef} from 'react';
 import ReactTooltip from 'react-tooltip';
+import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
+import ArrowTooltips from './ArrowTooltips'
 import SharkViewer, {swcParser} from '@janelia/sharkviewer';
 import {AppContext} from "../contexts/GlobalContext";
 import './Viewer.css'
@@ -24,16 +27,16 @@ function Viewer() {
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     let intersected = null;
-    const [currColor, setCurrColor] = useState(0xffffff);
+    const [currColor, setCurrColor] = useState("#ffffff");
+    const [displayTooltip, setDisplayTooltip] = useState(false);
+    const [tooltipInfo, setTooltipInfo] = useState()
 
     // calculate pointer position in normalized device coordinates
     // (-1 to +1) for both components
     function onPointerMove(e) {
         return;
-        pointer.x = ( e.clientX / window.innerWidth ) * 2 - 1;
-        pointer.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
     }
-
+    
 
     // Instantiates the viewer, will only run once on init
     useEffect(() => {
@@ -213,52 +216,46 @@ function Viewer() {
                     mesh.addEventListener("mouseover", (event) => {
                         event.target.material.color.set(0xff0000);
                         document.body.style.cursor = "pointer";
-                        synapseView();
 
-                        // change the colors of the neurons
-                        let currNeurons;
-                        if (event.target.geometry.userData) {
-                            currNeurons = event.target.geometry.userData.neurons;
-                        }
+                        console.log(motif.distances)
+                        setDisplayTooltip(true)
+                        setTooltipInfo({distances:motif.distances,event:event })
+                        // let currNeurons;
+                        // if (event.target.geometry.userData) {
+                        //     currNeurons = event.target.geometry.userData.neurons;
+                        // }
 
-                        for (let i = 0; i < currNeurons.length; i++) {
-                            // this is an opacity change
-                            // const newNeuron = scene.getObjectByName(currNeurons[i]); // need to fix name
-                            const newNeuron = scene.getObjectByName(0);
+                        // for (let i = 0; i < currNeurons.length; i++) {
+                        //     // this is an opacity change
+                        //     // const newNeuron = scene.getObjectByName(currNeurons[i]); // need to fix name
+                        //     const newNeuron = scene.getObjectByName(0);
 
-                            console.log(newNeuron)
+                        //     console.log(newNeuron)
 
-                            newNeuron.children.forEach(child => {
-                                    child.material.opacity = 0.5
-                                }
-                            )
+                        //     newNeuron.children.forEach(child => {
+                        //             child.material.opacity = 0.5
+                        //         }
+                        //     )
 
-                            console.log(newNeuron)
+                        //     console.log(newNeuron)
 
-                            // setCurrColor(newNeuron.material.color.getHex());
-                        }
+                        //     // setCurrColor(newNeuron.material.color.getHex());
+                        // }
+
+                      // return <ArrowTooltips distances={motif.distances}/>
+                        // ArrowTooltips(motif.distances)
+                        // console.log(motif.distances)
+                        // synapseView()
+                        // event.target.material.color.set(0xff0000);
+                        // document.body.style.cursor = "pointer";
                     });
 
                     mesh.addEventListener("mouseout", (event) => {
+                        setDisplayTooltip(false);
                         event.target.material.color.set(orange);
                         document.body.style.cursor = "default";
-
-                        // change the colors of the neurons back
-                        // let prevNeurons;
-                        // if (event.target.geometry.userData) {
-                        //     prevNeurons = event.target.geometry.userData.neurons;
-                        // }
-                        //
-                        // for (let i = 0; i < prevNeurons.length; i++) {
-                        //     // this is an opacity change
-                        //     const oldNeuron = scene.getObjectByName(prevNeurons[i]);
-                        //
-                        //     oldNeuron.children.forEach(child => {
-                        //         child.material.opacity = 1
-                        //     })
-                        // }
                     });
-
+                    
                     scene.add(mesh);
                     interactionManager.add(mesh);
                 })
@@ -266,18 +263,31 @@ function Viewer() {
         }
     }, [motif, sharkViewerInstance])
 
+    // synapse picking
+    // neuron geometry is undefined; synapse geometry is SphereGeometry
+    // this may be superfluous now
+    useEffect(() => {
+        return;
+    }, [motif, sharkViewerInstance])
+
     // displays data about presynaptic and postsynaptic distance
     function synapseView() {
-        // console.log("here")
+        console.log("hi")
         return (
-            <div>
-                <ReactTooltip place="top">jfdslkfjskdlfjsl</ReactTooltip>
-            </div>
-        )
+            <h1>hi</h1>
+            // <Tooltip title="Add" arrow>
+            // <Button>Arrow</Button>
+            // </Tooltip>
+        );
     }
 
     return (
-        <div id={id} className={className}></div>
+        <div id={id} className={className}>
+            { displayTooltip &&
+            <ArrowTooltips props={tooltipInfo}></ArrowTooltips>
+            }
+        
+        </div>
     );
 
 }

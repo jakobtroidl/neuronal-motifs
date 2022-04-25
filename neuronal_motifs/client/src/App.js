@@ -2,6 +2,7 @@ import logo from './logo.svg';
 import Viewer from './components/Viewer'
 import Loading from './components/Loading'
 import MotifPanel from './components/MotifPanel'
+import ArrowTooltips from './components/ArrowTooltips'
 import DraggableView from "./views/DraggableView";
 import {ContextWrapper} from "./contexts/GlobalContext";
 import './App.css';
