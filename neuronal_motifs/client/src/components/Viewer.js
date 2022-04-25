@@ -156,7 +156,7 @@ function Viewer() {
             let number_of_neurons = motif.neurons.length;
             let directions = getTranslationVectors(number_of_neurons);
             let neuron_order = [];
-            let factor = 3000;
+            let factor = 8000;
 
             motif.neurons.forEach((n) => {
                 let abstraction_level = 0
