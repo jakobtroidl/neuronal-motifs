@@ -218,7 +218,7 @@ function Viewer() {
 
                         for (let i = 0; i < currNeurons.length; i++) {
                             // this is an opacity change
-                            const newNeuron = scene.getObjectByName(currNeurons[i]); // need to fix name7
+                            const newNeuron = scene.getObjectByName(currNeurons[i]); // need to fix name
 
                             newNeuron.children.forEach(child => {
                                     child.material.opacity = 0.5
