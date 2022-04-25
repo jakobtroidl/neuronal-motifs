@@ -2,7 +2,7 @@
     position: absolute;
     top: -99vh;
     left: 1vw;
-    max-width: 35vw;
+    max-width: 400px;
     margin: 20px;
     padding: 0;
     max-height: 90vh;
@@ -23,7 +23,7 @@
     cursor: pointer;
 }
 
-#motif-panel-div .motif-selection-div:hover {
+#motif-panel-div .motif-selection-div:hover table {
     background-color: #e7e7e7;
 }
 
