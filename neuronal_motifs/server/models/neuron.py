@@ -55,7 +55,7 @@ def multiple_shortest_paths(graph, start_node, end_node_list):
     return uniques.astype(int)  # return node ids as int array
 
 
-@jit(nopython=True)
+@jit(nopython=True, parallel=True)
 def compute_labels(labels, edges, motif_nodes, unlabeled_node_id):
     labels[motif_nodes - 1] = 0  # label all motif nodes in the skeleton with 0
     num_unlabeled_nodes = np.count_nonzero(labels == unlabeled_node_id)
