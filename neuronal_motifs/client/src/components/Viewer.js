@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useContext} from 'react';
-import SharkViewer, {swcParser} from '@janelia/sharkviewer';
+import SharkViewer, {swcParser} from './shark_viewer';
 import {AppContext} from "../contexts/GlobalContext";
 import './Viewer.css'
 import * as THREE from 'three';
