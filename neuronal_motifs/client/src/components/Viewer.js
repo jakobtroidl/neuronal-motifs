@@ -74,18 +74,10 @@ function Viewer() {
     // Global context holds abstraction state
     const context = useContext(AppContext);
     // for synapse selecting & highlighting
-    const raycaster = new THREE.Raycaster();
-    const pointer = new THREE.Vector2();
-    let intersected = null;
-    const [currColor, setCurrColor] = useState("#ffffff");
     const [displayTooltip, setDisplayTooltip] = useState(false);
     const [tooltipInfo, setTooltipInfo] = useState()
 
-    // calculate pointer position in normalized device coordinates
-    // (-1 to +1) for both components
-    function onPointerMove(e) {
-        return;
-    }
+
 
 
     // Instantiates the viewer, will only run once on init
@@ -246,7 +238,6 @@ function Viewer() {
     // Updates the motifs, runs when data, viewer, or abstraction state change
     useEffect(() => {
         if (motif && sharkViewerInstance) {
-            console.log(motif)
             let scene = sharkViewerInstance.scene;
             let neurons = motif.neurons;
             let neuron_number = 0;
@@ -284,13 +275,11 @@ function Viewer() {
                     sharkViewerInstance.renderer.domElement
                 );
             }
-
-            /** @type {InteractionManager} */
-            let interactionManager = sharkViewerInstance.scene.interactionManager;
-
             let neurons = motif.neurons;
             const orange = new THREE.Color("rgb(255,154,0)");
+
             let scene = sharkViewerInstance.scene;
+            let interactionManager = sharkViewerInstance.scene.interactionManager;
 
             const white =new THREE.Color("rgb(255,255,255)");
             const ambientLight = new THREE.AmbientLight(white, 1.0);
@@ -307,17 +296,6 @@ function Viewer() {
                     let material = new THREE.MeshStandardMaterial({color: orange, transparent: true, opacity: 1.0});
                     let mesh = new THREE.Mesh(geometry, material);
 
-                    mesh.geometry.name = "synapse";
-                    if (!mesh.geometry.userData.neurons) {
-                        mesh.geometry.userData = {neurons: [neuron.id]} // need to change what this is
-                        // n neurons with complexity level that are set to visible or set to invisible
-                        // enabling the visibility of each of those. many objects in the threejs scene that correspond to what the neuron is
-                        // highlight the right neuron for the current abstraction level
-                        // each neuron has the same id space, the original neuron is id=0, id=1
-                    } else { // may need fixing because we seem to be creating "two" synapses
-                        mesh.geometry.userData.neurons.push(neuron.id)
-                        console.log("added neuron")
-                    }
                     mesh.name = "syn-" + syn.post.x + "-" + syn.post.y + "-" + syn.post.z;
                     mesh.position.x = (syn.post.x + syn.pre.x) / 2.0;
                     mesh.position.y = (syn.post.y + syn.pre.y) / 2.0;
@@ -325,38 +303,8 @@ function Viewer() {
                     mesh.addEventListener("mouseover", (event) => {
                         event.target.material.color.set(0xff0000);
                         document.body.style.cursor = "pointer";
-
-                        console.log(motif.distances)
                         setDisplayTooltip(true)
                         setTooltipInfo({distances: motif.distances, event: event})
-                        // let currNeurons;
-                        // if (event.target.geometry.userData) {
-                        //     currNeurons = event.target.geometry.userData.neurons;
-                        // }
-
-                        // for (let i = 0; i < currNeurons.length; i++) {
-                        //     // this is an opacity change
-                        //     // const newNeuron = scene.getObjectByName(currNeurons[i]); // need to fix name
-                        //     const newNeuron = scene.getObjectByName(0);
-
-                        //     console.log(newNeuron)
-
-                        //     newNeuron.children.forEach(child => {
-                        //             child.material.opacity = 0.5
-                        //         }
-                        //     )
-
-                        //     console.log(newNeuron)
-
-                        //     // setCurrColor(newNeuron.material.color.getHex());
-                        // }
-
-                        // return <ArrowTooltips distances={motif.distances}/>
-                        // ArrowTooltips(motif.distances)
-                        // console.log(motif.distances)
-                        // synapseView()
-                        // event.target.material.color.set(0xff0000);
-                        // document.body.style.cursor = "pointer";
                     });
 
                     mesh.addEventListener("mouseout", (event) => {
@@ -371,24 +319,6 @@ function Viewer() {
             })
         }
     }, [motif, sharkViewerInstance])
-
-    // synapse picking
-    // neuron geometry is undefined; synapse geometry is SphereGeometry
-    // this may be superfluous now
-    useEffect(() => {
-        return;
-    }, [motif, sharkViewerInstance])
-
-    // displays data about presynaptic and postsynaptic distance
-    function synapseView() {
-        console.log("hi")
-        return (
-            <h1>hi</h1>
-            // <Tooltip title="Add" arrow>
-            // <Button>Arrow</Button>
-            // </Tooltip>
-        );
-    }
 
     return (
         <div id={id} className={className}>
