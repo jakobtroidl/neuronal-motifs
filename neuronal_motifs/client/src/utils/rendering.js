@@ -1,8 +1,7 @@
 import * as THREE from 'three';
 
-export function getRandomColor()
-{
-    let color = new THREE.Color( 0xffffff );
-    color.setHex( Math.random() * 0xffffff );
-    return color
+export class Color {
+    static orange = new THREE.Color("rgb(255,154,0)");
+    static white = new THREE.Color("rgb(255,255,255)");
+    static red = new THREE.Color("rgb(227,55,55)");
 }

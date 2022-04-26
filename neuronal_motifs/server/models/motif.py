@@ -4,18 +4,18 @@ import navis
 
 import pandas as pd
 from networkx.readwrite import json_graph
-import json 
 from line_profiler_pycharm import profile
 
 from neuronal_motifs.server.services.data_access import DataAccess
+from neuronal_motifs.server.utils import data_conversion as conversion
 
 
 class MyMotif:
-    def __init__(self, neuron_ids=None, graph=None, distances=None):
+    def __init__(self, neuron_ids=None, graph=None, synapses=None):
         self.data_access = DataAccess()
         self.graph = graph  # networkx graph of the motif
         self.neurons = self.data_access.get_neurons(neuron_ids)
-        self.distances = distances
+        self.synapses = synapses
         self.download_synapses()
 
     def as_json(self):
@@ -29,10 +29,12 @@ class MyMotif:
             print(neuron.distances)
             neuron_json.append(neuron.as_json())
 
+        syn_export = conversion.synapse_array_to_object(self.synapses)
+
         motif = {
             'graph': json_graph.node_link_data(self.graph),
             'neurons': neuron_json,
-            'distances': json.dumps(self.distances)
+            'synapses': syn_export
         }
 
         return motif
@@ -68,12 +70,16 @@ class MyMotif:
         """
         print('Download Synapses')
 
+        all_synapses = []
         adjacency = self.get_adjacency(undirected=True)
         for neuron in self.neurons:  # download relevant synapses
             outgoing_synapses = self.data_access.get_synapses([neuron.id], adjacency[neuron.id])
             incoming_synapses = self.data_access.get_synapses(adjacency[neuron.id], [neuron.id])
             synapses = pd.concat([outgoing_synapses, incoming_synapses], ignore_index=True, sort=False)
+            all_synapses.append(synapses)
             neuron.set_synapses(synapses)
+        foo = pd.concat(all_synapses)
+        self.synapses = foo
 
     def get_adjacency(self, undirected=True):
         """
@@ -95,21 +101,40 @@ class MyMotif:
             adjacency[neuron.id] = neighbors
         return adjacency
 
-    def get_distances(self): 
+    def get_neuron(self, id):
+        for neuron in self.neurons:
+            if neuron.id == id:
+                return neuron
+        return None
+
+    def syn_soma_distance(self, neuron_id, syn_pos):
+        neuron = self.get_neuron(neuron_id)
+        syn_node, snap_distance = neuron.skeleton.snap(syn_pos)
+        soma = neuron.get_soma()
+        if soma is not None:
+            distance = navis.dist_between(neuron.skeleton, soma, syn_node)
+            return round(distance)
+        else:
+            return 0
+
+    def compute_synapse_soma_distances(self):
         """
         Generates geodesic distance matrix across all nodes in motif
         The graph is directed to preserve presynaptic/postsynaptic distances
         """
-        distances = {}
-        for neuron in self.neurons: # can be optimized
-            n = neuron.skeleton
-            end = n.nodes[n.nodes.type == 'end'].node_id.values[0]
+        print('Compute synapse soma distances...')
+        t = time.time()
+        pre_synaptic_soma_distances = []
+        post_synaptic_soma_distances = []
+        for index, synapse in self.synapses.iterrows():  # can be optimized
+            pre_distance = self.syn_soma_distance(synapse['bodyId_pre'],
+                                                  [synapse['x_pre'], synapse['y_pre'], synapse['z_pre']])
+            pre_synaptic_soma_distances.append(pre_distance)
 
-            if n.soma is not None:
-                print(navis.dist_between(n, n.soma, end) )
-                distances[neuron.id] = navis.dist_between(n, n.soma, end) 
-                neuron.distances = navis.dist_between(n, n.soma, end) 
-                print(distances[neuron.id])
-        
-        self.distances = distances
-        return distances
+            post_distance = self.syn_soma_distance(synapse['bodyId_post'],
+                                                   [synapse['x_post'], synapse['y_post'], synapse['z_post']])
+            post_synaptic_soma_distances.append(post_distance)
+
+        self.synapses['soma_distance_pre'] = pre_synaptic_soma_distances
+        self.synapses['soma_distance_post'] = post_synaptic_soma_distances
+        print('Done. Took {} sec'.format(time.time() - t))

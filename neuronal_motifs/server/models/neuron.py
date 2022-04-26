@@ -101,13 +101,13 @@ class Neuron:
         @return: json object
         """
         swc_object = conversion.treeneuron_to_swc_string(self.skeleton)
-        syn_export = conversion.synapse_array_to_object(self.synapses)
+        # syn_export = conversion.synapse_array_to_object(self.synapses)
         abstraction_export = conversion.treeneurons_list_to_swc_string_list(self.skeleton_abstractions)
 
         neuron = {
             'id': self.id,
             'mesh': 'TODO',
-            'synapses': syn_export,
+            # 'synapses': syn_export,
             'skeleton_swc': swc_object['swc'],
             'node_map': swc_object['map'],
             'skeleton_labels': self.skeleton_labels.tolist(),
@@ -122,6 +122,12 @@ class Neuron:
         y = int(self.skeleton.nodes['y'].mean())
         z = int(self.skeleton.nodes['z'].mean())
         return [x, y, z]
+
+    def get_soma(self):
+        return self.skeleton.soma
+
+    def get_synapses(self):
+        return self.synapses
 
     def set_mesh(self, mesh):
         """

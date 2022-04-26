@@ -6,6 +6,7 @@ import './Viewer.css'
 import * as THREE from 'three';
 import axios from "axios";
 import {InteractionManager} from "three.interactive";
+import {Color} from '../utils/rendering'
 
 
 const setLineVisibility = (scene, visible) => {
@@ -75,7 +76,7 @@ function Viewer() {
     const context = useContext(AppContext);
     // for synapse selecting & highlighting
     const [displayTooltip, setDisplayTooltip] = useState(false);
-    const [tooltipInfo, setTooltipInfo] = useState()
+    const [tooltipInfo, setTooltipInfo] = useState({})
 
 
 
@@ -206,8 +207,7 @@ function Viewer() {
                 scene.add(obj);
             })
 
-            motif.neurons.forEach(neuron => {
-                neuron.synapses.forEach(syn => {
+            motif.synapses.forEach(syn => {
                     let pre_neuron_number = neuron_order.indexOf(syn.pre_id);
                     let pre_loc = new THREE.Vector3(syn.pre.x, syn.pre.y, syn.pre.z);
                     let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
@@ -231,7 +231,6 @@ function Viewer() {
                     line.visible = false;
                     scene.add(line);
                 })
-            })
         }
     }, [motif, sharkViewerInstance])
 
@@ -275,25 +274,24 @@ function Viewer() {
                     sharkViewerInstance.renderer.domElement
                 );
             }
-            let neurons = motif.neurons;
-            const orange = new THREE.Color("rgb(255,154,0)");
+            //let neurons = motif.neurons;
+            // const orange = new THREE.Color("rgb(255,154,0)");
+            // const white =new THREE.Color("rgb(255,255,255)");
 
             let scene = sharkViewerInstance.scene;
             let interactionManager = sharkViewerInstance.scene.interactionManager;
 
-            const white =new THREE.Color("rgb(255,255,255)");
-            const ambientLight = new THREE.AmbientLight(white, 1.0);
+
+            const ambientLight = new THREE.AmbientLight(Color.white, 1.0);
             scene.add(ambientLight);
-            const directionalLight = new THREE.DirectionalLight(white, 0.7);
+            const directionalLight = new THREE.DirectionalLight(Color.white, 0.7);
             scene.add(directionalLight);
 
-            neurons.forEach(neuron => {
-                let synapses = neuron.synapses;
+            motif.synapses.forEach(syn => {
 
-                synapses.forEach(syn => {
                     // create a sphere shape
                     let geometry = new THREE.SphereGeometry(100, 16, 16);
-                    let material = new THREE.MeshStandardMaterial({color: orange, transparent: true, opacity: 1.0});
+                    let material = new THREE.MeshStandardMaterial({color: Color.orange});
                     let mesh = new THREE.Mesh(geometry, material);
 
                     mesh.name = "syn-" + syn.post.x + "-" + syn.post.y + "-" + syn.post.z;
@@ -301,22 +299,23 @@ function Viewer() {
                     mesh.position.y = (syn.post.y + syn.pre.y) / 2.0;
                     mesh.position.z = (syn.post.z + syn.pre.z) / 2.0;
                     mesh.addEventListener("mouseover", (event) => {
-                        event.target.material.color.set(0xff0000);
+                        mesh.material.color = Color.red;
+                        //mesh.material.needsUpdate = true;
                         document.body.style.cursor = "pointer";
                         setDisplayTooltip(true)
-                        setTooltipInfo({distances: motif.distances, event: event})
+                        setTooltipInfo({pre_soma_dist: syn.pre_soma_dist, post_soma_dist: syn.post_soma_dist, event: event})
                     });
 
                     mesh.addEventListener("mouseout", (event) => {
                         setDisplayTooltip(false);
-                        event.target.material.color.set(orange);
+                        mesh.material.color = Color.orange;
+                        //mesh.material.needsUpdate = true;
                         document.body.style.cursor = "default";
                     });
 
                     scene.add(mesh);
                     interactionManager.add(mesh);
                 })
-            })
         }
     }, [motif, sharkViewerInstance])
 

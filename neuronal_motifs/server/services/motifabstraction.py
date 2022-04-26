@@ -77,7 +77,7 @@ def compute_motif_data(body_ids, motif):
     yield 'Computing Motif Abstraction'
     motif.compute_motif_abstraction()
     yield 'Computing Distances'
-    motif.get_distances()
+    motif.compute_synapse_soma_distances()
 
     filename = get_cache_filename(body_ids)
 
