@@ -218,7 +218,7 @@ function Viewer() {
                     translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
                     let line_end = post_loc.add(translate);
 
-                    const material = new THREE.LineBasicMaterial({color: new THREE.Color("rgb(230,0,255)")});
+                    const material = new THREE.LineBasicMaterial({color: Color.orange});
                     const points = [];
                     points.push(line_start);
                     points.push(line_end);
