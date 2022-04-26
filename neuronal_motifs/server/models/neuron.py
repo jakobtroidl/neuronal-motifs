@@ -78,18 +78,20 @@ def compute_labels(labels, edges, motif_nodes, unlabeled_node_id):
 
 
 class Neuron:
-    def __init__(self, id, skeleton=None, mesh=None, synapses=None, skeleton_labels=None):
+    def __init__(self, id, skeleton=None, mesh=None, synapses=None, skeleton_labels=None, distances=None):
         """
         @param id: body id of the neuron. Acts as a unique identifier
         @param skeleton: stick figure skeleton of the neuron
         @param mesh: surface mesh of a neuron
         @param synapses: selected set synapse that connect to other neurons
         @param skeleton_labels: labels of skeleton nodes that specify the distance of the node to a motif path
+        @param distances: geodesic distance matrix of nodes coming out of neuron
         """
         self.skeleton_abstractions = None
         self.id = id
         self.skeleton = skeleton
         self.mesh = mesh
+        self.distances = None
         self.synapses = synapses
         self.skeleton_labels = skeleton_labels
 

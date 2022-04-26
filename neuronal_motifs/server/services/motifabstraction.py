@@ -30,6 +30,7 @@ def get_motif(ids, motif):
     yield {'status': 202, 'message': 'Motif Cached'}
     f = open(filepath, "rb")
     motif = pkl.load(f)
+    print("after file open")
     f.close()
     yield {'status': 200, 'payload': motif.as_json()}
 
@@ -75,6 +76,8 @@ def compute_motif_data(body_ids, motif):
     motif.compute_motif_paths()
     yield 'Computing Motif Abstraction'
     motif.compute_motif_abstraction()
+    yield 'Computing Distances'
+    motif.get_distances()
 
     filename = get_cache_filename(body_ids)
 

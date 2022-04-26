@@ -25,14 +25,6 @@ import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import {CollapsableTableRow} from './CollapsableTableRow'
 import {NodeFields} from "../config/NodeFields";
 
-/* fetches a list of motifs from backend/janelia and displays them here */
-/* motif sketching panel sends a list of text to the backend, backend returns list of ids */
-
-/* search is a get command */
-/* think about using d3 with react for the grab components */
-
-/* or, for draggable components, https://github.com/react-grid-layout/react-draggable */
-
 function MotifPanel() {
     const [number, setNumber] = useState(1);
     const [nodeAttribute, setNodeAttribute] = useState("");
@@ -81,6 +73,7 @@ function MotifPanel() {
         context.setLoadingMessage(null)
         setSearchedMotifs(motifs)
     }
+
     useEffect(() => {
         if (searchedMotifs && searchedMotifs?.length > 0) {
             let rows = searchedMotifs.map((motif, j) => {
