@@ -290,15 +290,21 @@ function Viewer() {
 
             let neurons = motif.neurons;
             const orange = new THREE.Color("rgb(255,154,0)");
+            let scene = sharkViewerInstance.scene;
+
+            const white =new THREE.Color("rgb(255,255,255)");
+            const ambientLight = new THREE.AmbientLight(white, 1.0);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(white, 0.7);
+            scene.add(directionalLight);
 
             neurons.forEach(neuron => {
                 let synapses = neuron.synapses;
-                let scene = sharkViewerInstance.scene;
 
                 synapses.forEach(syn => {
                     // create a sphere shape
-                    let geometry = new THREE.SphereGeometry(400, 16, 16);
-                    let material = new THREE.MeshBasicMaterial({color: orange});
+                    let geometry = new THREE.SphereGeometry(100, 16, 16);
+                    let material = new THREE.MeshStandardMaterial({color: orange, transparent: true, opacity: 1.0});
                     let mesh = new THREE.Mesh(geometry, material);
 
                     mesh.geometry.name = "synapse";
@@ -387,7 +393,7 @@ function Viewer() {
     return (
         <div id={id} className={className}>
             {displayTooltip &&
-            <ArrowTooltips props={tooltipInfo}></ArrowTooltips>
+                <ArrowTooltips props={tooltipInfo}></ArrowTooltips>
             }
 
         </div>
