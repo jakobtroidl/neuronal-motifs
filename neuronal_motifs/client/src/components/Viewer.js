@@ -291,7 +291,7 @@ function Viewer() {
 
                     // create a sphere shape
                     let geometry = new THREE.SphereGeometry(100, 16, 16);
-                    let material = new THREE.MeshStandardMaterial({color: Color.orange});
+                    let material = new THREE.MeshPhongMaterial({color: Color.orange});
                     let mesh = new THREE.Mesh(geometry, material);
 
                     mesh.name = "syn-" + syn.post.x + "-" + syn.post.y + "-" + syn.post.z;
@@ -299,8 +299,8 @@ function Viewer() {
                     mesh.position.y = (syn.post.y + syn.pre.y) / 2.0;
                     mesh.position.z = (syn.post.z + syn.pre.z) / 2.0;
                     mesh.addEventListener("mouseover", (event) => {
-                        mesh.material.color = Color.red;
-                        //mesh.material.needsUpdate = true;
+                        mesh.material = new THREE.MeshPhongMaterial({color: Color.red});
+                        mesh.material.needsUpdate = true;
                         document.body.style.cursor = "pointer";
                         setDisplayTooltip(true)
                         setTooltipInfo({pre_soma_dist: syn.pre_soma_dist, post_soma_dist: syn.post_soma_dist, event: event})
@@ -308,8 +308,8 @@ function Viewer() {
 
                     mesh.addEventListener("mouseout", (event) => {
                         setDisplayTooltip(false);
-                        mesh.material.color = Color.orange;
-                        //mesh.material.needsUpdate = true;
+                        mesh.material = new THREE.MeshPhongMaterial({color: Color.orange});
+                        mesh.material.needsUpdate = true;
                         document.body.style.cursor = "default";
                     });
 
