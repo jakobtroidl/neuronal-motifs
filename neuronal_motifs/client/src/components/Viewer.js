@@ -1,28 +1,25 @@
-import React, {useState, useEffect, useContext, useRef} from 'react';
-import ReactTooltip from 'react-tooltip';
-import Button from '@mui/material/Button';
-import Tooltip from '@mui/material/Tooltip';
+import React, {useState, useEffect, useContext} from 'react';
+import SharkViewer, {swcParser} from './shark_viewer';
 import ArrowTooltips from './ArrowTooltips'
-import SharkViewer, {swcParser} from '@janelia/sharkviewer';
 import {AppContext} from "../contexts/GlobalContext";
 import './Viewer.css'
 import * as THREE from 'three';
 import axios from "axios";
-import { InteractionManager } from "three.interactive";
+import {InteractionManager} from "three.interactive";
 
 
 const setLineVisibility = (scene, visible) => {
     scene.children.forEach(child => {
-        if(typeof child.name == 'string' && child.name.includes('line')){
-             child.visible = visible;
+        if (typeof child.name == 'string' && child.name.includes('line')) {
+            child.visible = visible;
         }
     })
 }
 
 const setSynapseVisibility = (scene, visible) => {
-  scene.children.forEach(child => {
-        if(typeof child.name == 'string' && child.name.includes('syn')){
-             child.visible = visible;
+    scene.children.forEach(child => {
+        if (typeof child.name == 'string' && child.name.includes('syn')) {
+            child.visible = visible;
         }
     })
 }
@@ -89,7 +86,6 @@ function Viewer() {
     function onPointerMove(e) {
         return;
     }
-    
 
 
     // Instantiates the viewer, will only run once on init
@@ -230,13 +226,13 @@ function Viewer() {
                     translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
                     let line_end = post_loc.add(translate);
 
-                    const material = new THREE.LineBasicMaterial( { color: new THREE.Color("rgb(230,0,255)")} );
+                    const material = new THREE.LineBasicMaterial({color: new THREE.Color("rgb(230,0,255)")});
                     const points = [];
                     points.push(line_start);
                     points.push(line_end);
 
                     const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                    const line = new THREE.Line( geometry, material );
+                    const line = new THREE.Line(geometry, material);
 
                     line.name = 'line-' + line_start.x + '-' + line_start.y + '-' + line_start.z + '-'
                         + line_end.x + '-' + line_end.y + '-' + line_end.z;
@@ -246,7 +242,7 @@ function Viewer() {
             })
         }
     }, [motif, sharkViewerInstance])
-    
+
     // Updates the motifs, runs when data, viewer, or abstraction state change
     useEffect(() => {
         if (motif && sharkViewerInstance) {
@@ -256,25 +252,24 @@ function Viewer() {
             let neuron_number = 0;
             let slider_value = context.abstractionLevel * 1.1;
             neurons.forEach(n => {
-                    let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value);
-                    let load_id = loadedNeurons[neuron_number] + level;
-                    let unload_id = loadedNeurons[neuron_number] + prevSliderValue;
+                let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value);
+                let load_id = loadedNeurons[neuron_number] + level;
+                let unload_id = loadedNeurons[neuron_number] + prevSliderValue;
 
-                    if (load_id !== unload_id) {
-                        sharkViewerInstance.setNeuronVisible(load_id, true);
-                        sharkViewerInstance.setNeuronVisible(unload_id, false);
-                    }
-                    setPrevSliderValue(level);
-                    neuron_number += 1;
+                if (load_id !== unload_id) {
+                    sharkViewerInstance.setNeuronVisible(load_id, true);
+                    sharkViewerInstance.setNeuronVisible(unload_id, false);
+                }
+                setPrevSliderValue(level);
+                neuron_number += 1;
 
-                    if (slider_value > 1.0){
-                        setLineVisibility(scene, true);
-                        setSynapseVisibility(scene, false);
-                    }
-                    else {
-                        setLineVisibility(scene, false);
-                        setSynapseVisibility(scene, true);
-                    }
+                if (slider_value > 1.0) {
+                    setLineVisibility(scene, true);
+                    setSynapseVisibility(scene, false);
+                } else {
+                    setLineVisibility(scene, false);
+                    setSynapseVisibility(scene, true);
+                }
 
             })
         }
@@ -308,7 +303,7 @@ function Viewer() {
 
                     mesh.geometry.name = "synapse";
                     if (!mesh.geometry.userData.neurons) {
-                        mesh.geometry.userData = { neurons: [neuron.id] } // need to change what this is
+                        mesh.geometry.userData = {neurons: [neuron.id]} // need to change what this is
                         // n neurons with complexity level that are set to visible or set to invisible
                         // enabling the visibility of each of those. many objects in the threejs scene that correspond to what the neuron is
                         // highlight the right neuron for the current abstraction level
@@ -327,7 +322,7 @@ function Viewer() {
 
                         console.log(motif.distances)
                         setDisplayTooltip(true)
-                        setTooltipInfo({distances:motif.distances,event:event })
+                        setTooltipInfo({distances: motif.distances, event: event})
                         // let currNeurons;
                         // if (event.target.geometry.userData) {
                         //     currNeurons = event.target.geometry.userData.neurons;
@@ -350,7 +345,7 @@ function Viewer() {
                         //     // setCurrColor(newNeuron.material.color.getHex());
                         // }
 
-                      // return <ArrowTooltips distances={motif.distances}/>
+                        // return <ArrowTooltips distances={motif.distances}/>
                         // ArrowTooltips(motif.distances)
                         // console.log(motif.distances)
                         // synapseView()
@@ -363,7 +358,7 @@ function Viewer() {
                         event.target.material.color.set(orange);
                         document.body.style.cursor = "default";
                     });
-                    
+
                     scene.add(mesh);
                     interactionManager.add(mesh);
                 })
@@ -391,10 +386,10 @@ function Viewer() {
 
     return (
         <div id={id} className={className}>
-            { displayTooltip &&
+            {displayTooltip &&
             <ArrowTooltips props={tooltipInfo}></ArrowTooltips>
             }
-        
+
         </div>
     );
 
