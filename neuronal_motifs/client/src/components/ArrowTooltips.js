@@ -12,7 +12,7 @@ function ArrowTooltips(props) {
   
   return (
     <div style={{position:'absolute', top:10, right:20, zIndex: 100}}>
-      <p>Distance from Presynaptics Neuron {distances}</p>
+      <p>Distance from Presynaptic Neuron {distances}</p>
       
     </div>
   );

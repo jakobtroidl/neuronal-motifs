@@ -10,7 +10,61 @@ import * as THREE from 'three';
 import axios from "axios";
 import { InteractionManager } from "three.interactive";
 
-import Draggable from 'react-draggable';
+
+const setLineVisibility = (scene, visible) => {
+    scene.children.forEach(child => {
+        if(typeof child.name == 'string' && child.name.includes('line')){
+             child.visible = visible;
+        }
+    })
+}
+
+const setSynapseVisibility = (scene, visible) => {
+  scene.children.forEach(child => {
+        if(typeof child.name == 'string' && child.name.includes('syn')){
+             child.visible = visible;
+        }
+    })
+}
+
+
+/* max count = 10 */
+const getTranslationVectors = (count) => {
+    let directions = [
+        [1, 0, 0],
+        [-1, 0, 0],
+        [0, 1, 0],
+        [0, -1, 0],
+        [0, 0, 1],
+        [0, 0, -1],
+        [1, 1, 1],
+        [-1, -1, -1],
+        [-1, 1, 1],
+        [1, -1, -1]
+    ]
+    return directions.slice(0, count);
+}
+
+// const createMoveAnimation = ({ mesh, startPosition, endPosition }) => {
+//   mesh.userData.mixer = new THREE.AnimationMixer(mesh);
+//   let track = new THREE.VectorKeyframeTrack(
+//     '.position',
+//     [0, 1],
+//     [
+//       startPosition.x,
+//       startPosition.y,
+//       startPosition.z,
+//       endPosition.x,
+//       endPosition.y,
+//       endPosition.z,
+//     ]
+//   );
+//   const animationClip = new THREE.AnimationClip(null, 5, [track]);
+//   const animationAction = mesh.userData.mixer.clipAction(animationClip);
+//   animationAction.setLoop(THREE.LoopOnce);
+//   animationAction.play();
+//   mesh.userData.clock = new THREE.Clock();
+// };
 
 function Viewer() {
     const [motif, setMotif] = React.useState()
@@ -22,7 +76,6 @@ function Viewer() {
     const className = 'shark_viewer';
     // Global context holds abstraction state
     const context = useContext(AppContext);
-
     // for synapse selecting & highlighting
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
@@ -37,6 +90,7 @@ function Viewer() {
         return;
     }
     
+
 
     // Instantiates the viewer, will only run once on init
     useEffect(() => {
@@ -113,9 +167,6 @@ function Viewer() {
                     console.log('[close] Connection died', new Date().getSeconds());
                 }
             };
-
-
-            // setMotif(res.data);
         }
 
     }, [context.selectedMotif]);
@@ -128,8 +179,13 @@ function Viewer() {
             scene.remove.apply(scene, scene.children);
 
             let neuron_number = 0
-            //console.log(context.colors);
-            motif.neurons.forEach(n => {
+            let objects_to_add = [];
+            let number_of_neurons = motif.neurons.length;
+            let directions = getTranslationVectors(number_of_neurons);
+            let neuron_order = [];
+            let factor = 8000;
+
+            motif.neurons.forEach((n) => {
                 let abstraction_level = 0
                 n.skeleton_abstractions.forEach(abstraction => {
                     let parsedSwc = swcParser(abstraction.swc)
@@ -144,7 +200,49 @@ function Viewer() {
                     }
                     abstraction_level += 1
                 })
+                neuron_order.push(n.id);
+
+                let id = loadedNeurons[neuron_number] + abstraction_level - 1
+                let most_abstract_mesh = scene.getObjectByName(id);
+                most_abstract_mesh = most_abstract_mesh.clone(true);
+                most_abstract_mesh.name = loadedNeurons[neuron_number] + abstraction_level;
+                most_abstract_mesh.visible = false;
+                most_abstract_mesh.translateX(factor * directions[neuron_number][0]);
+                most_abstract_mesh.translateY(factor * directions[neuron_number][1]);
+                most_abstract_mesh.translateZ(factor * directions[neuron_number][2]);
+                objects_to_add.push(most_abstract_mesh);
+
                 neuron_number += 1
+            })
+            objects_to_add.forEach(obj => {
+                scene.add(obj);
+            })
+
+            motif.neurons.forEach(neuron => {
+                neuron.synapses.forEach(syn => {
+                    let pre_neuron_number = neuron_order.indexOf(syn.pre_id);
+                    let pre_loc = new THREE.Vector3(syn.pre.x, syn.pre.y, syn.pre.z);
+                    let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
+                    let line_start = pre_loc.add(translate);
+
+                    let post_neuron_number = neuron_order.indexOf(syn.post_id);
+                    let post_loc = new THREE.Vector3(syn.post.x, syn.post.y, syn.post.z);
+                    translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
+                    let line_end = post_loc.add(translate);
+
+                    const material = new THREE.LineBasicMaterial( { color: new THREE.Color("rgb(230,0,255)")} );
+                    const points = [];
+                    points.push(line_start);
+                    points.push(line_end);
+
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const line = new THREE.Line( geometry, material );
+
+                    line.name = 'line-' + line_start.x + '-' + line_start.y + '-' + line_start.z + '-'
+                        + line_end.x + '-' + line_end.y + '-' + line_end.z;
+                    line.visible = false;
+                    scene.add(line);
+                })
             })
         }
     }, [motif, sharkViewerInstance])
@@ -153,20 +251,31 @@ function Viewer() {
     useEffect(() => {
         if (motif && sharkViewerInstance) {
             console.log(motif)
+            let scene = sharkViewerInstance.scene;
             let neurons = motif.neurons;
             let neuron_number = 0;
+            let slider_value = context.abstractionLevel * 1.1;
             neurons.forEach(n => {
-                let slider_value = context.abstractionLevel;
-                let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value);
-                let load_id = loadedNeurons[neuron_number] + level;
-                let unload_id = loadedNeurons[neuron_number] + prevSliderValue;
+                    let level = Math.round((n.skeleton_abstractions.length - 1) * slider_value);
+                    let load_id = loadedNeurons[neuron_number] + level;
+                    let unload_id = loadedNeurons[neuron_number] + prevSliderValue;
 
-                if (load_id !== unload_id) {
-                    sharkViewerInstance.setNeuronVisible(load_id, true);
-                    sharkViewerInstance.setNeuronVisible(unload_id, false);
-                }
-                setPrevSliderValue(level);
-                neuron_number += 1;
+                    if (load_id !== unload_id) {
+                        sharkViewerInstance.setNeuronVisible(load_id, true);
+                        sharkViewerInstance.setNeuronVisible(unload_id, false);
+                    }
+                    setPrevSliderValue(level);
+                    neuron_number += 1;
+
+                    if (slider_value > 1.0){
+                        setLineVisibility(scene, true);
+                        setSynapseVisibility(scene, false);
+                    }
+                    else {
+                        setLineVisibility(scene, false);
+                        setSynapseVisibility(scene, true);
+                    }
+
             })
         }
     }, [context.abstractionLevel])
@@ -208,11 +317,10 @@ function Viewer() {
                         mesh.geometry.userData.neurons.push(neuron.id)
                         console.log("added neuron")
                     }
-
-                    mesh.position.x = syn.x;
-                    mesh.position.y = syn.y;
-                    mesh.position.z = syn.z;
-
+                    mesh.name = "syn-" + syn.post.x + "-" + syn.post.y + "-" + syn.post.z;
+                    mesh.position.x = (syn.post.x + syn.pre.x) / 2.0;
+                    mesh.position.y = (syn.post.y + syn.pre.y) / 2.0;
+                    mesh.position.z = (syn.post.z + syn.pre.z) / 2.0;
                     mesh.addEventListener("mouseover", (event) => {
                         event.target.material.color.set(0xff0000);
                         document.body.style.cursor = "pointer";

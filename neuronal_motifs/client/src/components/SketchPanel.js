@@ -457,6 +457,7 @@ function SketchPanel() {
                         >
                             <Grid
                                 container
+                                className={'popover-grid'}
                                 direction="column"
                                 justifyContent="center"
                                 alignItems="flex-start"
@@ -508,7 +509,7 @@ function SketchPanel() {
                             </IconButton>
                         </Tooltip>
 
-                        <Tooltip title="Select" placement="right">
+                        <Tooltip title="Edit Properties" placement="right">
                             <IconButton value='edit' color={mouseState === 'edit' ? "primary" : "default"}
                                         onClick={() => {
                                             setCursor('pointer')
