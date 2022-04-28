@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import navis
 import networkx as nx
 import numpy as np
@@ -94,6 +96,7 @@ class Neuron:
         self.distances = None
         self.synapses = synapses
         self.skeleton_labels = skeleton_labels
+        self.abstraction_center = None
 
     def as_json(self):
         """
@@ -112,10 +115,31 @@ class Neuron:
             'node_map': swc_object['map'],
             'skeleton_labels': self.skeleton_labels.tolist(),
             'skeleton_abstractions': abstraction_export,
-            'center': self.get_center()
+            'center': self.get_center(),
+            'abstraction_center': self.abstraction_center
         }
 
         return neuron
+
+    def compute_abstraction_root(self, skeleton_abstraction):
+        """
+        Computes the abstraction center by averaging over motif synapse locations and snapping it to the neuron skeleton
+        @param skeleton_abstraction: TreeNeuron instance to which the center should be computed
+        @return: node id of the abstraction center
+        """
+        nodes = skeleton_abstraction.nodes
+        x = int(nodes['x'].mean())
+        y = int(nodes['y'].mean())
+        z = int(nodes['z'].mean())
+
+        center_id, distance = skeleton_abstraction.snap([x, y, z])
+        center_node = nodes[nodes['node_id'] == center_id]
+
+        center_x = int(center_node['x'])
+        center_y = int(center_node['y'])
+        center_z = int(center_node['z'])
+
+        self.abstraction_center = [center_x, center_y, center_z]
 
     def get_center(self):
         x = int(self.skeleton.nodes['x'].mean())
@@ -225,7 +249,7 @@ class Neuron:
                 node_id = self.get_closest_connector(x_post, y_post, z_post)
                 nodes.append(node_id)
 
-        return nodes
+        return list(OrderedDict.fromkeys(nodes))  # remove duplicates
 
     def compute_abstraction_levels(self, num_of_levels):
         """

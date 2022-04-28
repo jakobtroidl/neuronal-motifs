@@ -274,9 +274,7 @@ function Viewer() {
                     sharkViewerInstance.renderer.domElement
                 );
             }
-            //let neurons = motif.neurons;
-            // const orange = new THREE.Color("rgb(255,154,0)");
-            // const white =new THREE.Color("rgb(255,255,255)");
+
 
             let scene = sharkViewerInstance.scene;
             let interactionManager = sharkViewerInstance.scene.interactionManager;
@@ -287,8 +285,22 @@ function Viewer() {
             const directionalLight = new THREE.DirectionalLight(Color.white, 0.7);
             scene.add(directionalLight);
 
-            motif.synapses.forEach(syn => {
+            console.log(motif);
 
+            motif.neurons.forEach(neuron => {
+                let geometry = new THREE.SphereGeometry(200, 16, 16);
+                let material = new THREE.MeshPhongMaterial({color: Color.red});
+                let mesh = new THREE.Mesh(geometry, material);
+                mesh.name = "abstraction-center-" + neuron.abstraction_center[0] + "-" + neuron.abstraction_center[1] + "-" + neuron.abstraction_center[2];
+                mesh.position.x = neuron.abstraction_center[0];
+                mesh.position.y = neuron.abstraction_center[1];
+                mesh.position.z = neuron.abstraction_center[2];
+
+                scene.add(mesh);
+                interactionManager.add(mesh);
+            })
+
+            motif.synapses.forEach(syn => {
                     // create a sphere shape
                     let geometry = new THREE.SphereGeometry(100, 16, 16);
                     let material = new THREE.MeshPhongMaterial({color: Color.orange});
