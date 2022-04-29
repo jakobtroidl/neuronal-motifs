@@ -28,8 +28,7 @@ const setSynapseVisibility = (scene, visible) => {
 const getNeuronListId = (neurons, id) => {
     let out = -1;
     neurons.forEach((neuron, i) => {
-        if (neuron.id === id)
-        {
+        if (neuron.id === id) {
             out = i;
         }
     })
@@ -88,8 +87,6 @@ function Viewer() {
     // for synapse selecting & highlighting
     const [displayTooltip, setDisplayTooltip] = useState(false);
     const [tooltipInfo, setTooltipInfo] = useState({})
-
-
 
 
     // Instantiates the viewer, will only run once on init
@@ -182,28 +179,28 @@ function Viewer() {
             let factor = 8000;
 
             motif.synapses.forEach(syn => {
-                    let pre_neuron_number = getNeuronListId(motif.neurons, syn.pre_id);
-                    let pre_loc = new THREE.Vector3(syn.pre.x, syn.pre.y, syn.pre.z);
-                    let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
-                    let line_start = pre_loc.add(translate);
+                let pre_neuron_number = getNeuronListId(motif.neurons, syn.pre_id);
+                let pre_loc = new THREE.Vector3(syn.pre.x, syn.pre.y, syn.pre.z);
+                let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
+                let line_start = pre_loc.add(translate);
 
-                    let post_neuron_number = getNeuronListId(motif.neurons, syn.post_id);
-                    let post_loc = new THREE.Vector3(syn.post.x, syn.post.y, syn.post.z);
-                    translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
-                    let line_end = post_loc.add(translate);
+                let post_neuron_number = getNeuronListId(motif.neurons, syn.post_id);
+                let post_loc = new THREE.Vector3(syn.post.x, syn.post.y, syn.post.z);
+                translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
+                let line_end = post_loc.add(translate);
 
-                    const material = new THREE.LineBasicMaterial({color: Color.orange});
-                    const points = [];
-                    points.push(line_start);
-                    points.push(line_end);
+                const material = new THREE.LineBasicMaterial({color: Color.orange});
+                const points = [];
+                points.push(line_start);
+                points.push(line_end);
 
-                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                    const line = new THREE.Line(geometry, material);
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const line = new THREE.Line(geometry, material);
 
-                    line.name = 'line-' + line_start.x + '-' + line_start.y + '-' + line_start.z + '-'
-                        + line_end.x + '-' + line_end.y + '-' + line_end.z;
-                    line.visible = false;
-                    scene.add(line);
+                line.name = 'line-' + line_start.x + '-' + line_start.y + '-' + line_start.z + '-'
+                    + line_end.x + '-' + line_end.y + '-' + line_end.z;
+                line.visible = false;
+                scene.add(line);
             })
         }
     }, [motif, sharkViewerInstance])
@@ -219,8 +216,7 @@ function Viewer() {
             let directions = getTranslationVectors(number_of_neurons);
             let factor = 8000;
 
-            if(context.abstractionLevel > 0.9 && prevSliderValue <= 0.9)
-            {
+            if (context.abstractionLevel > 0.9 && prevSliderValue <= 0.9) {
                 motif.neurons.forEach((neuron, i) => {
                     let mesh = scene.getObjectByName(neuron.id);
                     mesh.translateX(factor * directions[i][0]);
@@ -231,8 +227,7 @@ function Viewer() {
                     setLineVisibility(scene, true);
                 });
             }
-            if(context.abstractionLevel <= 0.9 && prevSliderValue > 0.9)
-            {
+            if (context.abstractionLevel <= 0.9 && prevSliderValue > 0.9) {
                 motif.neurons.forEach((neuron, i) => {
                     let mesh = scene.getObjectByName(neuron.id);
                     mesh.translateX(factor * -directions[i][0]);
@@ -243,7 +238,6 @@ function Viewer() {
                     setLineVisibility(scene, false);
                 });
             }
-
 
 
         }
@@ -282,33 +276,33 @@ function Viewer() {
             })
 
             motif.synapses.forEach(syn => {
-                    // create a sphere shape
-                    let geometry = new THREE.SphereGeometry(100, 16, 16);
-                    let material = new THREE.MeshPhongMaterial({color: Color.orange});
-                    let mesh = new THREE.Mesh(geometry, material);
+                // create a sphere shape
+                let geometry = new THREE.SphereGeometry(100, 16, 16);
+                let material = new THREE.MeshPhongMaterial({color: Color.orange});
+                let mesh = new THREE.Mesh(geometry, material);
 
-                    mesh.name = "syn-" + syn.post.x + "-" + syn.post.y + "-" + syn.post.z;
-                    mesh.position.x = (syn.post.x + syn.pre.x) / 2.0;
-                    mesh.position.y = (syn.post.y + syn.pre.y) / 2.0;
-                    mesh.position.z = (syn.post.z + syn.pre.z) / 2.0;
-                    mesh.addEventListener("mouseover", (event) => {
-                        mesh.material = new THREE.MeshPhongMaterial({color: Color.red});
-                        mesh.material.needsUpdate = true;
-                        document.body.style.cursor = "pointer";
-                        setDisplayTooltip(true)
-                        setTooltipInfo({pre_soma_dist: syn.pre_soma_dist, post_soma_dist: syn.post_soma_dist, event: event})
-                    });
+                mesh.name = "syn-" + syn.post.x + "-" + syn.post.y + "-" + syn.post.z;
+                mesh.position.x = (syn.post.x + syn.pre.x) / 2.0;
+                mesh.position.y = (syn.post.y + syn.pre.y) / 2.0;
+                mesh.position.z = (syn.post.z + syn.pre.z) / 2.0;
+                mesh.addEventListener("mouseover", (event) => {
+                    mesh.material = new THREE.MeshPhongMaterial({color: Color.red});
+                    mesh.material.needsUpdate = true;
+                    document.body.style.cursor = "pointer";
+                    setDisplayTooltip(true)
+                    setTooltipInfo({pre_soma_dist: syn.pre_soma_dist, post_soma_dist: syn.post_soma_dist, event: event})
+                });
 
-                    mesh.addEventListener("mouseout", (event) => {
-                        setDisplayTooltip(false);
-                        mesh.material = new THREE.MeshPhongMaterial({color: Color.orange});
-                        mesh.material.needsUpdate = true;
-                        document.body.style.cursor = "default";
-                    });
+                mesh.addEventListener("mouseout", (event) => {
+                    setDisplayTooltip(false);
+                    mesh.material = new THREE.MeshPhongMaterial({color: Color.orange});
+                    mesh.material.needsUpdate = true;
+                    document.body.style.cursor = "default";
+                });
 
-                    scene.add(mesh);
-                    interactionManager.add(mesh);
-                })
+                scene.add(mesh);
+                interactionManager.add(mesh);
+            })
         }
     }, [motif, sharkViewerInstance])
 
