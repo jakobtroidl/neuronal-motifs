@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import navis
 import networkx as nx
 import numpy as np
@@ -83,17 +85,13 @@ class Neuron:
         @param id: body id of the neuron. Acts as a unique identifier
         @param skeleton: stick figure skeleton of the neuron
         @param mesh: surface mesh of a neuron
-        @param synapses: selected set synapse that connect to other neurons
-        @param skeleton_labels: labels of skeleton nodes that specify the distance of the node to a motif path
         @param distances: geodesic distance matrix of nodes coming out of neuron
         """
-        self.skeleton_abstractions = None
         self.id = id
         self.skeleton = skeleton
         self.mesh = mesh
         self.distances = None
-        self.synapses = synapses
-        self.skeleton_labels = skeleton_labels
+        self.abstraction_center = None
 
     def as_json(self):
         """
@@ -101,21 +99,35 @@ class Neuron:
         @return: json object
         """
         swc_object = conversion.treeneuron_to_swc_string(self.skeleton)
-        # syn_export = conversion.synapse_array_to_object(self.synapses)
-        abstraction_export = conversion.treeneurons_list_to_swc_string_list(self.skeleton_abstractions)
-
         neuron = {
             'id': self.id,
             'mesh': 'TODO',
-            # 'synapses': syn_export,
             'skeleton_swc': swc_object['swc'],
-            'node_map': swc_object['map'],
-            'skeleton_labels': self.skeleton_labels.tolist(),
-            'skeleton_abstractions': abstraction_export,
-            'center': self.get_center()
+            'abstraction_center': self.compute_abstraction_root()
         }
 
         return neuron
+
+    def compute_abstraction_root(self):
+        """
+        Computes the abstraction center by averaging over motif synapse locations and snapping it to the neuron skeleton
+        @return: node id of the abstraction center
+        """
+        nodes = self.skeleton.nodes
+        motif_nodes = nodes[nodes['abstraction_label'] == 0]
+
+        x = int(motif_nodes['x'].mean())
+        y = int(motif_nodes['y'].mean())
+        z = int(motif_nodes['z'].mean())
+
+        center_id, distance = self.skeleton.snap([x, y, z])
+        center_node = nodes[nodes['node_id'] == center_id]
+
+        center_x = int(center_node['x'])
+        center_y = int(center_node['y'])
+        center_z = int(center_node['z'])
+
+        return [center_x, center_y, center_z]
 
     def get_center(self):
         x = int(self.skeleton.nodes['x'].mean())
@@ -147,8 +159,8 @@ class Neuron:
         """
         self.synapses = synapses
 
-    def set_skeleton_abstractions(self, num_of_levels):
-        self.skeleton_abstractions = self.compute_abstraction_levels(num_of_levels)
+    # def set_skeleton_abstractions(self, num_of_levels):
+    #     self.skeleton_abstractions = self.compute_abstraction_levels(num_of_levels)
 
     def compute_skeleton_labels(self, motif_synapse_nodes):
         """
@@ -171,7 +183,10 @@ class Neuron:
         motif_nodes = multiple_shortest_paths(skeleton_graph, motif_synapse_nodes[0], motif_synapse_nodes[1:])
         # compute the shortest path between all synapse nodes which is equivalent to the motif path
         labels = compute_labels(labels, edges, motif_nodes, unlabeled_node_id)
-        self.skeleton_labels = labels  # add labeled nodes to the neuron object
+        self.skeleton.nodes['abstraction_label'] = labels
+
+        # print('hello world')
+        # self.skeleton_labels = labels  # add labeled nodes to the neuron object
 
     def get_closest_connector(self, x, y, z):
         """
@@ -225,30 +240,30 @@ class Neuron:
                 node_id = self.get_closest_connector(x_post, y_post, z_post)
                 nodes.append(node_id)
 
-        return nodes
+        return list(OrderedDict.fromkeys(nodes))  # remove duplicates
 
-    def compute_abstraction_levels(self, num_of_levels):
-        """
-        Generates [num_of_levels] abstractions of this neuron, by pruning branches of a certain distance to the motif path
-        @param num_of_levels: number of abstraction levels
-        @return: list of abstracted TreeNeurons
-        """
-        levels = np.linspace(0, 1, num_of_levels, endpoint=True)
-        results = Parallel(n_jobs=8)(delayed(self.prune_to_motif_path)(levels[i]) for i in range(levels.size))
-        results = sorted(results, key=lambda x: x[0])  # sort based on abstraction level
-        return list(map(itemgetter(1), results))  # only return TreeNeuron
-
-    def prune_to_motif_path(self, factor):
-        """
-        Prunes the given skeleton to the motif path
-        @param factor: float [0, 1]. 0 -> full skeleton is returned. 1 -> only motif path is returned
-        @return: pruned skeleton
-        """
-        node_ids = np.arange(1, self.skeleton_labels.shape[0] + 1)
-        labels = self.skeleton_labels
-
-        max_label = np.max(labels)
-        threshold = int(max_label * (1.0 - factor))  # convert scale factor to pruning threshold
-        mask = labels > threshold
-
-        return [factor, navis.remove_nodes(self.skeleton, node_ids[mask])]
+    # def compute_abstraction_levels(self, num_of_levels):
+    #     """
+    #     Generates [num_of_levels] abstractions of this neuron, by pruning branches of a certain distance to the motif path
+    #     @param num_of_levels: number of abstraction levels
+    #     @return: list of abstracted TreeNeurons
+    #     """
+    #     levels = np.linspace(0, 1, num_of_levels, endpoint=True)
+    #     results = Parallel(n_jobs=8)(delayed(self.prune_to_motif_path)(levels[i]) for i in range(levels.size))
+    #     results = sorted(results, key=lambda x: x[0])  # sort based on abstraction level
+    #     return list(map(itemgetter(1), results))  # only return TreeNeuron
+    #
+    # def prune_to_motif_path(self, factor):
+    #     """
+    #     Prunes the given skeleton to the motif path
+    #     @param factor: float [0, 1]. 0 -> full skeleton is returned. 1 -> only motif path is returned
+    #     @return: pruned skeleton
+    #     """
+    #     node_ids = np.arange(1, self.skeleton_labels.shape[0] + 1)
+    #     labels = self.skeleton_labels
+    #
+    #     max_label = np.max(labels)
+    #     threshold = int(max_label * (1.0 - factor))  # convert scale factor to pruning threshold
+    #     mask = labels > threshold
+    #
+    #     return [factor, navis.remove_nodes(self.skeleton, node_ids[mask])]

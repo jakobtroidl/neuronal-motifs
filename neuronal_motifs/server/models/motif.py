@@ -1,4 +1,3 @@
-import json
 import time
 import navis
 
@@ -26,7 +25,6 @@ class MyMotif:
 
         neuron_json = []
         for neuron in self.neurons:
-            print(neuron.distances)
             neuron_json.append(neuron.as_json())
 
         syn_export = conversion.synapse_array_to_object(self.synapses)
@@ -47,22 +45,22 @@ class MyMotif:
         @return:
         """
         for neuron in self.neurons:
-            nodes = neuron.get_nodes_of_motif_synapses()
-
+            synapse_nodes = neuron.get_nodes_of_motif_synapses()
+            # neuron.abstraction_center = neuron.compute_abstraction_root(synapse_nodes)
             print("Compute compute node labels for skeleton {} ...".format(neuron.id))
             t = time.time()
-            neuron.compute_skeleton_labels(nodes)
+            neuron.compute_skeleton_labels(synapse_nodes)
             print("Done. Took {} sec".format(time.time() - t))
 
-    def compute_motif_abstraction(self):
-        """
-        Computes the levels of abstraction for the motif path
-        """
-        for neuron in self.neurons:
-            print("Compute Motif Abstraction for Neuron {} ...".format(neuron.id))
-            t = time.time()
-            neuron.set_skeleton_abstractions(7)
-            print('Done. Took {} sec'.format(time.time() - t))
+    # def compute_motif_abstraction(self):
+    #     """
+    #     Computes the levels of abstraction for the motif path
+    #     """
+    #     for neuron in self.neurons:
+    #         print("Compute Motif Abstraction for Neuron {} ...".format(neuron.id))
+    #         t = time.time()
+    #         neuron.set_skeleton_abstractions(7)
+    #         print('Done. Took {} sec'.format(time.time() - t))
 
     def download_synapses(self):
         """

@@ -74,8 +74,8 @@ def compute_motif_data(body_ids, motif):
     motif = MyMotif(body_ids, motif_graph)
     yield 'Computing Motif Path'
     motif.compute_motif_paths()
-    yield 'Computing Motif Abstraction'
-    motif.compute_motif_abstraction()
+    # yield 'Computing Motif Abstraction'
+    # motif.compute_motif_abstraction()
     yield 'Computing Distances'
     motif.compute_synapse_soma_distances()
 

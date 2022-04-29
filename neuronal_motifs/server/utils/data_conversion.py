@@ -26,17 +26,17 @@ def apply_ids_to_motif_adjacency(body_ids, motif):
     return dict(zip(body_ids, adj))
 
 
-def treeneurons_list_to_swc_string_list(skeletons):
-    """
-    TODO
-    @param skeletons:
-    @return:
-    """
-    out = [None] * len(skeletons)
-    for i in range(len(skeletons)):
-        skl = skeletons[i]
-        out[i] = treeneuron_to_swc_string(skl)
-    return out
+# def treeneurons_list_to_swc_string_list(skeletons):
+#     """
+#     TODO
+#     @param skeletons:
+#     @return:
+#     """
+#     out = [None] * len(skeletons)
+#     for i in range(len(skeletons)):
+#         skl = skeletons[i]
+#         out[i] = treeneuron_to_swc_string(skl)
+#     return out
 
 
 def treeneuron_to_swc_string(neuron_skeleton):
@@ -46,7 +46,8 @@ def treeneuron_to_swc_string(neuron_skeleton):
     @return: swc string and mapping from new node id to old node id
     """
     fp = tempfile.NamedTemporaryFile(suffix='.swc', delete=False)
-    map_old_to_new = neuron_skeleton.to_swc(Path(fp.name), write_meta=True, return_node_map=True)
+    map_old_to_new = neuron_skeleton.to_swc(Path(fp.name), write_meta=True, labels='abstraction_label',
+                                            return_node_map=True)
     fp.seek(0)
     swc_string = fp.read()
     fp.close()
@@ -55,6 +56,7 @@ def treeneuron_to_swc_string(neuron_skeleton):
     map_new_to_old = {int(x): int(y) for x, y in map_old_to_new.items()}
 
     return {'swc': out, 'map': map_new_to_old}
+
 
 # Converts Query Builder Mongo-esque parameters to dotmotif query format
 def nodes_and_edges_to_motif_string(motif):
@@ -121,7 +123,8 @@ def synapse_array_to_object(synapse_df):
         syn_post = {'x': x_post, 'y': y_post, 'z': z_post}
         syn_post_soma_distance = synapse['soma_distance_post']
 
-        syn = {'pre_id': syn_pre_id, 'post_id': syn_post_id, 'pre': syn_pre, 'post': syn_post, 'pre_soma_dist': syn_pre_soma_distance, 'post_soma_dist': syn_post_soma_distance}
+        syn = {'pre_id': syn_pre_id, 'post_id': syn_post_id, 'pre': syn_pre, 'post': syn_post,
+               'pre_soma_dist': syn_pre_soma_distance, 'post_soma_dist': syn_post_soma_distance}
         synapses.append(syn)
 
     return synapses
