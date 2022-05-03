@@ -226,6 +226,11 @@ function Viewer() {
                     mesh.translateY(factor * directions[i][1]);
                     mesh.translateZ(factor * directions[i][2]);
 
+                    let center = scene.getObjectByName('abstraction-center-' + neuron.id);
+                    center.translateX(factor * directions[i][0]);
+                    center.translateY(factor * directions[i][1]);
+                    center.translateZ(factor * directions[i][2]);
+
                     setSynapseVisibility(scene, false);
                     setLineVisibility(scene, true);
                 });
@@ -236,6 +241,11 @@ function Viewer() {
                     mesh.translateX(factor * -directions[i][0]);
                     mesh.translateY(factor * -directions[i][1]);
                     mesh.translateZ(factor * -directions[i][2]);
+                    
+                    let center = scene.getObjectByName('abstraction-center-' + neuron.id);
+                    center.translateX(factor * -directions[i][0]);
+                    center.translateY(factor * -directions[i][1]);
+                    center.translateZ(factor * -directions[i][2]);
 
                     setSynapseVisibility(scene, true);
                     setLineVisibility(scene, false);
@@ -267,7 +277,7 @@ function Viewer() {
                 let geometry = new THREE.SphereGeometry(200, 16, 16);
                 let material = new THREE.MeshPhongMaterial({color: Color.red});
                 let mesh = new THREE.Mesh(geometry, material);
-                mesh.name = "abstraction-center-" + neuron.abstraction_center[0] + "-" + neuron.abstraction_center[1] + "-" + neuron.abstraction_center[2];
+                mesh.name = "abstraction-center-" + neuron.id;
                 mesh.position.x = neuron.abstraction_center[0];
                 mesh.position.y = neuron.abstraction_center[1];
                 mesh.position.z = neuron.abstraction_center[2];
