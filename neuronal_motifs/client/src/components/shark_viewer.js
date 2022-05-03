@@ -562,17 +562,19 @@ export default class SharkViewer {
      * @param threshold value between 0 and 1. 0: nothing is abstracted, 1: everything is abstracted
      */
     setAbstractionThreshold(threshold) {
-        let boundary = this.minLabel + (1 - threshold) * (this.maxLabel - this.minLabel);
-        this.scene.traverse(function (node) {
-            if (typeof node.name === 'string' && node.name.includes('skeleton-vertex')) {
-                // insert your code here, for example:
-                node.material.uniforms.abstraction_threshold.value = boundary;
-            }
-            if (typeof node.name === 'string' && node.name.includes('skeleton-edge')) {
-                // insert your code here, for example:
-                node.material.uniforms.abstraction_threshold.value = boundary;
-            }
-        });
+        if(0 <= threshold && threshold <= 1) {
+            let boundary = this.minLabel + (1 - threshold) * (this.maxLabel - this.minLabel);
+            this.scene.traverse(function (node) {
+                if (typeof node.name === 'string' && node.name.includes('skeleton-vertex')) {
+                    // insert your code here, for example:
+                    node.material.uniforms.abstraction_threshold.value = boundary;
+                }
+                if (typeof node.name === 'string' && node.name.includes('skeleton-edge')) {
+                    // insert your code here, for example:
+                    node.material.uniforms.abstraction_threshold.value = boundary;
+                }
+            });
+        }
     }
 
     createNeuron(swcJSON, color = undefined) {

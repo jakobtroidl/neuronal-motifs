@@ -208,15 +208,20 @@ function Viewer() {
     // Updates the motifs, runs when data, viewer, or abstraction state change
     useEffect(() => {
         if (motif && sharkViewerInstance) {
-            sharkViewerInstance.setAbstractionThreshold(context.abstractionLevel);
 
+            let level = context.abstractionLevel;
+            sharkViewerInstance.setAbstractionThreshold(level * 1.1);
             let scene = sharkViewerInstance.scene;
 
             let number_of_neurons = motif.neurons.length;
             let directions = getTranslationVectors(number_of_neurons);
             let factor = 8000;
 
-            if (context.abstractionLevel > 0.9 && prevSliderValue <= 0.9) {
+            // motif.neurons.forEach((neuron, i) => {
+            //     console.log(neuron);
+            // })
+
+            if (level >= 1.0 && prevSliderValue < 1.0) {
                 motif.neurons.forEach((neuron, i) => {
                     let mesh = scene.getObjectByName(neuron.id);
                     mesh.translateX(factor * directions[i][0]);
@@ -227,7 +232,7 @@ function Viewer() {
                     setLineVisibility(scene, true);
                 });
             }
-            if (context.abstractionLevel <= 0.9 && prevSliderValue > 0.9) {
+            if (level< 1.0 && prevSliderValue >= 1.0) {
                 motif.neurons.forEach((neuron, i) => {
                     let mesh = scene.getObjectByName(neuron.id);
                     mesh.translateX(factor * -directions[i][0]);
@@ -238,8 +243,6 @@ function Viewer() {
                     setLineVisibility(scene, false);
                 });
             }
-
-
         }
         setPrevSliderValue(context.abstractionLevel);
     }, [context.abstractionLevel])

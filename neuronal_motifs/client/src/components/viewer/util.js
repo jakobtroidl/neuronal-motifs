@@ -9,7 +9,7 @@ export function swcParser(swcFile) {
     "^[ \\t]*(" +
       [
         "\\d+", // index
-        "\\d+", // type
+        float, // type
         float, // x
         float, // y
         float, // z
