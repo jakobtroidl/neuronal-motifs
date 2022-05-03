@@ -1,6 +1,6 @@
-import {NODE_PARTICLE_IMAGE, swcParser, stretch} from "./viewer/util";
+import {NODE_PARTICLE_IMAGE, swcParser, stretch, stretch_inv} from "./viewer/util";
 
-export {swcParser, stretch};
+export {swcParser, stretch, stretch_inv};
 
 const THREE = require("three");
 require("three-obj-loader")(THREE);
@@ -555,6 +555,10 @@ export default class SharkViewer {
             normal1: n1,
             normal2: n2
         };
+    }
+
+    getMotifPathThreshold(){
+        return this.maxLabel / (this.maxLabel - this.minLabel);
     }
 
     /**

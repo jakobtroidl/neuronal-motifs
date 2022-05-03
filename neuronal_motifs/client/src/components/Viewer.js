@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useContext} from 'react';
-import SharkViewer, {swcParser, stretch} from './shark_viewer';
+import SharkViewer, {swcParser, stretch, stretch_inv} from './shark_viewer';
 import ArrowTooltips from './ArrowTooltips'
 import {AppContext} from "../contexts/GlobalContext";
 import './Viewer.css'
@@ -211,16 +211,14 @@ function Viewer() {
 
             let level = stretch(context.abstractionLevel);
             sharkViewerInstance.setAbstractionThreshold(level);
-            let scene = sharkViewerInstance.scene;
 
-            let number_of_neurons = motif.neurons.length;
-            let directions = getTranslationVectors(number_of_neurons);
-            let factor = 8000;
+            console.log(stretch_inv(sharkViewerInstance.getMotifPathThreshold()));
 
-            // motif.neurons.forEach((neuron, i) => {
-            //     console.log(neuron);
-            // })
-
+            // let scene = sharkViewerInstance.scene;
+            // let number_of_neurons = motif.neurons.length;
+            // let directions = getTranslationVectors(number_of_neurons);
+            // let factor = 8000;
+            //
             // if (level >= 1.0 && prevSliderValue < 1.0) {
             //     motif.neurons.forEach((neuron, i) => {
             //         let mesh = scene.getObjectByName(neuron.id);
