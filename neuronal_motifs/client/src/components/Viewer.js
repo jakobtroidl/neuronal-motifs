@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useContext} from 'react';
-import SharkViewer, {swcParser} from './shark_viewer';
+import SharkViewer, {swcParser, stretch} from './shark_viewer';
 import ArrowTooltips from './ArrowTooltips'
 import {AppContext} from "../contexts/GlobalContext";
 import './Viewer.css'
@@ -209,8 +209,8 @@ function Viewer() {
     useEffect(() => {
         if (motif && sharkViewerInstance) {
 
-            let level = context.abstractionLevel;
-            sharkViewerInstance.setAbstractionThreshold(level * 1.1);
+            let level = stretch(context.abstractionLevel);
+            sharkViewerInstance.setAbstractionThreshold(level);
             let scene = sharkViewerInstance.scene;
 
             let number_of_neurons = motif.neurons.length;
@@ -221,28 +221,28 @@ function Viewer() {
             //     console.log(neuron);
             // })
 
-            if (level >= 1.0 && prevSliderValue < 1.0) {
-                motif.neurons.forEach((neuron, i) => {
-                    let mesh = scene.getObjectByName(neuron.id);
-                    mesh.translateX(factor * directions[i][0]);
-                    mesh.translateY(factor * directions[i][1]);
-                    mesh.translateZ(factor * directions[i][2]);
-
-                    setSynapseVisibility(scene, false);
-                    setLineVisibility(scene, true);
-                });
-            }
-            if (level< 1.0 && prevSliderValue >= 1.0) {
-                motif.neurons.forEach((neuron, i) => {
-                    let mesh = scene.getObjectByName(neuron.id);
-                    mesh.translateX(factor * -directions[i][0]);
-                    mesh.translateY(factor * -directions[i][1]);
-                    mesh.translateZ(factor * -directions[i][2]);
-
-                    setSynapseVisibility(scene, true);
-                    setLineVisibility(scene, false);
-                });
-            }
+            // if (level >= 1.0 && prevSliderValue < 1.0) {
+            //     motif.neurons.forEach((neuron, i) => {
+            //         let mesh = scene.getObjectByName(neuron.id);
+            //         mesh.translateX(factor * directions[i][0]);
+            //         mesh.translateY(factor * directions[i][1]);
+            //         mesh.translateZ(factor * directions[i][2]);
+            //
+            //         setSynapseVisibility(scene, false);
+            //         setLineVisibility(scene, true);
+            //     });
+            // }
+            // if (level< 1.0 && prevSliderValue >= 1.0) {
+            //     motif.neurons.forEach((neuron, i) => {
+            //         let mesh = scene.getObjectByName(neuron.id);
+            //         mesh.translateX(factor * -directions[i][0]);
+            //         mesh.translateY(factor * -directions[i][1]);
+            //         mesh.translateZ(factor * -directions[i][2]);
+            //
+            //         setSynapseVisibility(scene, true);
+            //         setLineVisibility(scene, false);
+            //     });
+            // }
         }
         setPrevSliderValue(context.abstractionLevel);
     }, [context.abstractionLevel])

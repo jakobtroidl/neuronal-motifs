@@ -1,6 +1,6 @@
-import {NODE_PARTICLE_IMAGE, swcParser} from "./viewer/util";
+import {NODE_PARTICLE_IMAGE, swcParser, stretch} from "./viewer/util";
 
-export {swcParser};
+export {swcParser, stretch};
 
 const THREE = require("three");
 require("three-obj-loader")(THREE);
