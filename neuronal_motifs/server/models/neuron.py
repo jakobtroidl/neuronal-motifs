@@ -115,6 +115,13 @@ def compute_labels_to_abstraction_center(labels, edges, center_id, unlabeled_nod
         labels = labels_copy
         num_unlabeled_nodes = np.count_nonzero(labels == unlabeled_node_id)
         label = label - 1  # increase node label by one
+
+    min_value = np.amin(labels)
+    delta = abs(min_value) + abs(-1)
+    idx = np.where(labels < 0)
+    labels[idx] = labels[idx] + delta
+    labels[idx] = labels[idx] * -1
+
     return labels
 
 
