@@ -60,6 +60,7 @@ def multiple_shortest_paths(graph, start_node, end_node_list):
 @jit(nopython=True, parallel=True)
 def compute_distance_to_motif_path(labels, edges, motif_nodes, unlabeled_node_id):
     """
+    TODO
     @param labels:
     @param edges:
     @param motif_nodes:
@@ -89,10 +90,15 @@ def compute_distance_to_motif_path(labels, edges, motif_nodes, unlabeled_node_id
 
 
 def compute_labels_to_abstraction_center(labels, edges, center_id, unlabeled_node_id):
+    """
+    TODO
+    @param labels:
+    @param edges:
+    @param center_id:
+    @param unlabeled_node_id:
+    @return:
+    """
     labels[center_id - 1] = -1  # label all motif nodes in the skeleton with 0
-    # flip = 1
-    # if not positive_labels:
-    #     flip = -1
     num_unlabeled_nodes = np.count_nonzero(labels == unlabeled_node_id)
     label = -2  # specifies node labels, start with distance to motif path is 1
     while num_unlabeled_nodes > 0:  # repeat until all nodes are labeled
