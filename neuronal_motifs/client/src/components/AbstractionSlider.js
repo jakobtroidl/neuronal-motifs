@@ -38,7 +38,7 @@ function AbstractionSlider() {
                         defaultValue={0}
                         valueLabelFormat={valueLabelFormat}
                         valueLabelDisplay="auto"
-                        step={0.008}
+                        step={0.005}
                         marks
                         min={0}
                         max={1}
