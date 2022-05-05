@@ -1,5 +1,6 @@
 import React, {useState, useEffect, useContext} from 'react';
 import SharkViewer, {swcParser, stretch, stretch_inv} from './shark_viewer';
+import {bundle} from '../services/bundling';
 import ArrowTooltips from './ArrowTooltips'
 import {AppContext} from "../contexts/GlobalContext";
 import './Viewer.css'
@@ -178,31 +179,47 @@ function Viewer() {
             let directions = getTranslationVectors(number_of_neurons);
             let factor = 8000;
 
+            let start_points = [];
+            let end_points = [];
+
             motif.synapses.forEach(syn => {
                 let pre_neuron_number = getNeuronListId(motif.neurons, syn.pre_id);
-                let pre_loc = new THREE.Vector3(syn.pre.x, syn.pre.y, syn.pre.z);
-                let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
-                let line_start = pre_loc.add(translate);
-
                 let post_neuron_number = getNeuronListId(motif.neurons, syn.post_id);
-                let post_loc = new THREE.Vector3(syn.post.x, syn.post.y, syn.post.z);
-                translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
-                let line_end = post_loc.add(translate);
 
-                const material = new THREE.LineBasicMaterial({color: Color.orange});
-                const points = [];
-                points.push(line_start);
-                points.push(line_end);
+                console.log(pre_neuron_number);
 
-                const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                const line = new THREE.Line(geometry, material);
+                if(motif.graph.links.some(e => e.source === syn.pre_id && e.target === syn.post_id)) {
+                    let pre_loc = new THREE.Vector3(syn.pre.x, syn.pre.y, syn.pre.z);
+                    let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
+                    let line_start = pre_loc.add(translate);
 
-                line.name = 'line-' + line_start.x + '-' + line_start.y + '-' + line_start.z + '-'
-                    + line_end.x + '-' + line_end.y + '-' + line_end.z;
-                line.visible = false;
-                scene.add(line);
+                    let post_loc = new THREE.Vector3(syn.post.x, syn.post.y, syn.post.z);
+                    translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
+                    let line_end = post_loc.add(translate);
+
+                    // const material = new THREE.LineBasicMaterial({color: Color.orange});
+                    // const points = [];
+
+                    start_points.push(line_start);
+                    end_points.push(line_end);
+
+                    // points.push(line_start);
+                    // points.push(line_end);
+                    //
+                    // const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    // const line = new THREE.Line(geometry, material);
+                    //
+                    // line.name = 'line-' + line_start.x + '-' + line_start.y + '-' + line_start.z + '-'
+                    //     + line_end.x + '-' + line_end.y + '-' + line_end.z;
+                    // line.visible = false;
+                    // scene.add(line);
+                }
             })
+
+            let bundles = bundle(start_points, end_points, 0.3);
+            bundles.forEach((bundle, i) => { scene.add(bundle); });
         }
+
     }, [motif, sharkViewerInstance])
 
     // Updates the motifs, runs when data, viewer, or abstraction state change
@@ -241,7 +258,7 @@ function Viewer() {
                     mesh.translateX(factor * -directions[i][0]);
                     mesh.translateY(factor * -directions[i][1]);
                     mesh.translateZ(factor * -directions[i][2]);
-                    
+
                     let center = scene.getObjectByName('abstraction-center-' + neuron.id);
                     center.translateX(factor * -directions[i][0]);
                     center.translateY(factor * -directions[i][1]);
