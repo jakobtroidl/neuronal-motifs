@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import axios from "axios";
 import {InteractionManager} from "three.interactive";
 import {Color} from '../utils/rendering'
+import _ from 'lodash';
 
 
 const setLineVisibility = (scene, visible) => {
@@ -39,19 +40,21 @@ const getNeuronListId = (neurons, id) => {
 
 /* max count = 10 */
 const getTranslationVectors = (count) => {
-    let directions = [
-        [1, 0, 0],
-        [-1, 0, 0],
-        [0, 1, 0],
-        [0, -1, 0],
-        [0, 0, 1],
-        [0, 0, -1],
-        [1, 1, 1],
-        [-1, -1, -1],
-        [-1, 1, 1],
-        [1, -1, -1]
-    ]
-    return directions.slice(0, count);
+    // Following Saff and Kuijlaars via https://discuss.dizzycoding.com/evenly-distributing-n-points-on-a-sphere/
+    const indices = _.range(0.5, count + 0.5);
+    const phi = indices.map(ind => {
+        return Math.acos(1 - 2 * ind / count)
+    })
+    const theta = indices.map(ind => {
+        return Math.PI * (1 + Math.sqrt(5)) * ind;
+    })
+    let directions = _.range(count).map(i => {
+        const x = Math.cos(_.toNumber(theta[i])) * Math.sin(phi[i]);
+        const y = Math.sin(_.toNumber(theta[i])) * Math.sin(phi[i]);
+        const z = Math.cos(phi[i])
+        return [x, y, z]
+    })
+    return directions;
 }
 
 // const createMoveAnimation = ({ mesh, startPosition, endPosition }) => {
@@ -349,7 +352,7 @@ function Viewer() {
     return (
         <div id={id} className={className}>
             {displayTooltip &&
-                <ArrowTooltips props={tooltipInfo}></ArrowTooltips>
+            <ArrowTooltips props={tooltipInfo}></ArrowTooltips>
             }
 
         </div>
