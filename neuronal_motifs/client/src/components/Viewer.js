@@ -245,7 +245,7 @@ function Viewer() {
 
         }
         setPrevSliderValue(context.abstractionLevel);
-    }, [context.abstractionLevel])
+    }, [context.abstractionLevel, sharkViewerInstance, motif, prevSliderValue])
 
     useEffect(() => {
         if (motif && sharkViewerInstance) {
