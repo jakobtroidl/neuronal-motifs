@@ -14,6 +14,8 @@ delete InitialConfig['conjunctions']['OR']
 InitialConfig['settings']['showNot'] = false;
 InitialConfig['settings']['groupOperators'] = false
 InitialConfig['settings']['canAddGroup'] = false;
+InitialConfig['settings']['canReorder'] = false;
+InitialConfig['settings']['renderSize'] = 'small';
 
 
 function QueryBuilder() {
