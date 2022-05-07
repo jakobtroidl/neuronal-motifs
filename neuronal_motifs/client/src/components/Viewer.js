@@ -83,18 +83,14 @@ const getTranslationVectors = (count) => {
 
 function Viewer() {
     const [motif, setMotif] = React.useState()
-    /** @type {SharkViewer, function} */
     const [sharkViewerInstance, setSharkViewerInstance] = useState();
-    const [loadedNeurons, setLoadedNeurons] = useState()
     const [prevSliderValue, setPrevSliderValue] = useState()
     const id = "my_shark_viewer";
     const className = 'shark_viewer';
-    // Global context holds abstraction state
-    const context = useContext(AppContext);
+    const context = useContext(AppContext); // Global context holds abstraction state
     // for synapse selecting & highlighting
     const [displayTooltip, setDisplayTooltip] = useState(false);
     const [tooltipInfo, setTooltipInfo] = useState({})
-
 
     // Instantiates the viewer, will only run once on init
     useEffect(() => {
@@ -121,7 +117,6 @@ function Viewer() {
 
     useEffect(() => {
         if (sharkViewerInstance) {
-
             // remove all previous loaded objects in three.js scene
             let scene = sharkViewerInstance.scene;
             scene.remove.apply(scene, scene.children);
@@ -135,8 +130,6 @@ function Viewer() {
             let bodyIds = selectedMotif.map(m => m.bodyId);
             bodyIds = JSON.stringify(bodyIds);
             let motifQuery = JSON.stringify(context.motifQuery);
-            let id_ranges = Array.from({length: selectedMotif.length}, (_, i) => i * 1000);
-            setLoadedNeurons(id_ranges);
             const ws = new WebSocket(`ws://localhost:5050/display_motif_ws/`)
             ws.onopen = function (e) {
                 console.log("[open] Connection established", new Date().getSeconds());
