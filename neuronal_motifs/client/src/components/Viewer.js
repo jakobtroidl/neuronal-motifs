@@ -37,8 +37,11 @@ const getNeuronListId = (neurons, id) => {
     return out;
 }
 
-
-/* max count = 10 */
+/**
+ * Computes uniformly distributed points on the unit sphere
+ * @param count: number of points to sample
+ * @return {[number,number,number][]}
+ */
 const getTranslationVectors = (count) => {
     // Following Saff and Kuijlaars via https://discuss.dizzycoding.com/evenly-distributing-n-points-on-a-sphere/
     const indices = _.range(0.5, count + 0.5);
@@ -174,7 +177,7 @@ function Viewer() {
             motif.neurons.forEach((neuron, i) => {
 
                 let parsedSwc = swcParser(neuron.skeleton_swc);
-                let color = context.colors[i];
+                let color = context.neuronColors[i];
                 sharkViewerInstance.loadNeuron(neuron.id, color, parsedSwc, true);
             })
 
@@ -229,9 +232,11 @@ function Viewer() {
                 }
             })
 
+            let i = 0;
             for (const [id, group] of Object.entries(groups)) {
-                let bundles = bundle(group['start'], group['end'], 0.3);
+                let bundles = bundle(group['start'], group['end'], 0.3, context.synapseColors[i] );
                 bundles.forEach((bundle, i) => { scene.add(bundle); });
+                i++;
             }
         }
 

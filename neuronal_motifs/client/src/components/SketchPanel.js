@@ -53,7 +53,7 @@ function SketchPanel() {
             if (mouseState === 'node') {
                 if (context.selectedSketchElement) context.setSelectedSketchElement(null);
                 let numNodes = nodes?.length || 0;
-                let color = numNodes <= context.colors.length ? context.colors[numNodes] : '#000000';
+                let color = numNodes <= context.neuronColors.length ? context.neuronColors[numNodes] : '#000000';
                 // Create new Circle
                 if (!currentPath) {
                     currentPath = new paper.Path.Circle(point, circleRadius);

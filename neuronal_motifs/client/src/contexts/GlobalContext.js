@@ -9,7 +9,8 @@ export const ContextWrapper = (props) => {
     const [selectedMotif, setSelectedMotif] = useState();
     const [motifQuery, setMotifQuery] = useState();
     const [abstractionLevel, setAbstractionLevel] = useState();
-    const [colors, setColors] = useState(['#7e2fd0', '#81D02F', '#34AFCB', '#CB5034', '#B3A94C', '#4C56B3', '#D9C226', '#263DD9']);
+    const [neuronColors, setNeuronColors] = useState(['#7e2fd0', '#81D02F', '#34AFCB', '#CB5034', '#B3A94C', '#4C56B3', '#D9C226', '#263DD9']);
+    const [synapseColors, setSynapseColors] = useState(['#FF6347', '#DAA520', '#97d0b5', '#76acf3', '#9400D3', '#4C56B3', '#D9C226', '#263DD9']);
     const [loadingMessage, setLoadingMessage] = useState();
     const [selectedSketchElement, setSelectedSketchElement] = useState(null);
 
@@ -21,7 +22,8 @@ export const ContextWrapper = (props) => {
                 motifQuery, setMotifQuery,
                 abstractionLevel, setAbstractionLevel,
                 loadingMessage, setLoadingMessage,
-                colors, setColors,
+                neuronColors, setNeuronColors,
+                synapseColors, setSynapseColors
             }}>
             {props.children}
         </AppContext.Provider>

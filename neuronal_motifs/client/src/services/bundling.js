@@ -2,11 +2,12 @@ import * as THREE from 'three';
 import {Vector3} from "three";
 import {Color} from "../utils/rendering";
 
-export function bundle(start, end, strength){
+export function bundle(start, end, strength, color){
     /**
      * @param start: array of Vector3 holding all start points of the lines [start_1, start_2, ..., start_n]
      * @param end: array of Vector3 holding all end points of the lines [end_1, end_2, ..., end_n]
      * @param strength: bundling strength, must be in [0.0, 1.0]
+     * @param color: line color
      * @return list of splines that in conjunction represent a bundles version of the lines
      */
     // compute mean edge
@@ -14,13 +15,8 @@ export function bundle(start, end, strength){
     let mean_end = avg(end);
     let direction = mean_end.sub(mean_start);
 
-    console.log(direction);
-
     let mean_samples = [];
     for (let x = strength; x < 1 - strength; x = x + 0.05) {
-        //console.log(x);
-        //console.log(x);
-        //console.log('------------------');
         let point = line(mean_start, direction, x);
         mean_samples.push(point);
     }
@@ -34,26 +30,20 @@ export function bundle(start, end, strength){
 
         const curve = new THREE.CatmullRomCurve3(samples, false, 'chordal');
 
-        //curve.name = "line";
-        //curve.visible = true;
-
         const points = curve.getPoints( 1000 );
         const geometry = new THREE.BufferGeometry().setFromPoints( points );
 
-        const material = new THREE.LineBasicMaterial({color: Color.orange, linewidth: 20});
+        const material = new THREE.LineBasicMaterial({color: color, linewidth: 20});
 
         // Create the final object to add to the scene
         let spline = new THREE.Line( geometry, material );
+        spline.visible = false;
+        spline.name = 'line-' + start_point[0] + '-' + start_point[1] + '-' + start_point[2];
+
         splines.push(spline);
     });
+
     return splines;
-
-    // sample points on mean edge
-
-    // draw splines with point samples on mean edge and start and end point
-
-    // return list of splines
-
 }
 
 function scale(x){
