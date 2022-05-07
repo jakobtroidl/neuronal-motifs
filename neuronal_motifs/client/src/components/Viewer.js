@@ -179,14 +179,14 @@ function Viewer() {
             let directions = getTranslationVectors(number_of_neurons);
             let factor = 8000;
 
-            let start_points = [];
-            let end_points = [];
+            // let start_points = [];
+            // let end_points = [];
+
+            let groups = {}
 
             motif.synapses.forEach(syn => {
                 let pre_neuron_number = getNeuronListId(motif.neurons, syn.pre_id);
                 let post_neuron_number = getNeuronListId(motif.neurons, syn.post_id);
-
-                console.log(pre_neuron_number);
 
                 if(motif.graph.links.some(e => e.source === syn.pre_id && e.target === syn.post_id)) {
                     let pre_loc = new THREE.Vector3(syn.pre.x, syn.pre.y, syn.pre.z);
@@ -197,11 +197,21 @@ function Viewer() {
                     translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
                     let line_end = post_loc.add(translate);
 
+                    let group_id = syn.pre_id + "-" + syn.post_id;
+                    if(!(group_id in groups))
+                    {
+                        groups[group_id] = {'start': [], 'end': []};
+                    }
+
+                    let group_points = groups[group_id];
+                    group_points['start'].push(line_start);
+                    group_points['end'].push(line_end);
+
                     // const material = new THREE.LineBasicMaterial({color: Color.orange});
                     // const points = [];
 
-                    start_points.push(line_start);
-                    end_points.push(line_end);
+                    // start_points.push(line_start);
+                    // end_points.push(line_end);
 
                     // points.push(line_start);
                     // points.push(line_end);
@@ -216,8 +226,10 @@ function Viewer() {
                 }
             })
 
-            let bundles = bundle(start_points, end_points, 0.3);
-            bundles.forEach((bundle, i) => { scene.add(bundle); });
+            for (const [id, group] of Object.entries(groups)) {
+                let bundles = bundle(group['start'], group['end'], 0.3);
+                bundles.forEach((bundle, i) => { scene.add(bundle); });
+            }
         }
 
     }, [motif, sharkViewerInstance])
