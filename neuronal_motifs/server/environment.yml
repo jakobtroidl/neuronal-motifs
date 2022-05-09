@@ -8,6 +8,7 @@ dependencies:
   - numba
   - pandas
   - pykdtree
+  - zarr
   - pip
   - pip:
       - PyQt5==5.15.6
