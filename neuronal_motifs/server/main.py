@@ -10,6 +10,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from services import data_service
 from services import motifabstraction
+from models import nblast
 import motif_search
 import uvicorn
 
@@ -99,9 +100,16 @@ async def ws_get_motif_data(websocket: WebSocket):
     except StopIteration:
         print('Done Fetching Motif')
 
+
 @app.get("/get_swc")
 def get_swc():
     return {'swc': data_service.get_swc()}
+
+
+@app.get("/nblast/{node_id}")
+@app.get("/nblast/{node_id}/{top_n}")
+def get_nblast(node_id: int, top_n: Optional[int] = None):
+    return nblast.get_nblast_scores(node_id, top_n)
 
 
 if __name__ == "__main__":
