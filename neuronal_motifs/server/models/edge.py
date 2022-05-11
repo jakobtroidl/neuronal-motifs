@@ -21,14 +21,15 @@ class Edge:
         }
         return edge
 
-
     def compute_line_abstractions(self, line_start_node_id, line_end_node_id):
         start_graph = self.start_skeleton.get_graph_nx()
+        start_graph = start_graph.to_undirected()
         start_nodes = self.start_skeleton.nodes
         start_positions = self.add_position(line_start_node_id, start_graph, start_nodes, 1, self.abstraction['start'])
         self.abstraction['start'] = start_positions
 
         end_graph = self.end_skeleton.get_graph_nx()
+        end_graph = end_graph.to_undirected()
         end_nodes = self.end_skeleton.nodes
         end_positions = self.add_position(line_end_node_id, end_graph, end_nodes, 1, self.abstraction['end'])
         self.abstraction['end'] = end_positions

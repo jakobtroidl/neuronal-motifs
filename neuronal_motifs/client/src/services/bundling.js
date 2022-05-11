@@ -44,12 +44,10 @@ export function bundle(group, strength, color){
 
         // Create the final object to add to the scene
         let spline = new THREE.Line( geometry, material );
-        spline.visible = false;
+        spline.visible = true;
         spline.name = 'line-' + start_point[0] + '-' + start_point[1] + '-' + start_point[2];
 
-        let edge = new Edge(spline, pre_id, post_id, start_point, end[i]);
-
-        splines.push(edge);
+        splines.push(spline);
     });
 
     return splines;

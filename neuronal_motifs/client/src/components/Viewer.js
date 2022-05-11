@@ -13,61 +13,64 @@ import _ from 'lodash';
 
 const setLineVisibility = (scene, visible) => {
     scene.children.forEach(child => {
-        if (typeof child.name == 'string' && child.name.includes('line')) {
+        if (typeof child.name == 'string' && child.name.includes('lines')) {
             child.visible = visible;
         }
     })
 }
 
-const getEdgePoints = (motif, boundary) => {
+const getEdgeGroups = (motif, boundary) => {
     let groups = {}
-    motif.synapses.forEach(syn => {
-        // let pre_neuron_number = getNeuronListId(motif.neurons, syn.pre_id);
-        // let post_neuron_number = getNeuronListId(motif.neurons, syn.post_id);
-        //
-        // if (motif.graph.links.some(e => e.source === syn.pre_id && e.target === syn.post_id)) {
-        //     let pre_loc = new THREE.Vector3(syn.pre.x, syn.pre.y, syn.pre.z);
-        //     let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
-        //     let line_start = pre_loc.add(translate);
-        //
-        //     let post_loc = new THREE.Vector3(syn.post.x, syn.post.y, syn.post.z);
-        //     translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
-        //     let line_end = post_loc.add(translate);
-        //
-        //     let group_id = syn.pre_id + "-" + syn.post_id;
-        //     if (!(group_id in groups)) {
-        //         groups[group_id] = {'start': [], 'end': [], 'start_id': syn.pre_id, 'end_id': syn.post_id};
-        //     }
-        //
-        //     let group_points = groups[group_id];
-        //     group_points['start'].push(line_start);
-        //     group_points['end'].push(line_end);
 
-            // const material = new THREE.LineBasicMaterial({color: Color.orange});
-            // const points = [];
+    let number_of_neurons = motif.neurons.length;
+    let directions = getTranslationVectors(number_of_neurons);
+    let factor = 8000;
 
-            // start_points.push(line_start);
-            // end_points.push(line_end);
+    boundary = Math.round(boundary);
 
-            // points.push(line_start);
-            // points.push(line_end);
-            //
-            // const geometry = new THREE.BufferGeometry().setFromPoints(points);
-            // const line = new THREE.Line(geometry, material);
-            //
-            // line.name = 'line-' + line_start.x + '-' + line_start.y + '-' + line_start.z + '-'
-            //     + line_end.x + '-' + line_end.y + '-' + line_end.z;
-            // line.visible = false;
-            // scene.add(line);
-        //}
+    motif.edges.forEach(edge => {
+        let pre_neuron_number = getNeuronListId(motif.neurons, edge.start_neuron_id);
+        let post_neuron_number = getNeuronListId(motif.neurons, edge.end_neuron_id);
+
+        if (motif.graph.links.some(e => e.source === edge.start_neuron_id && e.target === edge.end_neuron_id)) {
+
+            let pre_loc = new THREE.Vector3();
+            if (boundary in edge.abstraction.start){
+                pre_loc.fromArray(edge.abstraction.start[boundary]);
+            }
+            else {
+                pre_loc.fromArray(edge.default_start_position);
+            }
+            let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
+            let line_start = pre_loc.add(translate);
+
+            let post_loc = new THREE.Vector3();
+            if (boundary in edge.abstraction.end)
+            {
+                post_loc.fromArray(edge.abstraction.end[boundary]);
+            }
+            else {
+                post_loc.fromArray(edge.default_end_position);
+            }
+
+            translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
+            let line_end = post_loc.add(translate);
+
+            let group_id = edge.start_neuron_id + "-" + edge.end_neuron_id;
+            if (!(group_id in groups)) {
+                groups[group_id] = {
+                    'start': [],
+                    'end': [],
+                    'start_id': edge.start_neuron_id,
+                    'end_id': edge.end_neuron_id
+                };
+            }
+
+            let group_points = groups[group_id];
+            group_points['start'].push(line_start);
+            group_points['end'].push(line_end);
+        }
     })
-
-    // let i = 0;
-    // for (const [id, group] of Object.entries(groups)) {
-    //     let edges = bundle(group, 0.3, context.synapseColors[i] );
-    //     edges.forEach((edge, i) => { scene.add(edge.line); });
-    //     i++;
-    // }
 
     return groups;
 }
@@ -217,6 +220,25 @@ function Viewer() {
 
     }, [context.selectedMotif]);
 
+    function addEdgeGroupToScene(groups, scene) {
+        let lines_identifier = 'lines';
+        let prevLines = scene.getObjectByName(lines_identifier);
+        scene.remove(prevLines);
+
+        let i = 0;
+        let lines = new THREE.Object3D();
+        lines.name = lines_identifier;
+        lines.visible = edgesEnabled;
+        for (const [id, group] of Object.entries(groups)) {
+            let line_group = bundle(group, 0.3, context.synapseColors[i]);
+            line_group.forEach((line, i) => {
+                lines.children.push(line);
+            });
+            i++;
+        }
+        scene.add(lines);
+    }
+
     useEffect(() => {
         if (motif && sharkViewerInstance) {
             // remove all previous loaded objects in three.js scene
@@ -231,67 +253,40 @@ function Viewer() {
 
             console.log(motif.edges);
 
-            // let number_of_neurons = motif.neurons.length;
-            // let directions = getTranslationVectors(number_of_neurons);
-            // let factor = 8000;
-            //
-            // // let start_points = [];
-            // // let end_points = [];
-            //
-            // let groups = {}
-            //
-            // motif.synapses.forEach(syn => {
-            //     let pre_neuron_number = getNeuronListId(motif.neurons, syn.pre_id);
-            //     let post_neuron_number = getNeuronListId(motif.neurons, syn.post_id);
-            //
-            //     if(motif.graph.links.some(e => e.source === syn.pre_id && e.target === syn.post_id)) {
-            //         let pre_loc = new THREE.Vector3(syn.pre.x, syn.pre.y, syn.pre.z);
-            //         let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
-            //         let line_start = pre_loc.add(translate);
-            //
-            //         let post_loc = new THREE.Vector3(syn.post.x, syn.post.y, syn.post.z);
-            //         translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
-            //         let line_end = post_loc.add(translate);
-            //
-            //         let group_id = syn.pre_id + "-" + syn.post_id;
-            //         if(!(group_id in groups))
-            //         {
-            //             groups[group_id] = {'start': [], 'end': [], 'start_id': syn.pre_id, 'end_id': syn.post_id};
-            //         }
-            //
-            //         let group_points = groups[group_id];
-            //         group_points['start'].push(line_start);
-            //         group_points['end'].push(line_end);
-            //
-            //         // const material = new THREE.LineBasicMaterial({color: Color.orange});
-            //         // const points = [];
-            //
-            //         // start_points.push(line_start);
-            //         // end_points.push(line_end);
-            //
-            //         // points.push(line_start);
-            //         // points.push(line_end);
-            //         //
-            //         // const geometry = new THREE.BufferGeometry().setFromPoints(points);
-            //         // const line = new THREE.Line(geometry, material);
-            //         //
-            //         // line.name = 'line-' + line_start.x + '-' + line_start.y + '-' + line_start.z + '-'
-            //         //     + line_end.x + '-' + line_end.y + '-' + line_end.z;
-            //         // line.visible = false;
-            //         // scene.add(line);
-            //     }
-            // })
-            //
-            // setEdgeGroups(groups);
-            //
-            // console.log(groups);
-            //
-            // let i = 0;
-            // for (const [id, group] of Object.entries(groups)) {
-            //     let edges = bundle(group, 0.3, context.synapseColors[i] );
-            //     edges.forEach((edge, i) => { scene.add(edge.line); });
-            //     i++;
-            // }
+            let number_of_neurons = motif.neurons.length;
+            let directions = getTranslationVectors(number_of_neurons);
+            let factor = 8000;
+
+            let groups = {}
+
+            motif.edges.forEach(edge => {
+                let pre_neuron_number = getNeuronListId(motif.neurons, edge.start_neuron_id);
+                let post_neuron_number = getNeuronListId(motif.neurons, edge.end_neuron_id);
+
+                if(motif.graph.links.some(e => e.source === edge.start_neuron_id && e.target === edge.end_neuron_id)) {
+                    let pre_loc = new THREE.Vector3()
+                    pre_loc.fromArray(edge.default_start_position);
+                    let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
+                    let line_start = pre_loc.add(translate);
+
+                    let post_loc = new THREE.Vector3();
+                    post_loc.fromArray(edge.default_end_position);
+                    translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
+                    let line_end = post_loc.add(translate);
+
+                    let group_id = edge.start_neuron_id + "-" + edge.end_neuron_id;
+                    if(!(group_id in groups))
+                    {
+                        groups[group_id] = {'start': [], 'end': [], 'start_id': edge.start_neuron_id, 'end_id': edge.end_neuron_id};
+                    }
+
+                    let group_points = groups[group_id];
+                    group_points['start'].push(line_start);
+                    group_points['end'].push(line_end);
+                }
+            })
+            setEdgeGroups(groups);
+            addEdgeGroupToScene(groups, scene);
         }
 
     }, [motif, sharkViewerInstance])
@@ -303,17 +298,23 @@ function Viewer() {
             let level = stretch(context.abstractionLevel);
             sharkViewerInstance.setAbstractionThreshold(level);
 
-            // if(edgesEnabled)
-            // {
-            //     let edges = getEdgePoints(motif, sharkViewerInstance.getAbstractionBoundary(level));
-            // }
+
 
             let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
+            let abstraction_boundary = sharkViewerInstance.getAbstractionBoundary(level);
+
             let scene = sharkViewerInstance.scene;
             let number_of_neurons = motif.neurons.length;
             let directions = getTranslationVectors(number_of_neurons);
             let factor = 8000;
             let offset = 0.01;
+
+            if(edgesEnabled)
+            {
+                let groups = getEdgeGroups(motif, abstraction_boundary);
+                setEdgeGroups(groups);
+                addEdgeGroupToScene(groups, scene);
+            }
 
             if (level > motif_path_threshold + offset && prevSliderValue <= motif_path_threshold + offset) {
                 motif.neurons.forEach((neuron, i) => {
