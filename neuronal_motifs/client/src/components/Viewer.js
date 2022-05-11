@@ -262,8 +262,6 @@ function Viewer() {
                 sharkViewerInstance.loadNeuron(neuron.id, color, parsedSwc, true);
             })
 
-            console.log(motif.edges);
-
             let number_of_neurons = motif.neurons.length;
             let directions = getTranslationVectors(number_of_neurons);
             let factor = 8000;
