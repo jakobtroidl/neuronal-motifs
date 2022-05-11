@@ -129,6 +129,15 @@ def nodes_and_edges_to_motif_string(motif):
     return output
 
 
+def edges_to_json(edges):
+    edge_list = []
+    for edge in edges:
+        edge_json = edge.as_json()
+        edge_list.append(edge_json)
+    return edge_list
+
+
+
 def synapse_array_to_object(synapse_df):
     """
     TODO

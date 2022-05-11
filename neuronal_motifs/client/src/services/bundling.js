@@ -1,8 +1,9 @@
 import * as THREE from 'three';
+import {Edge} from "../utils/edge"
 import {Vector3} from "three";
 import {Color} from "../utils/rendering";
 
-export function bundle(start, end, strength, color){
+export function bundle(group, strength, color){
     /**
      * @param start: array of Vector3 holding all start points of the lines [start_1, start_2, ..., start_n]
      * @param end: array of Vector3 holding all end points of the lines [end_1, end_2, ..., end_n]
@@ -11,6 +12,12 @@ export function bundle(start, end, strength, color){
      * @return list of splines that in conjunction represent a bundles version of the lines
      */
     // compute mean edge
+    let start = group['start'];
+    let end = group['end'];
+
+    let pre_id = group['start_id'];
+    let post_id = group['end_id'];
+
     let mean_start = avg(start);
     let mean_end = avg(end);
     let direction = mean_end.sub(mean_start);
@@ -40,7 +47,9 @@ export function bundle(start, end, strength, color){
         spline.visible = false;
         spline.name = 'line-' + start_point[0] + '-' + start_point[1] + '-' + start_point[2];
 
-        splines.push(spline);
+        let edge = new Edge(spline, pre_id, post_id, start_point, end[i]);
+
+        splines.push(edge);
     });
 
     return splines;

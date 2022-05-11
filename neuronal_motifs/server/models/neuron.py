@@ -89,6 +89,7 @@ def compute_distance_to_motif_path(labels, edges, motif_nodes, unlabeled_node_id
     return labels
 
 
+@jit(nopython=True, parallel=True)
 def compute_labels_to_abstraction_center(labels, edges, center_id, unlabeled_node_id):
     """
     TODO
@@ -117,7 +118,7 @@ def compute_labels_to_abstraction_center(labels, edges, center_id, unlabeled_nod
         label = label - 1  # increase node label by one
 
     min_value = np.amin(labels)
-    delta = abs(min_value) + abs(-1)
+    delta = np.absolute(min_value) + np.absolute(-1)
     idx = np.where(labels < 0)
     labels[idx] = labels[idx] + delta
     labels[idx] = labels[idx] * -1

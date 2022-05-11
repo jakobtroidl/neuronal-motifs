@@ -19,6 +19,59 @@ const setLineVisibility = (scene, visible) => {
     })
 }
 
+const getEdgePoints = (motif, boundary) => {
+    let groups = {}
+    motif.synapses.forEach(syn => {
+        // let pre_neuron_number = getNeuronListId(motif.neurons, syn.pre_id);
+        // let post_neuron_number = getNeuronListId(motif.neurons, syn.post_id);
+        //
+        // if (motif.graph.links.some(e => e.source === syn.pre_id && e.target === syn.post_id)) {
+        //     let pre_loc = new THREE.Vector3(syn.pre.x, syn.pre.y, syn.pre.z);
+        //     let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
+        //     let line_start = pre_loc.add(translate);
+        //
+        //     let post_loc = new THREE.Vector3(syn.post.x, syn.post.y, syn.post.z);
+        //     translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
+        //     let line_end = post_loc.add(translate);
+        //
+        //     let group_id = syn.pre_id + "-" + syn.post_id;
+        //     if (!(group_id in groups)) {
+        //         groups[group_id] = {'start': [], 'end': [], 'start_id': syn.pre_id, 'end_id': syn.post_id};
+        //     }
+        //
+        //     let group_points = groups[group_id];
+        //     group_points['start'].push(line_start);
+        //     group_points['end'].push(line_end);
+
+            // const material = new THREE.LineBasicMaterial({color: Color.orange});
+            // const points = [];
+
+            // start_points.push(line_start);
+            // end_points.push(line_end);
+
+            // points.push(line_start);
+            // points.push(line_end);
+            //
+            // const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            // const line = new THREE.Line(geometry, material);
+            //
+            // line.name = 'line-' + line_start.x + '-' + line_start.y + '-' + line_start.z + '-'
+            //     + line_end.x + '-' + line_end.y + '-' + line_end.z;
+            // line.visible = false;
+            // scene.add(line);
+        //}
+    })
+
+    // let i = 0;
+    // for (const [id, group] of Object.entries(groups)) {
+    //     let edges = bundle(group, 0.3, context.synapseColors[i] );
+    //     edges.forEach((edge, i) => { scene.add(edge.line); });
+    //     i++;
+    // }
+
+    return groups;
+}
+
 const setSynapseVisibility = (scene, visible) => {
     scene.children.forEach(child => {
         if (typeof child.name == 'string' && child.name.includes('syn')) {
@@ -85,6 +138,8 @@ function Viewer() {
     const [motif, setMotif] = React.useState()
     const [sharkViewerInstance, setSharkViewerInstance] = useState();
     const [prevSliderValue, setPrevSliderValue] = useState()
+    const [edgesEnabled, setEdgesEnabled] = useState(false);
+    const [edgeGroups, setEdgeGroups] = useState();
     const id = "my_shark_viewer";
     const className = 'shark_viewer';
     const context = useContext(AppContext); // Global context holds abstraction state
@@ -174,63 +229,69 @@ function Viewer() {
                 sharkViewerInstance.loadNeuron(neuron.id, color, parsedSwc, true);
             })
 
-            let number_of_neurons = motif.neurons.length;
-            let directions = getTranslationVectors(number_of_neurons);
-            let factor = 8000;
+            console.log(motif.edges);
 
-            // let start_points = [];
-            // let end_points = [];
-
-            let groups = {}
-
-            motif.synapses.forEach(syn => {
-                let pre_neuron_number = getNeuronListId(motif.neurons, syn.pre_id);
-                let post_neuron_number = getNeuronListId(motif.neurons, syn.post_id);
-
-                if(motif.graph.links.some(e => e.source === syn.pre_id && e.target === syn.post_id)) {
-                    let pre_loc = new THREE.Vector3(syn.pre.x, syn.pre.y, syn.pre.z);
-                    let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
-                    let line_start = pre_loc.add(translate);
-
-                    let post_loc = new THREE.Vector3(syn.post.x, syn.post.y, syn.post.z);
-                    translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
-                    let line_end = post_loc.add(translate);
-
-                    let group_id = syn.pre_id + "-" + syn.post_id;
-                    if(!(group_id in groups))
-                    {
-                        groups[group_id] = {'start': [], 'end': []};
-                    }
-
-                    let group_points = groups[group_id];
-                    group_points['start'].push(line_start);
-                    group_points['end'].push(line_end);
-
-                    // const material = new THREE.LineBasicMaterial({color: Color.orange});
-                    // const points = [];
-
-                    // start_points.push(line_start);
-                    // end_points.push(line_end);
-
-                    // points.push(line_start);
-                    // points.push(line_end);
-                    //
-                    // const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                    // const line = new THREE.Line(geometry, material);
-                    //
-                    // line.name = 'line-' + line_start.x + '-' + line_start.y + '-' + line_start.z + '-'
-                    //     + line_end.x + '-' + line_end.y + '-' + line_end.z;
-                    // line.visible = false;
-                    // scene.add(line);
-                }
-            })
-
-            let i = 0;
-            for (const [id, group] of Object.entries(groups)) {
-                let bundles = bundle(group['start'], group['end'], 0.3, context.synapseColors[i] );
-                bundles.forEach((bundle, i) => { scene.add(bundle); });
-                i++;
-            }
+            // let number_of_neurons = motif.neurons.length;
+            // let directions = getTranslationVectors(number_of_neurons);
+            // let factor = 8000;
+            //
+            // // let start_points = [];
+            // // let end_points = [];
+            //
+            // let groups = {}
+            //
+            // motif.synapses.forEach(syn => {
+            //     let pre_neuron_number = getNeuronListId(motif.neurons, syn.pre_id);
+            //     let post_neuron_number = getNeuronListId(motif.neurons, syn.post_id);
+            //
+            //     if(motif.graph.links.some(e => e.source === syn.pre_id && e.target === syn.post_id)) {
+            //         let pre_loc = new THREE.Vector3(syn.pre.x, syn.pre.y, syn.pre.z);
+            //         let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
+            //         let line_start = pre_loc.add(translate);
+            //
+            //         let post_loc = new THREE.Vector3(syn.post.x, syn.post.y, syn.post.z);
+            //         translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
+            //         let line_end = post_loc.add(translate);
+            //
+            //         let group_id = syn.pre_id + "-" + syn.post_id;
+            //         if(!(group_id in groups))
+            //         {
+            //             groups[group_id] = {'start': [], 'end': [], 'start_id': syn.pre_id, 'end_id': syn.post_id};
+            //         }
+            //
+            //         let group_points = groups[group_id];
+            //         group_points['start'].push(line_start);
+            //         group_points['end'].push(line_end);
+            //
+            //         // const material = new THREE.LineBasicMaterial({color: Color.orange});
+            //         // const points = [];
+            //
+            //         // start_points.push(line_start);
+            //         // end_points.push(line_end);
+            //
+            //         // points.push(line_start);
+            //         // points.push(line_end);
+            //         //
+            //         // const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            //         // const line = new THREE.Line(geometry, material);
+            //         //
+            //         // line.name = 'line-' + line_start.x + '-' + line_start.y + '-' + line_start.z + '-'
+            //         //     + line_end.x + '-' + line_end.y + '-' + line_end.z;
+            //         // line.visible = false;
+            //         // scene.add(line);
+            //     }
+            // })
+            //
+            // setEdgeGroups(groups);
+            //
+            // console.log(groups);
+            //
+            // let i = 0;
+            // for (const [id, group] of Object.entries(groups)) {
+            //     let edges = bundle(group, 0.3, context.synapseColors[i] );
+            //     edges.forEach((edge, i) => { scene.add(edge.line); });
+            //     i++;
+            // }
         }
 
     }, [motif, sharkViewerInstance])
@@ -241,6 +302,11 @@ function Viewer() {
 
             let level = stretch(context.abstractionLevel);
             sharkViewerInstance.setAbstractionThreshold(level);
+
+            // if(edgesEnabled)
+            // {
+            //     let edges = getEdgePoints(motif, sharkViewerInstance.getAbstractionBoundary(level));
+            // }
 
             let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
             let scene = sharkViewerInstance.scene;
@@ -263,6 +329,8 @@ function Viewer() {
 
                     setSynapseVisibility(scene, false);
                     setLineVisibility(scene, true);
+
+                    setEdgesEnabled(true);
                 });
             }
             if (level <= motif_path_threshold + offset && prevSliderValue > motif_path_threshold + offset) {
@@ -279,6 +347,8 @@ function Viewer() {
 
                     setSynapseVisibility(scene, true);
                     setLineVisibility(scene, false);
+
+                    setEdgesEnabled(false);
                 });
             }
             setPrevSliderValue(level);

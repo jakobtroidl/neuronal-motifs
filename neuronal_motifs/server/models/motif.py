@@ -7,14 +7,16 @@ from line_profiler_pycharm import profile
 
 from neuronal_motifs.server.services.data_access import DataAccess
 from neuronal_motifs.server.utils import data_conversion as conversion
+from neuronal_motifs.server.models.edge import Edge
 
 
 class MyMotif:
-    def __init__(self, neuron_ids=None, graph=None, synapses=None):
+    def __init__(self, neuron_ids=None, graph=None, synapses=None, edges=None):
         self.data_access = DataAccess()
         self.graph = graph  # networkx graph of the motif
         self.neurons = self.data_access.get_neurons(neuron_ids)
         self.synapses = synapses
+        self.edges = edges
         self.download_synapses()
 
     def as_json(self):
@@ -28,14 +30,41 @@ class MyMotif:
             neuron_json.append(neuron.as_json())
 
         syn_export = conversion.synapse_array_to_object(self.synapses)
+        edges_export = conversion.edges_to_json(self.edges)
 
         motif = {
             'graph': json_graph.node_link_data(self.graph),
             'neurons': neuron_json,
-            'synapses': syn_export
+            'synapses': syn_export,
+            'edges': edges_export
         }
 
         return motif
+
+    def compute_synapse_trajectory(self):
+        edges = []
+        for idx, syn in self.synapses.iterrows():
+            pre_id = syn['bodyId_pre']
+            post_id = syn['bodyId_post']
+            if post_id in self.graph.neighbors(pre_id):
+                pre_x = syn['x_pre']
+                pre_y = syn['y_pre']
+                pre_z = syn['z_pre']
+
+                pre_neuron = self.get_neuron(pre_id)
+                pre_node = pre_neuron.get_closest_connector(pre_x, pre_y, pre_z)
+
+                post_x = syn['x_post']
+                post_y = syn['y_post']
+                post_z = syn['z_post']
+
+                post_neuron = self.get_neuron(post_id)
+                post_node = post_neuron.get_closest_connector(post_x, post_y, post_z)
+
+                edge = Edge(pre_neuron.skeleton, [pre_x, pre_y, pre_z], post_neuron.skeleton, [post_x, post_y, post_z])
+                edge.compute_line_abstractions(pre_node, post_node)
+                edges.append(edge)
+        self.edges = edges
 
     @profile
     def compute_motif_paths(self):
@@ -76,8 +105,7 @@ class MyMotif:
             synapses = pd.concat([outgoing_synapses, incoming_synapses], ignore_index=True, sort=False)
             all_synapses.append(synapses)
             neuron.set_synapses(synapses)
-        foo = pd.concat(all_synapses)
-        self.synapses = foo
+        self.synapses = pd.concat(all_synapses)
 
     def get_adjacency(self, undirected=True):
         """

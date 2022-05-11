@@ -19,7 +19,7 @@ def get_motif(ids, motif):
     filename = get_cache_filename(ids)
     filepath = Path("cache/data/" + filename + ".pkl")
     if filepath.is_file() is False:
-    # if True:
+        # if True:
         yield {'status': 202, 'message': 'Downloading Motif'}
         try:
             motif_data_generator = compute_motif_data(ids, motif)
@@ -74,6 +74,8 @@ def compute_motif_data(body_ids, motif):
     motif = MyMotif(body_ids, motif_graph)
     yield 'Computing Motif Path'
     motif.compute_motif_paths()
+    yield 'Compute Synapse Trajectory'
+    motif.compute_synapse_trajectory()
     # yield 'Computing Motif Abstraction'
     # motif.compute_motif_abstraction()
     yield 'Computing Distances'
