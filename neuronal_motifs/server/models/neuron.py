@@ -150,10 +150,18 @@ class Neuron:
             'id': self.id,
             'mesh': 'TODO',
             'skeleton_swc': swc_object['swc'],
-            'abstraction_center': self.compute_abstraction_root()
+            'abstraction_center': self.compute_abstraction_root(),
+            'min_skel_label': self.get_min_skeleton_label(),
+            'max_skel_label': self.get_max_skeleton_label()
         }
 
         return neuron
+
+    def get_max_skeleton_label(self):
+        return int(self.skeleton.nodes['abstraction_label'].max())
+
+    def get_min_skeleton_label(self):
+        return int(self.skeleton.nodes['abstraction_label'].min())
 
     def compute_abstraction_root(self, to="position"):
         """

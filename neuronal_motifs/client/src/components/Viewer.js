@@ -28,9 +28,11 @@ const getEdgeGroups = (motif, boundary) => {
 
     boundary = Math.round(boundary);
 
+
+
     motif.edges.forEach(edge => {
-        let pre_neuron_number = getNeuronListId(motif.neurons, edge.start_neuron_id);
-        let post_neuron_number = getNeuronListId(motif.neurons, edge.end_neuron_id);
+        let [pre_neuron, pre_neuron_number] = getNeuronListId(motif.neurons, edge.start_neuron_id);
+        let [post_neuron, post_neuron_number] = getNeuronListId(motif.neurons, edge.end_neuron_id);
 
         if (motif.graph.links.some(e => e.source === edge.start_neuron_id && e.target === edge.end_neuron_id)) {
 
@@ -38,9 +40,13 @@ const getEdgeGroups = (motif, boundary) => {
             if (boundary in edge.abstraction.start){
                 pre_loc.fromArray(edge.abstraction.start[boundary]);
             }
+            else if(boundary < pre_neuron.min_skel_label){
+                pre_loc.fromArray(pre_neuron.abstraction_center);
+            }
             else {
                 pre_loc.fromArray(edge.default_start_position);
             }
+
             let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
             let line_start = pre_loc.add(translate);
 
@@ -48,6 +54,9 @@ const getEdgeGroups = (motif, boundary) => {
             if (boundary in edge.abstraction.end)
             {
                 post_loc.fromArray(edge.abstraction.end[boundary]);
+            }
+            else if(boundary < post_neuron.min_skel_label){
+                post_loc.fromArray(post_neuron.abstraction_center);
             }
             else {
                 post_loc.fromArray(edge.default_end_position);
@@ -84,13 +93,15 @@ const setSynapseVisibility = (scene, visible) => {
 }
 
 const getNeuronListId = (neurons, id) => {
-    let out = -1;
+    let out_id = -1;
+    let out_neuron = undefined;
     neurons.forEach((neuron, i) => {
         if (neuron.id === id) {
-            out = i;
+            out_id = i;
+            out_neuron = neuron;
         }
     })
-    return out;
+    return [out_neuron, out_id];
 }
 
 /**
@@ -260,8 +271,8 @@ function Viewer() {
             let groups = {}
 
             motif.edges.forEach(edge => {
-                let pre_neuron_number = getNeuronListId(motif.neurons, edge.start_neuron_id);
-                let post_neuron_number = getNeuronListId(motif.neurons, edge.end_neuron_id);
+                let [pre_neuron, pre_neuron_number] = getNeuronListId(motif.neurons, edge.start_neuron_id);
+                let [post_neuron, post_neuron_number] = getNeuronListId(motif.neurons, edge.end_neuron_id);
 
                 if(motif.graph.links.some(e => e.source === edge.start_neuron_id && e.target === edge.end_neuron_id)) {
                     let pre_loc = new THREE.Vector3()
