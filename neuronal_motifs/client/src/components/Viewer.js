@@ -319,9 +319,9 @@ function Viewer() {
             const directionalLight = new THREE.DirectionalLight(Color.white, 0.7);
             scene.add(directionalLight);
 
-            motif.neurons.forEach(neuron => {
+            motif.neurons.forEach((neuron, i) => {
                 let geometry = new THREE.SphereGeometry(200, 16, 16);
-                let material = new THREE.MeshPhongMaterial({color: Color.red});
+                let material = new THREE.MeshPhongMaterial({color: context.neuronColors[i]});
                 let mesh = new THREE.Mesh(geometry, material);
                 mesh.name = "abstraction-center-" + neuron.id;
                 mesh.position.x = neuron.abstraction_center[0];
