@@ -5,7 +5,6 @@ import ArrowTooltips from './ArrowTooltips'
 import {AppContext} from "../contexts/GlobalContext";
 import './Viewer.css'
 import * as THREE from 'three';
-import axios from "axios";
 import {InteractionManager} from "three.interactive";
 import {Color} from '../utils/rendering'
 import _ from 'lodash';
@@ -28,8 +27,6 @@ const getEdgeGroups = (motif, boundary) => {
 
     boundary = Math.round(boundary);
 
-
-
     motif.edges.forEach(edge => {
         let [pre_neuron, pre_neuron_number] = getNeuronListId(motif.neurons, edge.start_neuron_id);
         let [post_neuron, post_neuron_number] = getNeuronListId(motif.neurons, edge.end_neuron_id);
@@ -37,13 +34,11 @@ const getEdgeGroups = (motif, boundary) => {
         if (motif.graph.links.some(e => e.source === edge.start_neuron_id && e.target === edge.end_neuron_id)) {
 
             let pre_loc = new THREE.Vector3();
-            if (boundary in edge.abstraction.start){
+            if (boundary in edge.abstraction.start) {
                 pre_loc.fromArray(edge.abstraction.start[boundary]);
-            }
-            else if(boundary < pre_neuron.min_skel_label){
+            } else if (boundary < pre_neuron.min_skel_label) {
                 pre_loc.fromArray(pre_neuron.abstraction_center);
-            }
-            else {
+            } else {
                 pre_loc.fromArray(edge.default_start_position);
             }
 
@@ -51,14 +46,11 @@ const getEdgeGroups = (motif, boundary) => {
             let line_start = pre_loc.add(translate);
 
             let post_loc = new THREE.Vector3();
-            if (boundary in edge.abstraction.end)
-            {
+            if (boundary in edge.abstraction.end) {
                 post_loc.fromArray(edge.abstraction.end[boundary]);
-            }
-            else if(boundary < post_neuron.min_skel_label){
+            } else if (boundary < post_neuron.min_skel_label) {
                 post_loc.fromArray(post_neuron.abstraction_center);
-            }
-            else {
+            } else {
                 post_loc.fromArray(edge.default_end_position);
             }
 
@@ -127,27 +119,6 @@ const getTranslationVectors = (count) => {
     return directions;
 }
 
-// const createMoveAnimation = ({ mesh, startPosition, endPosition }) => {
-//   mesh.userData.mixer = new THREE.AnimationMixer(mesh);
-//   let track = new THREE.VectorKeyframeTrack(
-//     '.position',
-//     [0, 1],
-//     [
-//       startPosition.x,
-//       startPosition.y,
-//       startPosition.z,
-//       endPosition.x,
-//       endPosition.y,
-//       endPosition.z,
-//     ]
-//   );
-//   const animationClip = new THREE.AnimationClip(null, 5, [track]);
-//   const animationAction = mesh.userData.mixer.clipAction(animationClip);
-//   animationAction.setLoop(THREE.LoopOnce);
-//   animationAction.play();
-//   mesh.userData.clock = new THREE.Clock();
-// };
-
 function Viewer() {
     const [motif, setMotif] = React.useState()
     const [sharkViewerInstance, setSharkViewerInstance] = useState();
@@ -178,7 +149,6 @@ function Viewer() {
                 sharkViewerInstance.scene?.interactionManager?.update();
             }
             updateLoop();
-
             sharkViewerInstance.animate();
         }
         setPrevSliderValue(0);
@@ -262,38 +232,7 @@ function Viewer() {
                 sharkViewerInstance.loadNeuron(neuron.id, color, parsedSwc, true);
             })
 
-            let number_of_neurons = motif.neurons.length;
-            let directions = getTranslationVectors(number_of_neurons);
-            let factor = 8000;
-
-            let groups = {}
-
-            motif.edges.forEach(edge => {
-                let [pre_neuron, pre_neuron_number] = getNeuronListId(motif.neurons, edge.start_neuron_id);
-                let [post_neuron, post_neuron_number] = getNeuronListId(motif.neurons, edge.end_neuron_id);
-
-                if(motif.graph.links.some(e => e.source === edge.start_neuron_id && e.target === edge.end_neuron_id)) {
-                    let pre_loc = new THREE.Vector3()
-                    pre_loc.fromArray(edge.default_start_position);
-                    let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
-                    let line_start = pre_loc.add(translate);
-
-                    let post_loc = new THREE.Vector3();
-                    post_loc.fromArray(edge.default_end_position);
-                    translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
-                    let line_end = post_loc.add(translate);
-
-                    let group_id = edge.start_neuron_id + "-" + edge.end_neuron_id;
-                    if(!(group_id in groups))
-                    {
-                        groups[group_id] = {'start': [], 'end': [], 'start_id': edge.start_neuron_id, 'end_id': edge.end_neuron_id};
-                    }
-
-                    let group_points = groups[group_id];
-                    group_points['start'].push(line_start);
-                    group_points['end'].push(line_end);
-                }
-            })
+            let groups = getEdgeGroups(motif, 1.0);
             setEdgeGroups(groups);
             addEdgeGroupToScene(groups, scene);
         }
@@ -307,8 +246,6 @@ function Viewer() {
             let level = stretch(context.abstractionLevel);
             sharkViewerInstance.setAbstractionThreshold(level);
 
-
-
             let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
             let abstraction_boundary = sharkViewerInstance.getAbstractionBoundary(level);
 
@@ -318,8 +255,7 @@ function Viewer() {
             let factor = 8000;
             let offset = 0.01;
 
-            if(edgesEnabled)
-            {
+            if (edgesEnabled) {
                 let groups = getEdgeGroups(motif, abstraction_boundary);
                 setEdgeGroups(groups);
                 addEdgeGroupToScene(groups, scene);
@@ -430,7 +366,7 @@ function Viewer() {
     return (
         <div id={id} className={className}>
             {displayTooltip &&
-            <ArrowTooltips props={tooltipInfo}></ArrowTooltips>
+                <ArrowTooltips props={tooltipInfo}></ArrowTooltips>
             }
 
         </div>
