@@ -245,7 +245,7 @@ class Neuron:
         @param motif_synapse_nodes: skeleton node ids that matching relevant synapses
         """
         motif_synapse_nodes = np.asarray(motif_synapse_nodes)
-        graph = nk.nxadapter.nx2nk(navis.neuron2nx(self.skeleton))
+        graph = nk.nxadapter.nx2nk(navis.neuron2nx(self.skeleton)) # curr most expensive line
         graph = nk.graphtools.toUndirected(graph)
         graph.indexEdges()
 
@@ -254,10 +254,9 @@ class Neuron:
         labels = self.compute_distance_to_motif_path_optimized(graph, motif_synapse_nodes, motif_nodes)
         self.skeleton.nodes['abstraction_label'] = labels
         labels = self.compute_labels_to_abstraction_center_optimized(graph, labels, motif_nodes)
-
-        # labels = compute_labels_to_abstraction_center(labels, self.skeleton.edges, root_id, unlabeled_node_id=0)
         self.skeleton.nodes['abstraction_label'] = labels
 
+    @profile
     def compute_labels_to_abstraction_center_optimized(self, graph, labels, motif_nodes):
         abstraction_root = self.compute_abstraction_root(to="node")
         root_id = int(abstraction_root['node_id'].item())

@@ -3,7 +3,7 @@ import tempfile
 from pathlib import Path
 import os
 import numpy as np
-
+from scipy.spatial import KDTree
 
 def get_cache_filename(ids):
     """
@@ -28,45 +28,13 @@ def apply_ids_to_motif_adjacency(body_ids, motif):
     return dict(zip(body_ids, adj))
 
 
-# def treeneurons_list_to_swc_string_list(skeletons):
-#     """
-#     TODO
-#     @param skeletons:
-#     @return:
-#     """
-#     out = [None] * len(skeletons)
-#     for i in range(len(skeletons)):
-#         skl = skeletons[i]
-#         out[i] = treeneuron_to_swc_string(skl)
-#     return out
-
-
 def get_closest_point(nodes, position):
-    closest_distance = sys.float_info.max
-    node_id = -1
-    for index, node in nodes.iterrows():
-        x = node['x']
-        y = node['y']
-        z = node['z']
+    node_array = nodes.iloc[:, 1:4].values
+    kdtree = KDTree(node_array)
+    dist, point = kdtree.query(position, 1)
 
-        point = np.array((x, y, z))
-        dist = distance(point, position)
-
-        if dist < closest_distance:
-            closest_distance = dist
-            node_id = node['node_id']
-    return node_id
-
-
-def distance(a, b):
-    """
-    Calculate absolute euclidean distance between two 3D np arrays
-    @param a: point 1
-    @param b: point 2
-    @return: distance
-    """
-    # calculate Euclidean distance
-    return abs(np.linalg.norm(a - b))
+    node = nodes.iloc[point]
+    return int(node['node_id'])
 
 
 def treeneuron_to_swc_string(neuron_skeleton):
