@@ -1,4 +1,5 @@
 import pandas as pd
+from line_profiler_pycharm import profile
 
 
 class Edge:
@@ -21,6 +22,7 @@ class Edge:
         }
         return edge
 
+    @profile
     def compute_line_abstractions(self, line_start_node_id, line_end_node_id):
         start_graph = self.start_skeleton.get_graph_nx()
         start_graph = start_graph.to_undirected()
@@ -34,6 +36,7 @@ class Edge:
         end_positions = self.add_position(line_end_node_id, end_graph, end_nodes, 1, self.abstraction['end'])
         self.abstraction['end'] = end_positions
 
+    @profile
     def add_position(self, node_id, graph, nodes, prev_label, positions):
         # add this node to the list
         node = nodes[nodes['node_id'] == node_id]

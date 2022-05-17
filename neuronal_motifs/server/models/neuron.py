@@ -1,12 +1,9 @@
-import time
 from collections import OrderedDict
 
 import navis
 import networkx as nx
 import numpy as np
 import networkit as nk
-
-from numba import jit
 
 from line_profiler_pycharm import profile
 

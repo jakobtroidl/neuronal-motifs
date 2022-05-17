@@ -41,8 +41,12 @@ class MyMotif:
 
         return motif
 
+    @profile
     def compute_synapse_trajectory(self):
         edges = []
+        print('Compute synapse trajectories...')
+        t = time.time()
+
         for idx, syn in self.synapses.iterrows():
             pre_id = syn['bodyId_pre']
             post_id = syn['bodyId_post']
@@ -65,6 +69,7 @@ class MyMotif:
                 edge.compute_line_abstractions(pre_node, post_node)
                 edges.append(edge)
         self.edges = edges
+        print("Done. Took {} sec".format(time.time() - t))
 
     @profile
     def compute_motif_paths(self):
@@ -75,21 +80,10 @@ class MyMotif:
         """
         for neuron in self.neurons:
             synapse_nodes = neuron.get_nodes_of_motif_synapses()
-            # neuron.abstraction_center = neuron.compute_abstraction_root(synapse_nodes)
             print("Compute compute node labels for skeleton {} ...".format(neuron.id))
             t = time.time()
             neuron.compute_skeleton_labels(synapse_nodes)
             print("Done. Took {} sec".format(time.time() - t))
-
-    # def compute_motif_abstraction(self):
-    #     """
-    #     Computes the levels of abstraction for the motif path
-    #     """
-    #     for neuron in self.neurons:
-    #         print("Compute Motif Abstraction for Neuron {} ...".format(neuron.id))
-    #         t = time.time()
-    #         neuron.set_skeleton_abstractions(7)
-    #         print('Done. Took {} sec'.format(time.time() - t))
 
     def download_synapses(self):
         """

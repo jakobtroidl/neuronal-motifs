@@ -5,6 +5,7 @@ import os
 import numpy as np
 from scipy.spatial import KDTree
 
+
 def get_cache_filename(ids):
     """
     TODO
@@ -32,7 +33,6 @@ def get_closest_point(nodes, position):
     node_array = nodes.iloc[:, 1:4].values
     kdtree = KDTree(node_array)
     dist, point = kdtree.query(position, 1)
-
     node = nodes.iloc[point]
     return int(node['node_id'])
 
@@ -103,7 +103,6 @@ def edges_to_json(edges):
         edge_json = edge.as_json()
         edge_list.append(edge_json)
     return edge_list
-
 
 
 def synapse_array_to_object(synapse_df):
