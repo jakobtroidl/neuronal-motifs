@@ -24,7 +24,7 @@ class DataAccess:
         skeletons = neu.fetch_skeletons(x=body_ids, with_synapses=True, parallel=True)
         neurons = []
         for skel in skeletons:
-            neuron = Neuron(id=skel.id, skeleton=skel)
+            neuron = Neuron(id=skel.id, skeleton=navis.heal_skeleton(skel))
             neurons.append(neuron)
         return neurons
 
