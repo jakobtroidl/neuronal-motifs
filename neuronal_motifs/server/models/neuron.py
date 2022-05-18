@@ -122,7 +122,7 @@ def multiple_shortest_paths(graph, start_node, end_node_list):
 
 
 class Neuron:
-    def __init__(self, id, skeleton=None, mesh=None, synapses=None, skeleton_labels=None, distances=None):
+    def __init__(self, id, skeleton=None, skel_graph=None, mesh=None, synapses=None, skeleton_labels=None, distances=None):
         """
         @param id: body id of the neuron. Acts as a unique identifier
         @param skeleton: stick figure skeleton of the neuron
@@ -131,6 +131,7 @@ class Neuron:
         """
         self.id = id
         self.skeleton = skeleton
+        self.skeleton_nk_graph = skel_graph
         self.mesh = mesh
         self.distances = None
         self.abstraction_center = None
@@ -242,29 +243,30 @@ class Neuron:
         @param motif_synapse_nodes: skeleton node ids that matching relevant synapses
         """
         motif_synapse_nodes = np.asarray(motif_synapse_nodes)
-        graph = nk.nxadapter.nx2nk(navis.neuron2nx(self.skeleton)) # curr most expensive line
-        graph = nk.graphtools.toUndirected(graph)
-        graph.indexEdges()
+        # graph = nk.nxadapter.nx2nk(navis.neuron2nx(self.skeleton)) # curr most expensive line
+        # graph = nk.graphtools.toUndirected(graph)
+        # graph.indexEdges()
 
-        motif_nodes = multiple_shortest_paths(graph, motif_synapse_nodes[0], motif_synapse_nodes[1:])
+        motif_nodes = multiple_shortest_paths(self.skeleton_nk_graph, motif_synapse_nodes[0], motif_synapse_nodes[1:])
         # compute the shortest path between all synapse nodes which is equivalent to the motif path
-        labels = self.compute_distance_to_motif_path_optimized(graph, motif_synapse_nodes, motif_nodes)
+        labels = self.compute_distance_to_motif_path_optimized(self.skeleton_nk_graph, motif_synapse_nodes, motif_nodes)
         self.skeleton.nodes['abstraction_label'] = labels
-        labels = self.compute_labels_to_abstraction_center_optimized(graph, labels, motif_nodes)
+        labels = self.compute_labels_to_abstraction_center_optimized(self.skeleton_nk_graph, labels, motif_nodes)
         self.skeleton.nodes['abstraction_label'] = labels
 
     @profile
     def compute_labels_to_abstraction_center_optimized(self, graph, labels, motif_nodes):
         abstraction_root = self.compute_abstraction_root(to="node")
         root_id = int(abstraction_root['node_id'].item())
+        self.abstraction_center = root_id
         labels = np.asarray(labels)
         for node in motif_nodes:
             mtd = nk.distance.Dijkstra(graph, root_id, False, False, node)
             mtd.run()
-            labels[node] = -1 * (mtd.distance(node) + 1)
+            labels[node] = -1 * (mtd.distance(node))
         min_value = np.amin(labels)
         delta = np.absolute(min_value) + np.absolute(-1)
-        idx = np.where(labels < 0)
+        idx = np.where(labels < 0)[0]
         labels[idx] = labels[idx] + delta
         labels[idx] = labels[idx] * -1
         return labels
@@ -281,7 +283,7 @@ class Neuron:
         # synapse location to the closest connector
         connectors = self.skeleton.connectors  # get all connectors of the skeleton
         conn = connectors.iloc[connector_id]
-        return conn['node_id']  # get skeleton node id from connector id
+        return int(conn['node_id'])  # get skeleton node id from connector id
 
     def get_nodes_of_motif_synapses(self):
         """

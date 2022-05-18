@@ -65,8 +65,14 @@ class MyMotif:
                 post_neuron = self.get_neuron(post_id)
                 post_node = post_neuron.get_closest_connector(post_x, post_y, post_z)
 
-                edge = Edge(pre_neuron.skeleton, [pre_x, pre_y, pre_z], post_neuron.skeleton, [post_x, post_y, post_z])
-                edge.compute_line_abstractions(pre_node, post_node)
+                edge = Edge(pre_neuron.id, pre_neuron.skeleton_nk_graph, [pre_x, pre_y, pre_z], post_neuron.id, post_neuron.skeleton_nk_graph, [post_x, post_y, post_z])
+
+                start_abs = edge.compute_line_abstractions(edge.start_skel_graph, pre_neuron.skeleton.nodes, pre_node, pre_neuron.abstraction_center)
+                edge.set_start_abstraction(start_abs)
+
+                end_abs = edge.compute_line_abstractions(edge.end_skel_graph, post_neuron.skeleton.nodes, post_node, post_neuron.abstraction_center)
+                edge.set_end_abstraction(end_abs)
+
                 edges.append(edge)
         self.edges = edges
         print("Done. Took {} sec".format(time.time() - t))
