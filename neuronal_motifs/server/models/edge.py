@@ -45,7 +45,7 @@ class Edge:
         pos = list(zip(x, y, z))
         pos = list(map(list, pos))
         labels = trajectory['abstraction_label'].tolist()
-        labels = list(map(int, labels))
+        labels = list(map(int, labels)) # convert labels to int
         return dict(zip(labels, pos))
 
         # self.start_skel_graph.
