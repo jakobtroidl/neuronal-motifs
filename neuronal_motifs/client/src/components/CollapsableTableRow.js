@@ -31,10 +31,10 @@ export function CollapsableTableRow(props) {
                     {row.name}
                 </TableCell>
             </TableRow>
-            <TableRow>
+            <TableRow className={"motif-selection-div"}>
                 <TableCell style={{paddingBottom: 0, paddingTop: 0}} colSpan={6} onClick={() => {
                     handleClick(row)
-                }} className={"motif-selection-div"}>
+                }}>
                     <Collapse in={open}>
                         <Box sx={{margin: 1}}>
                             <Table size="small" aria-label="motifs">
