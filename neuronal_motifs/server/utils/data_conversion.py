@@ -1,6 +1,9 @@
+import sys
 import tempfile
 from pathlib import Path
 import os
+import numpy as np
+from scipy.spatial import KDTree
 
 
 def get_cache_filename(ids):
@@ -26,17 +29,12 @@ def apply_ids_to_motif_adjacency(body_ids, motif):
     return dict(zip(body_ids, adj))
 
 
-# def treeneurons_list_to_swc_string_list(skeletons):
-#     """
-#     TODO
-#     @param skeletons:
-#     @return:
-#     """
-#     out = [None] * len(skeletons)
-#     for i in range(len(skeletons)):
-#         skl = skeletons[i]
-#         out[i] = treeneuron_to_swc_string(skl)
-#     return out
+def get_closest_point(nodes, position):
+    node_array = nodes.iloc[:, 1:4].values
+    kdtree = KDTree(node_array)
+    dist, point = kdtree.query(position, 1)
+    node = nodes.iloc[point]
+    return int(node['node_id'])
 
 
 def treeneuron_to_swc_string(neuron_skeleton):
@@ -67,7 +65,7 @@ def nodes_and_edges_to_motif_string(motif):
     # First list every edge like A -> B [weight > x]
     for edge in edges:
         edge_str = edge['label']
-        if 'properties' in edge:
+        if 'properties' in edge and edge['properties'] is not None:
             edge_str += ' ['
             for i, prop in enumerate(list(edge['properties'].items())):
                 if i != 0:
@@ -97,6 +95,14 @@ def nodes_and_edges_to_motif_string(motif):
                     node_str += str(node['label']) + "['" + str(prop[0]) + "'] > " + str(prop[1]['$gt']) + '\n'
         output += node_str
     return output
+
+
+def edges_to_json(edges):
+    edge_list = []
+    for edge in edges:
+        edge_json = edge.as_json()
+        edge_list.append(edge_json)
+    return edge_list
 
 
 def synapse_array_to_object(synapse_df):

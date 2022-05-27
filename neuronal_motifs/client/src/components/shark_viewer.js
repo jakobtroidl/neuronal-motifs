@@ -1,6 +1,6 @@
-import {NODE_PARTICLE_IMAGE, swcParser} from "./viewer/util";
+import {NODE_PARTICLE_IMAGE, swcParser, stretch, stretch_inv} from "./viewer/util";
 
-export {swcParser};
+export {swcParser, stretch, stretch_inv};
 
 const THREE = require("three");
 require("three-obj-loader")(THREE);
@@ -557,22 +557,32 @@ export default class SharkViewer {
         };
     }
 
+    getMotifPathThreshold(){
+        return this.maxLabel / (this.maxLabel - this.minLabel);
+    }
+
+    getAbstractionBoundary(threshold){
+        return this.minLabel + (1 - threshold) * (this.maxLabel - this.minLabel);
+    }
+
     /**
      * Set neuron abstraction threshold
      * @param threshold value between 0 and 1. 0: nothing is abstracted, 1: everything is abstracted
      */
     setAbstractionThreshold(threshold) {
-        let boundary = this.minLabel + (1 - threshold) * (this.maxLabel - this.minLabel);
-        this.scene.traverse(function (node) {
-            if (typeof node.name === 'string' && node.name.includes('skeleton-vertex')) {
-                // insert your code here, for example:
-                node.material.uniforms.abstraction_threshold.value = boundary;
-            }
-            if (typeof node.name === 'string' && node.name.includes('skeleton-edge')) {
-                // insert your code here, for example:
-                node.material.uniforms.abstraction_threshold.value = boundary;
-            }
-        });
+        if(0 <= threshold && threshold <= 1) {
+            let boundary = this.getAbstractionBoundary(threshold);
+            this.scene.traverse(function (node) {
+                if (typeof node.name === 'string' && node.name.includes('skeleton-vertex')) {
+                    // insert your code here, for example:
+                    node.material.uniforms.abstraction_threshold.value = boundary;
+                }
+                if (typeof node.name === 'string' && node.name.includes('skeleton-edge')) {
+                    // insert your code here, for example:
+                    node.material.uniforms.abstraction_threshold.value = boundary;
+                }
+            });
+        }
     }
 
     createNeuron(swcJSON, color = undefined) {

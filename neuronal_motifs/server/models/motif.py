@@ -7,14 +7,16 @@ from line_profiler_pycharm import profile
 
 from neuronal_motifs.server.services.data_access import DataAccess
 from neuronal_motifs.server.utils import data_conversion as conversion
+from neuronal_motifs.server.models.edge import NodeLink3DEdge
 
 
 class MyMotif:
-    def __init__(self, neuron_ids=None, graph=None, synapses=None):
+    def __init__(self, neuron_ids=None, graph=None, synapses=None, edges=None):
         self.data_access = DataAccess()
         self.graph = graph  # networkx graph of the motif
         self.neurons = self.data_access.get_neurons(neuron_ids)
         self.synapses = synapses
+        self.nodeLinkEdges = edges
         self.download_synapses()
 
     def as_json(self):
@@ -28,14 +30,52 @@ class MyMotif:
             neuron_json.append(neuron.as_json())
 
         syn_export = conversion.synapse_array_to_object(self.synapses)
+        edges_export = conversion.edges_to_json(self.nodeLinkEdges)
 
         motif = {
             'graph': json_graph.node_link_data(self.graph),
             'neurons': neuron_json,
-            'synapses': syn_export
+            'synapses': syn_export,
+            'edges': edges_export
         }
 
         return motif
+
+    @profile
+    def compute_synapse_trajectory(self):
+        edges = []
+        print('Compute synapse trajectories...')
+        t = time.time()
+
+        for idx, syn in self.synapses.iterrows():
+            pre_id = syn['bodyId_pre']
+            post_id = syn['bodyId_post']
+            if post_id in self.graph.neighbors(pre_id):
+                pre_x = syn['x_pre']
+                pre_y = syn['y_pre']
+                pre_z = syn['z_pre']
+
+                pre_neuron = self.get_neuron(pre_id)
+                pre_node = pre_neuron.get_closest_connector(pre_x, pre_y, pre_z)
+
+                post_x = syn['x_post']
+                post_y = syn['y_post']
+                post_z = syn['z_post']
+
+                post_neuron = self.get_neuron(post_id)
+                post_node = post_neuron.get_closest_connector(post_x, post_y, post_z)
+
+                edge = NodeLink3DEdge(pre_neuron.id, pre_neuron.skeleton_nk_graph, [pre_x, pre_y, pre_z], post_neuron.id, post_neuron.skeleton_nk_graph, [post_x, post_y, post_z])
+
+                start_abs = edge.compute_line_abstractions(edge.start_skel_graph, pre_neuron.skeleton.nodes, pre_node, pre_neuron.abstraction_center)
+                edge.set_start_abstraction(start_abs)
+
+                end_abs = edge.compute_line_abstractions(edge.end_skel_graph, post_neuron.skeleton.nodes, post_node, post_neuron.abstraction_center)
+                edge.set_end_abstraction(end_abs)
+
+                edges.append(edge)
+        self.nodeLinkEdges = edges
+        print("Done. Took {} sec".format(time.time() - t))
 
     @profile
     def compute_motif_paths(self):
@@ -46,21 +86,10 @@ class MyMotif:
         """
         for neuron in self.neurons:
             synapse_nodes = neuron.get_nodes_of_motif_synapses()
-            # neuron.abstraction_center = neuron.compute_abstraction_root(synapse_nodes)
             print("Compute compute node labels for skeleton {} ...".format(neuron.id))
             t = time.time()
             neuron.compute_skeleton_labels(synapse_nodes)
             print("Done. Took {} sec".format(time.time() - t))
-
-    # def compute_motif_abstraction(self):
-    #     """
-    #     Computes the levels of abstraction for the motif path
-    #     """
-    #     for neuron in self.neurons:
-    #         print("Compute Motif Abstraction for Neuron {} ...".format(neuron.id))
-    #         t = time.time()
-    #         neuron.set_skeleton_abstractions(7)
-    #         print('Done. Took {} sec'.format(time.time() - t))
 
     def download_synapses(self):
         """
@@ -76,8 +105,7 @@ class MyMotif:
             synapses = pd.concat([outgoing_synapses, incoming_synapses], ignore_index=True, sort=False)
             all_synapses.append(synapses)
             neuron.set_synapses(synapses)
-        foo = pd.concat(all_synapses)
-        self.synapses = foo
+        self.synapses = pd.concat(all_synapses)
 
     def get_adjacency(self, undirected=True):
         """

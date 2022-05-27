@@ -53,7 +53,7 @@ function SketchPanel() {
             if (mouseState === 'node') {
                 if (context.selectedSketchElement) context.setSelectedSketchElement(null);
                 let numNodes = nodes?.length || 0;
-                let color = numNodes <= context.colors.length ? context.colors[numNodes] : '#000000';
+                let color = numNodes <= context.neuronColors.length ? context.neuronColors[numNodes] : '#000000';
                 // Create new Circle
                 if (!currentPath) {
                     currentPath = new paper.Path.Circle(point, circleRadius);
@@ -226,7 +226,7 @@ function SketchPanel() {
                 })
                 let newEdges = edgesToAddAgain.map(e => {
                     e.edgeLine.opacity = 1;
-                    return createEdge(e.fromNode, e.toNode, e.edgeLine, e.indices);
+                    return createEdge(e.fromNode, e.toNode, e.edgeLine, e.indices, e.properties, e.tree, e.propertyLabel);
                 })
 
                 setEdges([...newEdges, ...filteredEdges]);
@@ -250,6 +250,7 @@ function SketchPanel() {
                             if (e.lineGroup) {
                                 edges[i].edgeLine.remove()
                                 edges[i].lineGroup.remove();
+                                edges[i].propertyLabel?.remove();
                                 edges[i].edgeLine = null;
                                 edges[i].edgeLine = null;
                                 edges[i].oppositeEdge = null;
@@ -284,7 +285,7 @@ function SketchPanel() {
         setEdges([...edges, newEdgeObj])
     })
 
-    const createEdge = ((fromNode, toNode, edgeLine, nodeIndices) => {
+    const createEdge = ((fromNode, toNode, edgeLine, nodeIndices, properties = null, tree = null, propertyLabel = null) => {
 
         let edgeObj = {'indices': nodeIndices, 'toNode': toNode, 'fromNode': fromNode, 'edgeLine': edgeLine}
         // If this edge already exists, don't create it
@@ -319,8 +320,48 @@ function SketchPanel() {
         circle?.remove();
         edgeObj['type'] = 'edge';
         edgeObj['label'] = `${edgeObj.fromNode.label} -> ${edgeObj.toNode.label}`
+        edgeObj['properties'] = properties;
+        edgeObj['tree'] = tree;
+        if (propertyLabel) edgeObj = addEdgePropertyLabel(edgeObj);
         return edgeObj
     })
+
+    const addEdgePropertyLabel = (e) => {
+        // Remove any existing label
+        if (!e.properties) return e;
+        e.propertyLabel?.remove();
+        let midpoint = new paper.Point([(e.toPoint.x + e.fromPoint.x) / 2, (e.toPoint.y + e.fromPoint.y) / 2]);
+        let midpointCircle = new paper.Path.Circle(midpoint, 10);
+        let intersectionsCircles = midpointCircle.getIntersections(e.lineGroup.children[1]).map(i => {
+            return new paper.Path.Circle(i.point, 15);
+        })
+        let drawPoints = intersectionsCircles[0].getIntersections(intersectionsCircles[1]).map(i => i.point);
+
+        let topPoint = _.sortBy(drawPoints, 'y')[0]
+        midpointCircle.remove()
+        intersectionsCircles.map(i => i.remove());
+
+        let labelText = '';
+        if (_.isNumber(e.properties.weight)) {
+            labelText = e.properties.weight
+        } else if (e.properties.weight['$lt']) {
+            labelText = '< ' + e.properties.weight['$lt'];
+        } else if (e.properties.weight['$gt']) {
+            labelText = '> ' + e.properties.weight['$gt'];
+        }
+
+
+        let propertyLabel = new paper.PointText({
+            point: topPoint,
+            justification: 'center',
+            fillColor: 'black',
+            font: "Roboto",
+            fontSize: 14
+        });
+        propertyLabel.content = labelText;
+        e.propertyLabel = propertyLabel;
+        return e;
+    }
 
     const getNodeLocations = () => {
         return nodes.map(n => {
@@ -331,6 +372,7 @@ function SketchPanel() {
     // Checks for edges going opposite to each other and offsets them so they are distinguishable
     useEffect(() => {
         if (!edges) return;
+        console.log('Edges');
         edges.forEach((e, i) => {
             let oppositeEdge = _.findIndex(edges, (oppE) => {
                 return _.isEqual(oppE.indices, [e.indices[1], e.indices[0]]);
@@ -388,6 +430,7 @@ function SketchPanel() {
                     if (_.isEqual(e.edgeLine, context.selectedSketchElement.edgeLine)) {
                         e.tree = context.selectedSketchElement.tree;
                         e.properties = context.selectedSketchElement.properties;
+                        e = addEdgePropertyLabel(e);
                     }
                     return e
                 }));
@@ -532,8 +575,6 @@ function SketchPanel() {
                     </Grid>
                 </Grid>
             </Grid>
-
-
         </div>
     )
 }

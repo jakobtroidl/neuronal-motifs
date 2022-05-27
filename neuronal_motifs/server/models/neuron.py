@@ -3,17 +3,9 @@ from collections import OrderedDict
 import navis
 import networkx as nx
 import numpy as np
-from numba import jit
-from tqdm import tqdm
+import networkit as nk
+
 from line_profiler_pycharm import profile
-
-from joblib import Parallel, delayed
-from operator import *
-
-import pandas as pd
-
-import plotly
-import plotly.express as px
 
 from neuronal_motifs.server.utils import data_conversion as conversion
 
@@ -50,15 +42,27 @@ def multiple_shortest_paths(graph, start_node, end_node_list):
     """
     nodes = []
     for end_node in end_node_list:  # iterate over all end nodes
-        n = np.array(shortest_path(graph, start_node, end_node))  # compute list of node ids for shortest path between
+        dijks = nk.distance.Dijkstra(graph, start_node, end_node)
+        dijks.run()
+        n = np.asarray(dijks.getPath(end_node))  # compute list of node ids for shortest path between
         # start node and the current end node
         nodes = np.concatenate((nodes, n), axis=0)  # combine np arrays
     uniques = np.unique(nodes)  # remove duplicates
     return uniques.astype(int)  # return node ids as int array
 
 
-@jit(nopython=True, parallel=True)
-def compute_labels(labels, edges, motif_nodes, unlabeled_node_id):
+# @jit(nopython=True, parallel=True)
+def compute_distance_to_motif_path(labels, edges, motif_nodes, unlabeled_node_id):
+    """
+    TODO
+    @param labels:
+    @param edges:
+    @param motif_nodes:
+    @param unlabeled_node_id:
+    @param positive_labels:
+    @return:
+    """
+
     labels[motif_nodes - 1] = 0  # label all motif nodes in the skeleton with 0
     num_unlabeled_nodes = np.count_nonzero(labels == unlabeled_node_id)
     label = 1  # specifies node labels, start with distance to motif path is 1
@@ -79,8 +83,47 @@ def compute_labels(labels, edges, motif_nodes, unlabeled_node_id):
     return labels
 
 
+# #@jit(nopython=True, parallel=True)
+def compute_labels_to_abstraction_center(labels, edges, center_id, unlabeled_node_id):
+    """
+    TODO
+    @param labels:
+    @param edges:
+    @param center_id:
+    @param unlabeled_node_id:
+    @return:
+    """
+    labels = np.asarray(labels)
+    labels[center_id - 1] = -1  # label all motif nodes in the skeleton with 0
+    num_unlabeled_nodes = np.count_nonzero(labels == unlabeled_node_id)
+    label = -2  # specifies node labels, start with distance to motif path is 1
+    while num_unlabeled_nodes > 0:  # repeat until all nodes are labeled
+        labels_copy = np.copy(labels)
+        for edge in edges:  # look at all edges of the neuron skeleton
+            x = edge[0] - 1  # first node index of an edge
+            y = edge[1] - 1  # second node index of an edge
+            if labels[x] < 0 and labels[y] == 0:  # if x is labeled yet and y isn't, then add current
+                # label to node
+                labels_copy[y] = label
+            elif labels[y] < 0 and labels[x] == 0:  # if y is labeled yet and x isn't, then add current
+                # label to node
+                labels_copy[x] = label
+        labels = labels_copy
+        num_unlabeled_nodes = np.count_nonzero(labels == unlabeled_node_id)
+        label = label - 1  # increase node label by one
+
+    min_value = np.amin(labels)
+    delta = np.absolute(min_value) + np.absolute(-1)
+    idx = np.where(labels < 0)
+    labels[idx] = labels[idx] + delta
+    labels[idx] = labels[idx] * -1
+
+    return labels
+
+
 class Neuron:
-    def __init__(self, id, skeleton=None, mesh=None, synapses=None, skeleton_labels=None, distances=None):
+    def __init__(self, id, skeleton=None, skel_graph=None, mesh=None, synapses=None, skeleton_labels=None,
+                 distances=None):
         """
         @param id: body id of the neuron. Acts as a unique identifier
         @param skeleton: stick figure skeleton of the neuron
@@ -89,6 +132,7 @@ class Neuron:
         """
         self.id = id
         self.skeleton = skeleton
+        self.skeleton_nk_graph = skel_graph
         self.mesh = mesh
         self.distances = None
         self.abstraction_center = None
@@ -103,31 +147,46 @@ class Neuron:
             'id': self.id,
             'mesh': 'TODO',
             'skeleton_swc': swc_object['swc'],
-            'abstraction_center': self.compute_abstraction_root()
+            'abstraction_center': self.compute_abstraction_root(),
+            'min_skel_label': self.get_min_skeleton_label(),
+            'max_skel_label': self.get_max_skeleton_label()
         }
 
         return neuron
 
-    def compute_abstraction_root(self):
+    def get_max_skeleton_label(self):
+        return int(self.skeleton.nodes['abstraction_label'].max())
+
+    def get_min_skeleton_label(self):
+        return int(self.skeleton.nodes['abstraction_label'].min())
+
+    def compute_abstraction_root(self, to="position"):
         """
         Computes the abstraction center by averaging over motif synapse locations and snapping it to the neuron skeleton
+        @param nodes: pd dataframe of nodes to be considered for root computation
+        @param to: if equals "position" returns the position of the abstraction center, if equals "node" returns the pd node series.
         @return: node id of the abstraction center
         """
         nodes = self.skeleton.nodes
-        motif_nodes = nodes[nodes['abstraction_label'] == 0]
+        motif_nodes = nodes[nodes['abstraction_label'] <= 0]
 
         x = int(motif_nodes['x'].mean())
         y = int(motif_nodes['y'].mean())
         z = int(motif_nodes['z'].mean())
 
-        center_id, distance = self.skeleton.snap([x, y, z])
+        center_id = conversion.get_closest_point(motif_nodes, np.array((x, y, z)))
+
         center_node = nodes[nodes['node_id'] == center_id]
 
-        center_x = int(center_node['x'])
-        center_y = int(center_node['y'])
-        center_z = int(center_node['z'])
-
-        return [center_x, center_y, center_z]
+        if to == "position":
+            center_x = int(center_node['x'])
+            center_y = int(center_node['y'])
+            center_z = int(center_node['z'])
+            return [center_x, center_y, center_z]
+        elif to == "node":
+            return center_node
+        else:
+            return None
 
     def get_center(self):
         x = int(self.skeleton.nodes['x'].mean())
@@ -162,6 +221,20 @@ class Neuron:
     # def set_skeleton_abstractions(self, num_of_levels):
     #     self.skeleton_abstractions = self.compute_abstraction_levels(num_of_levels)
 
+    @profile
+    def compute_distance_to_motif_path_optimized(self, graph, motif_synapse_nodes, motif_nodes):
+        motif_synapse_node_list = motif_synapse_nodes.tolist()
+        distances = np.zeros([graph.numberOfNodes(), len(motif_synapse_node_list)])
+        for i in range(0, len(motif_synapse_node_list)):
+            dijks = nk.distance.Dijkstra(graph, motif_synapse_node_list[i])
+            dijks.run()
+            distances[:, i] = np.asarray(dijks.getDistances())
+        distances = np.amin(distances, axis=1)
+        distances = distances - np.amin(distances)
+        distances[motif_nodes] = 0
+        return distances.tolist()
+
+    @profile
     def compute_skeleton_labels(self, motif_synapse_nodes):
         """
         Computes a label for each node in the neurons skeleton.
@@ -170,23 +243,39 @@ class Neuron:
         Stores the labels in self.skeleton_label np array
         @param motif_synapse_nodes: skeleton node ids that matching relevant synapses
         """
-        unlabeled_node_id = -1  # unlabeled nodes have this id
-        self.skeleton = navis.heal_skeleton(self.skeleton)  # heal to skeleton such that all components are connected
-        number_skeleton_nodes = self.skeleton.nodes['node_id'].max()  # get the number of nodes of the neuron skeleton
         motif_synapse_nodes = np.asarray(motif_synapse_nodes)
+        # graph = nk.nxadapter.nx2nk(navis.neuron2nx(self.skeleton)) # curr most expensive line
+        # graph = nk.graphtools.toUndirected(graph)
+        # graph.indexEdges()
 
-        labels = np.full(number_skeleton_nodes, unlabeled_node_id, dtype=int)
-        edges = self.skeleton.edges
-
-        skeleton_graph = skeleton_2_nx_graph(self.skeleton, undirected=True)  # convert skeleton to an
-        # undirected networkx graph
-        motif_nodes = multiple_shortest_paths(skeleton_graph, motif_synapse_nodes[0], motif_synapse_nodes[1:])
+        motif_nodes = multiple_shortest_paths(self.skeleton_nk_graph, motif_synapse_nodes[0], motif_synapse_nodes[1:])
         # compute the shortest path between all synapse nodes which is equivalent to the motif path
-        labels = compute_labels(labels, edges, motif_nodes, unlabeled_node_id)
+        # labels2 = compute_distance_to_motif_path()
+        labels = self.compute_distance_to_motif_path_optimized(self.skeleton_nk_graph, motif_synapse_nodes, motif_nodes)
+        self.skeleton.nodes['abstraction_label'] = labels
+        labels = self.compute_labels_to_abstraction_center_optimized(self.skeleton_nk_graph, labels, motif_nodes)
         self.skeleton.nodes['abstraction_label'] = labels
 
-        # print('hello world')
-        # self.skeleton_labels = labels  # add labeled nodes to the neuron object
+    @profile
+    def compute_labels_to_abstraction_center_optimized(self, graph, labels, motif_nodes):
+        abstraction_root = self.compute_abstraction_root(to="node")
+        root_id = int(abstraction_root['node_id'].item())
+        self.abstraction_center = root_id
+        labels = np.asarray(labels)
+        for node in motif_nodes:
+            mtd = nk.distance.Dijkstra(graph, root_id, False, False, node)
+            mtd.run()
+            distance = -1 * (mtd.distance(node) + 1)
+            if labels[node] == 0 or labels[node] < distance:
+                labels[node] = distance
+        min_value = np.amin(labels)
+        delta = np.absolute(min_value) + np.absolute(-1)
+        idx = np.where(labels < 0)[0]
+        labels[idx] = labels[idx] + delta
+        labels[idx] = labels[idx] * -1
+        foo = labels[idx]
+        rt_idx = labels[root_id]
+        return labels
 
     def get_closest_connector(self, x, y, z):
         """
@@ -200,7 +289,7 @@ class Neuron:
         # synapse location to the closest connector
         connectors = self.skeleton.connectors  # get all connectors of the skeleton
         conn = connectors.iloc[connector_id]
-        return conn['node_id']  # get skeleton node id from connector id
+        return int(conn['node_id'])  # get skeleton node id from connector id
 
     def get_nodes_of_motif_synapses(self):
         """

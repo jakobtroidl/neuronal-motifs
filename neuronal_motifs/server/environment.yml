@@ -16,3 +16,4 @@ dependencies:
       - navis
       - neuprint-python==0.4.16
       - uvicorn[standard]
+      - zarr

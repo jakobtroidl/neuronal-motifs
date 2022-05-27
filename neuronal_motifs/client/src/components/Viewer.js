@@ -1,20 +1,79 @@
 import React, {useState, useEffect, useContext} from 'react';
-import SharkViewer, {swcParser} from './shark_viewer';
+import SharkViewer, {swcParser, stretch, stretch_inv} from './shark_viewer';
+import {bundle} from '../services/bundling';
 import ArrowTooltips from './ArrowTooltips'
 import {AppContext} from "../contexts/GlobalContext";
 import './Viewer.css'
 import * as THREE from 'three';
-import axios from "axios";
 import {InteractionManager} from "three.interactive";
 import {Color} from '../utils/rendering'
+import _ from 'lodash';
 
 
 const setLineVisibility = (scene, visible) => {
     scene.children.forEach(child => {
-        if (typeof child.name == 'string' && child.name.includes('line')) {
+        if (typeof child.name == 'string' && child.name.includes('lines')) {
             child.visible = visible;
         }
     })
+}
+
+const getEdgeGroups = (motif, boundary) => {
+    let groups = {}
+
+    let number_of_neurons = motif.neurons.length;
+    let directions = getTranslationVectors(number_of_neurons);
+    let factor = 8000;
+
+    boundary = Math.round(boundary);
+
+    motif.edges.forEach(edge => {
+        let [pre_neuron, pre_neuron_number] = getNeuronListId(motif.neurons, edge.start_neuron_id);
+        let [post_neuron, post_neuron_number] = getNeuronListId(motif.neurons, edge.end_neuron_id);
+
+        if (motif.graph.links.some(e => e.source === edge.start_neuron_id && e.target === edge.end_neuron_id)) {
+
+            let pre_loc = new THREE.Vector3();
+            if (boundary in edge.abstraction.start) {
+                pre_loc.fromArray(edge.abstraction.start[boundary]);
+            } else if (boundary < pre_neuron.min_skel_label) {
+                pre_loc.fromArray(pre_neuron.abstraction_center);
+            } else {
+                pre_loc.fromArray(edge.default_start_position);
+            }
+
+            let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
+            let line_start = pre_loc.add(translate);
+
+            let post_loc = new THREE.Vector3();
+            if (boundary in edge.abstraction.end) {
+                post_loc.fromArray(edge.abstraction.end[boundary]);
+            } else if (boundary < post_neuron.min_skel_label) {
+                post_loc.fromArray(post_neuron.abstraction_center);
+            } else {
+                post_loc.fromArray(edge.default_end_position);
+            }
+
+            translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
+            let line_end = post_loc.add(translate);
+
+            let group_id = edge.start_neuron_id + "-" + edge.end_neuron_id;
+            if (!(group_id in groups)) {
+                groups[group_id] = {
+                    'start': [],
+                    'end': [],
+                    'start_id': edge.start_neuron_id,
+                    'end_id': edge.end_neuron_id
+                };
+            }
+
+            let group_points = groups[group_id];
+            group_points['start'].push(line_start);
+            group_points['end'].push(line_end);
+        }
+    })
+
+    return groups;
 }
 
 const setSynapseVisibility = (scene, visible) => {
@@ -26,68 +85,52 @@ const setSynapseVisibility = (scene, visible) => {
 }
 
 const getNeuronListId = (neurons, id) => {
-    let out = -1;
+    let out_id = -1;
+    let out_neuron = undefined;
     neurons.forEach((neuron, i) => {
         if (neuron.id === id) {
-            out = i;
+            out_id = i;
+            out_neuron = neuron;
         }
     })
-    return out;
+    return [out_neuron, out_id];
 }
 
-
-/* max count = 10 */
+/**
+ * Computes uniformly distributed points on the unit sphere
+ * @param count: number of points to sample
+ * @return {[number,number,number][]}
+ */
 const getTranslationVectors = (count) => {
-    let directions = [
-        [1, 0, 0],
-        [-1, 0, 0],
-        [0, 1, 0],
-        [0, -1, 0],
-        [0, 0, 1],
-        [0, 0, -1],
-        [1, 1, 1],
-        [-1, -1, -1],
-        [-1, 1, 1],
-        [1, -1, -1]
-    ]
-    return directions.slice(0, count);
+    // Following Saff and Kuijlaars via https://discuss.dizzycoding.com/evenly-distributing-n-points-on-a-sphere/
+    const indices = _.range(0.5, count + 0.5);
+    const phi = indices.map(ind => {
+        return Math.acos(1 - 2 * ind / count)
+    })
+    const theta = indices.map(ind => {
+        return Math.PI * (1 + Math.sqrt(5)) * ind;
+    })
+    let directions = _.range(count).map(i => {
+        const x = Math.cos(_.toNumber(theta[i])) * Math.sin(phi[i]);
+        const y = Math.sin(_.toNumber(theta[i])) * Math.sin(phi[i]);
+        const z = Math.cos(phi[i])
+        return [x, y, z]
+    })
+    return directions;
 }
-
-// const createMoveAnimation = ({ mesh, startPosition, endPosition }) => {
-//   mesh.userData.mixer = new THREE.AnimationMixer(mesh);
-//   let track = new THREE.VectorKeyframeTrack(
-//     '.position',
-//     [0, 1],
-//     [
-//       startPosition.x,
-//       startPosition.y,
-//       startPosition.z,
-//       endPosition.x,
-//       endPosition.y,
-//       endPosition.z,
-//     ]
-//   );
-//   const animationClip = new THREE.AnimationClip(null, 5, [track]);
-//   const animationAction = mesh.userData.mixer.clipAction(animationClip);
-//   animationAction.setLoop(THREE.LoopOnce);
-//   animationAction.play();
-//   mesh.userData.clock = new THREE.Clock();
-// };
 
 function Viewer() {
     const [motif, setMotif] = React.useState()
-    /** @type {SharkViewer, function} */
     const [sharkViewerInstance, setSharkViewerInstance] = useState();
-    const [loadedNeurons, setLoadedNeurons] = useState()
     const [prevSliderValue, setPrevSliderValue] = useState()
+    const [edgesEnabled, setEdgesEnabled] = useState(false);
+    const [edgeGroups, setEdgeGroups] = useState();
     const id = "my_shark_viewer";
     const className = 'shark_viewer';
-    // Global context holds abstraction state
-    const context = useContext(AppContext);
+    const context = useContext(AppContext); // Global context holds abstraction state
     // for synapse selecting & highlighting
     const [displayTooltip, setDisplayTooltip] = useState(false);
     const [tooltipInfo, setTooltipInfo] = useState({})
-
 
     // Instantiates the viewer, will only run once on init
     useEffect(() => {
@@ -106,7 +149,6 @@ function Viewer() {
                 sharkViewerInstance.scene?.interactionManager?.update();
             }
             updateLoop();
-
             sharkViewerInstance.animate();
         }
         setPrevSliderValue(0);
@@ -114,7 +156,6 @@ function Viewer() {
 
     useEffect(() => {
         if (sharkViewerInstance) {
-
             // remove all previous loaded objects in three.js scene
             let scene = sharkViewerInstance.scene;
             scene.remove.apply(scene, scene.children);
@@ -128,8 +169,6 @@ function Viewer() {
             let bodyIds = selectedMotif.map(m => m.bodyId);
             bodyIds = JSON.stringify(bodyIds);
             let motifQuery = JSON.stringify(context.motifQuery);
-            let id_ranges = Array.from({length: selectedMotif.length}, (_, i) => i * 1000);
-            setLoadedNeurons(id_ranges);
             const ws = new WebSocket(`ws://localhost:5050/display_motif_ws/`)
             ws.onopen = function (e) {
                 console.log("[open] Connection established", new Date().getSeconds());
@@ -162,6 +201,25 @@ function Viewer() {
 
     }, [context.selectedMotif]);
 
+    function addEdgeGroupToScene(groups, scene) {
+        let lines_identifier = 'lines';
+        let prevLines = scene.getObjectByName(lines_identifier);
+        scene.remove(prevLines);
+
+        let i = 0;
+        let lines = new THREE.Object3D();
+        lines.name = lines_identifier;
+        lines.visible = edgesEnabled;
+        for (const [id, group] of Object.entries(groups)) {
+            let line_group = bundle(group, 0.3, context.synapseColors[i]);
+            line_group.forEach((line, i) => {
+                lines.children.push(line);
+            });
+            i++;
+        }
+        scene.add(lines);
+    }
+
     useEffect(() => {
         if (motif && sharkViewerInstance) {
             // remove all previous loaded objects in three.js scene
@@ -170,78 +228,77 @@ function Viewer() {
             motif.neurons.forEach((neuron, i) => {
 
                 let parsedSwc = swcParser(neuron.skeleton_swc);
-                let color = context.colors[i];
+                let color = context.neuronColors[i];
                 sharkViewerInstance.loadNeuron(neuron.id, color, parsedSwc, true);
             })
 
-            let number_of_neurons = motif.neurons.length;
-            let directions = getTranslationVectors(number_of_neurons);
-            let factor = 8000;
-
-            motif.synapses.forEach(syn => {
-                let pre_neuron_number = getNeuronListId(motif.neurons, syn.pre_id);
-                let pre_loc = new THREE.Vector3(syn.pre.x, syn.pre.y, syn.pre.z);
-                let translate = new THREE.Vector3(factor * directions[pre_neuron_number][0], factor * directions[pre_neuron_number][1], factor * directions[pre_neuron_number][2]);
-                let line_start = pre_loc.add(translate);
-
-                let post_neuron_number = getNeuronListId(motif.neurons, syn.post_id);
-                let post_loc = new THREE.Vector3(syn.post.x, syn.post.y, syn.post.z);
-                translate = new THREE.Vector3(factor * directions[post_neuron_number][0], factor * directions[post_neuron_number][1], factor * directions[post_neuron_number][2]);
-                let line_end = post_loc.add(translate);
-
-                const material = new THREE.LineBasicMaterial({color: Color.orange});
-                const points = [];
-                points.push(line_start);
-                points.push(line_end);
-
-                const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                const line = new THREE.Line(geometry, material);
-
-                line.name = 'line-' + line_start.x + '-' + line_start.y + '-' + line_start.z + '-'
-                    + line_end.x + '-' + line_end.y + '-' + line_end.z;
-                line.visible = false;
-                scene.add(line);
-            })
+            let groups = getEdgeGroups(motif, 1.0);
+            setEdgeGroups(groups);
+            addEdgeGroupToScene(groups, scene);
         }
+
     }, [motif, sharkViewerInstance])
 
     // Updates the motifs, runs when data, viewer, or abstraction state change
     useEffect(() => {
         if (motif && sharkViewerInstance) {
-            sharkViewerInstance.setAbstractionThreshold(context.abstractionLevel);
+
+            let level = stretch(context.abstractionLevel);
+            sharkViewerInstance.setAbstractionThreshold(level);
+
+            let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
+            let abstraction_boundary = sharkViewerInstance.getAbstractionBoundary(level);
 
             let scene = sharkViewerInstance.scene;
-
             let number_of_neurons = motif.neurons.length;
             let directions = getTranslationVectors(number_of_neurons);
             let factor = 8000;
+            let offset = 0.01;
 
-            if (context.abstractionLevel > 0.9 && prevSliderValue <= 0.9) {
+            if (edgesEnabled) {
+                let groups = getEdgeGroups(motif, abstraction_boundary);
+                setEdgeGroups(groups);
+                addEdgeGroupToScene(groups, scene);
+            }
+
+            if (level > motif_path_threshold + offset && prevSliderValue <= motif_path_threshold + offset) {
                 motif.neurons.forEach((neuron, i) => {
                     let mesh = scene.getObjectByName(neuron.id);
                     mesh.translateX(factor * directions[i][0]);
                     mesh.translateY(factor * directions[i][1]);
                     mesh.translateZ(factor * directions[i][2]);
 
+                    let center = scene.getObjectByName('abstraction-center-' + neuron.id);
+                    center.translateX(factor * directions[i][0]);
+                    center.translateY(factor * directions[i][1]);
+                    center.translateZ(factor * directions[i][2]);
+
                     setSynapseVisibility(scene, false);
                     setLineVisibility(scene, true);
+
+                    setEdgesEnabled(true);
                 });
             }
-            if (context.abstractionLevel <= 0.9 && prevSliderValue > 0.9) {
+            if (level <= motif_path_threshold + offset && prevSliderValue > motif_path_threshold + offset) {
                 motif.neurons.forEach((neuron, i) => {
                     let mesh = scene.getObjectByName(neuron.id);
                     mesh.translateX(factor * -directions[i][0]);
                     mesh.translateY(factor * -directions[i][1]);
                     mesh.translateZ(factor * -directions[i][2]);
 
+                    let center = scene.getObjectByName('abstraction-center-' + neuron.id);
+                    center.translateX(factor * -directions[i][0]);
+                    center.translateY(factor * -directions[i][1]);
+                    center.translateZ(factor * -directions[i][2]);
+
                     setSynapseVisibility(scene, true);
                     setLineVisibility(scene, false);
+
+                    setEdgesEnabled(false);
                 });
             }
-
-
+            setPrevSliderValue(level);
         }
-        setPrevSliderValue(context.abstractionLevel);
     }, [context.abstractionLevel])
 
     useEffect(() => {
@@ -262,11 +319,11 @@ function Viewer() {
             const directionalLight = new THREE.DirectionalLight(Color.white, 0.7);
             scene.add(directionalLight);
 
-            motif.neurons.forEach(neuron => {
+            motif.neurons.forEach((neuron, i) => {
                 let geometry = new THREE.SphereGeometry(200, 16, 16);
-                let material = new THREE.MeshPhongMaterial({color: Color.red});
+                let material = new THREE.MeshPhongMaterial({color: context.neuronColors[i]});
                 let mesh = new THREE.Mesh(geometry, material);
-                mesh.name = "abstraction-center-" + neuron.abstraction_center[0] + "-" + neuron.abstraction_center[1] + "-" + neuron.abstraction_center[2];
+                mesh.name = "abstraction-center-" + neuron.id;
                 mesh.position.x = neuron.abstraction_center[0];
                 mesh.position.y = neuron.abstraction_center[1];
                 mesh.position.z = neuron.abstraction_center[2];
