@@ -7,7 +7,7 @@ from line_profiler_pycharm import profile
 
 from neuronal_motifs.server.services.data_access import DataAccess
 from neuronal_motifs.server.utils import data_conversion as conversion
-from neuronal_motifs.server.models.edge import Edge
+from neuronal_motifs.server.models.edge import NodeLink3DEdge
 
 
 class MyMotif:
@@ -16,7 +16,7 @@ class MyMotif:
         self.graph = graph  # networkx graph of the motif
         self.neurons = self.data_access.get_neurons(neuron_ids)
         self.synapses = synapses
-        self.edges = edges
+        self.nodeLinkEdges = edges
         self.download_synapses()
 
     def as_json(self):
@@ -30,7 +30,7 @@ class MyMotif:
             neuron_json.append(neuron.as_json())
 
         syn_export = conversion.synapse_array_to_object(self.synapses)
-        edges_export = conversion.edges_to_json(self.edges)
+        edges_export = conversion.edges_to_json(self.nodeLinkEdges)
 
         motif = {
             'graph': json_graph.node_link_data(self.graph),
@@ -65,7 +65,7 @@ class MyMotif:
                 post_neuron = self.get_neuron(post_id)
                 post_node = post_neuron.get_closest_connector(post_x, post_y, post_z)
 
-                edge = Edge(pre_neuron.id, pre_neuron.skeleton_nk_graph, [pre_x, pre_y, pre_z], post_neuron.id, post_neuron.skeleton_nk_graph, [post_x, post_y, post_z])
+                edge = NodeLink3DEdge(pre_neuron.id, pre_neuron.skeleton_nk_graph, [pre_x, pre_y, pre_z], post_neuron.id, post_neuron.skeleton_nk_graph, [post_x, post_y, post_z])
 
                 start_abs = edge.compute_line_abstractions(edge.start_skel_graph, pre_neuron.skeleton.nodes, pre_node, pre_neuron.abstraction_center)
                 edge.set_start_abstraction(start_abs)
@@ -74,7 +74,7 @@ class MyMotif:
                 edge.set_end_abstraction(end_abs)
 
                 edges.append(edge)
-        self.edges = edges
+        self.nodeLinkEdges = edges
         print("Done. Took {} sec".format(time.time() - t))
 
     @profile

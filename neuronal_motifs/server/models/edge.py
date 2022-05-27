@@ -3,7 +3,7 @@ from line_profiler_pycharm import profile
 import networkit as nk
 
 
-class Edge:
+class NodeLink3DEdge:
     def __init__(self, start_id, start_graph, default_start_position, end_id, end_graph, default_end_position):
         self.start_neuron_id = start_id
         self.end_neuron_id = end_id
@@ -36,7 +36,6 @@ class Edge:
         path = djk.getPath(conv_node_id)  # djk.getNodesSortedByDistance()  #
 
         path = map(lambda x: x + 1, path)
-
 
         trajectory = nodes[nodes['node_id'].isin(path)]
         x = trajectory['x'].tolist()

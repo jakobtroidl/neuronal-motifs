@@ -65,7 +65,7 @@ def nodes_and_edges_to_motif_string(motif):
     # First list every edge like A -> B [weight > x]
     for edge in edges:
         edge_str = edge['label']
-        if 'properties' in edge:
+        if 'properties' in edge and edge['properties'] is not None:
             edge_str += ' ['
             for i, prop in enumerate(list(edge['properties'].items())):
                 if i != 0:
