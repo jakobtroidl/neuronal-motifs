@@ -21,7 +21,10 @@ Activate the conda environment
 ```python
 conda activate neuronal-motifs
 ```
-
+If env already exists, instead update it
+```python
+conda env update --file environment.yml --prune
+```
 From this folder, start the server with
 
 ```python
