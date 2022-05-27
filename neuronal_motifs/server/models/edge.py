@@ -35,13 +35,18 @@ class Edge:
         djk.run()
         path = djk.getPath(conv_node_id)  # djk.getNodesSortedByDistance()  #
 
+        path = map(lambda x: x + 1, path)
+
+
         trajectory = nodes[nodes['node_id'].isin(path)]
         x = trajectory['x'].tolist()
         y = trajectory['y'].tolist()
         z = trajectory['z'].tolist()
         pos = list(zip(x, y, z))
         pos = list(map(list, pos))
-        return dict(zip(trajectory['abstraction_label'].tolist(), pos))
+        labels = trajectory['abstraction_label'].tolist()
+        labels = list(map(int, labels))
+        return dict(zip(labels, pos))
 
         # self.start_skel_graph.
         # start_positions = self.add_position(start_node_id, start_graph, start_nodes, 1, self.abstraction['start'])
