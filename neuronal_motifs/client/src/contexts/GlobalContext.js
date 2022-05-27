@@ -13,6 +13,7 @@ export const ContextWrapper = (props) => {
     const [synapseColors, setSynapseColors] = useState(['#FF6347', '#DAA520', '#97d0b5', '#76acf3', '#9400D3', '#4C56B3', '#D9C226', '#263DD9']);
     const [loadingMessage, setLoadingMessage] = useState();
     const [selectedSketchElement, setSelectedSketchElement] = useState(null);
+    const [resetUICounter, setResetUICounter] = useState(0);
 
     return (
         <AppContext.Provider value={
@@ -23,7 +24,8 @@ export const ContextWrapper = (props) => {
                 abstractionLevel, setAbstractionLevel,
                 loadingMessage, setLoadingMessage,
                 neuronColors, setNeuronColors,
-                synapseColors, setSynapseColors
+                synapseColors, setSynapseColors,
+                resetUICounter, setResetUICounter
             }}>
             {props.children}
         </AppContext.Provider>

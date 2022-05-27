@@ -7,7 +7,7 @@ import './AbstractionSlider.css'
 
 
 function AbstractionSlider() {
-    const abstractionSliderId = 'abstraction-slider-div'
+    const abstractionSliderId = 'abstraction-slider-div';
 
     function valueLabelFormat(value) {
         return `Level ${value}`
@@ -22,6 +22,10 @@ function AbstractionSlider() {
         }
     }
 
+    useEffect(() => {
+        console.log('Reset Slider');
+    }, [context.resetUICounter])
+
     return (
         <div id={abstractionSliderId}>
             {/*Drag Handler*/}
@@ -34,6 +38,7 @@ function AbstractionSlider() {
                 </div>
                 <div id="abstractionSlider" className='item'>
                     <Slider
+                        key={context.resetUICounter}
                         aria-label="Abstraction"
                         defaultValue={0}
                         valueLabelFormat={valueLabelFormat}

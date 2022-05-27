@@ -154,13 +154,14 @@ function Viewer() {
         setPrevSliderValue(0);
     }, [sharkViewerInstance])
 
-    useEffect(() => {
-        if (sharkViewerInstance) {
-            // remove all previous loaded objects in three.js scene
-            let scene = sharkViewerInstance.scene;
-            scene.remove.apply(scene, scene.children);
-        }
-    }, [context.clearViewer])
+    // useEffect(() => {
+    //     console.log("clear viewer triggered");
+    //     if (sharkViewerInstance) {
+    //         // remove all previous loaded objects in three.js scene
+    //         let scene = sharkViewerInstance.scene;
+    //         scene.remove.apply(scene, scene.children);
+    //     }
+    // }, [context.clearViewer])
 
     // Fetches the data, only runs on init
     useEffect(async () => {
@@ -222,9 +223,12 @@ function Viewer() {
 
     useEffect(() => {
         if (motif && sharkViewerInstance) {
-            // remove all previous loaded objects in three.js scene
+
+            // remove all previous loaded objects and reset slider
             let scene = sharkViewerInstance.scene;
             scene.remove.apply(scene, scene.children);
+            context.setResetUICounter(context.resetUICounter + 1); // reset slider
+
             motif.neurons.forEach((neuron, i) => {
 
                 let parsedSwc = swcParser(neuron.skeleton_swc);

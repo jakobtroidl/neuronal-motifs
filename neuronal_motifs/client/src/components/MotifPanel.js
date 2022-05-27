@@ -58,7 +58,6 @@ function MotifPanel() {
     }
 
     const handleMotifSelection = (motif) => {
-        //context.setAbstractionLevel(0);
         context.setSelectedMotif(motif.neurons);
     }
 
