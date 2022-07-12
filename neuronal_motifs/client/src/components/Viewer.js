@@ -23,7 +23,7 @@ const getEdgeGroups = (motif, boundary) => {
 
     let number_of_neurons = motif.neurons.length;
     let directions = getTranslationVectors(number_of_neurons);
-    let factor = 8000;
+    let factor = 20000;
 
     boundary = Math.round(boundary);
 
@@ -256,8 +256,8 @@ function Viewer() {
             let scene = sharkViewerInstance.scene;
             let number_of_neurons = motif.neurons.length;
             let directions = getTranslationVectors(number_of_neurons);
-            let factor = 8000;
-            let offset = 0.01;
+            let factor = 20000;
+            let offset = 0.001;
 
             if (edgesEnabled) {
                 let groups = getEdgeGroups(motif, abstraction_boundary);

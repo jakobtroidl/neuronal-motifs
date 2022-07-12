@@ -50,21 +50,6 @@ def get_example_motif():
         return motif.as_json()
 
 
-# def get_pruned_motif(factor):
-#     filepath = "cache/test_motif.pkl"
-#     try:  # try to load from cache
-#         f = open(filepath)
-#         f.close()
-#     except FileNotFoundError:
-#         example_motif_data()  # download data if not available
-#         f = open(filepath)
-#     finally:
-#         f = open(filepath, "rb")
-#         motif = pkl.load(f)
-#         f.close()
-#         motif.simplify(factor=factor)
-#         return motif.as_json()
-
 def compute_motif_data(body_ids, motif):
     yield 'Beginning Computation'
     adjacency = apply_ids_to_motif_adjacency(body_ids, motif)
