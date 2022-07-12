@@ -1,6 +1,5 @@
-import networkx as nx
 import pickle as pkl
-import pathlib
+
 from neuronal_motifs.server.models.motif import MyMotif
 from neuronal_motifs.server.utils.data_conversion import *
 

@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 import Draggable from 'react-draggable';
 import './DraggableView.css'
 import AbstractionSlider from "../components/AbstractionSlider";

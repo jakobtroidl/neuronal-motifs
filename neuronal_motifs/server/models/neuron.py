@@ -1,10 +1,9 @@
 from collections import OrderedDict
 
 import navis
+import networkit as nk
 import networkx as nx
 import numpy as np
-import networkit as nk
-
 from line_profiler_pycharm import profile
 
 from neuronal_motifs.server.utils import data_conversion as conversion

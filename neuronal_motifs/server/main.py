@@ -1,14 +1,15 @@
 import json
 import time
 from typing import Optional
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import WebSocket
 from starlette.middleware.cors import CORSMiddleware
 
-from services import data_service, motifabstraction, motif_search
 from models import nblast, count
-import uvicorn
+from services import data_service, motifabstraction, motif_search
 
 app = FastAPI()
 

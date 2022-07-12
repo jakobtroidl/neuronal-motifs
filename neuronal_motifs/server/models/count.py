@@ -1,7 +1,8 @@
+import pickle as pkl
+
 import networkx as nx
 
 from neuronal_motifs.server.utils.data_conversion import nodes_and_edges_to_networkx
-import pickle as pkl
 
 
 def get(motif):

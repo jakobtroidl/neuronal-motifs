@@ -1,12 +1,8 @@
-from dotmotif.executors.NeuPrintExecutor import NeuPrintExecutor
 from dotmotif import Motif
-from utils.data_conversion import nodes_and_edges_to_motif_string
-import pandas as pd
-import json
-
-from services.motifabstraction import *
-
+from dotmotif.executors.NeuPrintExecutor import NeuPrintExecutor
 from services.data_access import *
+from services.motifabstraction import *
+from utils.data_conversion import nodes_and_edges_to_motif_string
 
 
 def search_hemibrain_motif(motif_specs, lim):

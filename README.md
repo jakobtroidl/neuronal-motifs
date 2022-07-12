@@ -1,10 +1,13 @@
 # Neuronal Motifs
+
 A visualization tool for investigating __network motifs__ in connectomics data.
 
 ## Required Software
+
 This project requires `Node.js` and `conda` to run.
 
 ## Getting Started
+
 - Once you've cloned the repository, navigate to `neuronal_motifs/server/` and run `conda env create -f environment.yml`
 - Activate the environment with `conda activate neuronal-motifs`
 - Start the backend server with `python main.py`

@@ -1,4 +1,4 @@
-import {NODE_PARTICLE_IMAGE, swcParser, stretch, stretch_inv} from "./viewer/util";
+import {NODE_PARTICLE_IMAGE, stretch, stretch_inv, swcParser} from "./viewer/util";
 
 export {swcParser, stretch, stretch_inv};
 
@@ -557,11 +557,11 @@ export default class SharkViewer {
         };
     }
 
-    getMotifPathThreshold(){
+    getMotifPathThreshold() {
         return this.maxLabel / (this.maxLabel - this.minLabel);
     }
 
-    getAbstractionBoundary(threshold){
+    getAbstractionBoundary(threshold) {
         return this.minLabel + (1 - threshold) * (this.maxLabel - this.minLabel);
     }
 
@@ -570,7 +570,7 @@ export default class SharkViewer {
      * @param threshold value between 0 and 1. 0: nothing is abstracted, 1: everything is abstracted
      */
     setAbstractionThreshold(threshold) {
-        if(0 <= threshold && threshold <= 1) {
+        if (0 <= threshold && threshold <= 1) {
             let boundary = this.getAbstractionBoundary(threshold);
             this.scene.traverse(function (node) {
                 if (typeof node.name === 'string' && node.name.includes('skeleton-vertex')) {

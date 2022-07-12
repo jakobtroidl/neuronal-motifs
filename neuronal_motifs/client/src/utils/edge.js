@@ -1,4 +1,4 @@
-export class Edge{
+export class Edge {
     constructor(from_neuron_id, to_neuron_id) {
         this.from = from_neuron_id;
         this.to = to_neuron_id;

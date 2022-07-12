@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useContext, useEffect} from 'react';
 import {AppContext} from "../contexts/GlobalContext";
 import './Viewer.css'
 import DragHandleIcon from '@mui/icons-material/DragHandle';

@@ -1,9 +1,6 @@
 import * as THREE from 'three';
-import {Edge} from "../utils/edge"
-import {Vector3} from "three";
-import {Color} from "../utils/rendering";
 
-export function bundle(group, strength, color){
+export function bundle(group, strength, color) {
     /**
      * @param start: array of Vector3 holding all start points of the lines [start_1, start_2, ..., start_n]
      * @param end: array of Vector3 holding all end points of the lines [end_1, end_2, ..., end_n]
@@ -11,7 +8,7 @@ export function bundle(group, strength, color){
      * @param color: line color
      * @return list of splines that in conjunction represent a bundles version of the lines
      */
-    // compute mean edge
+        // compute mean edge
     let start = group['start'];
     let end = group['end'];
 
@@ -37,13 +34,13 @@ export function bundle(group, strength, color){
 
         const curve = new THREE.CatmullRomCurve3(samples, false, 'chordal');
 
-        const points = curve.getPoints( 1000 );
-        const geometry = new THREE.BufferGeometry().setFromPoints( points );
+        const points = curve.getPoints(1000);
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
 
         const material = new THREE.LineBasicMaterial({color: color, linewidth: 20});
 
         // Create the final object to add to the scene
-        let spline = new THREE.Line( geometry, material );
+        let spline = new THREE.Line(geometry, material);
         spline.visible = true;
         spline.name = 'line-' + start_point[0] + '-' + start_point[1] + '-' + start_point[2];
 
@@ -53,11 +50,11 @@ export function bundle(group, strength, color){
     return splines;
 }
 
-function scale(x){
-    return - Math.pow(2*x - 1, 2) + 1;
+function scale(x) {
+    return -Math.pow(2 * x - 1, 2) + 1;
 }
 
-function line(start, direction, x){
+function line(start, direction, x) {
     let dir = new THREE.Vector3();
     dir.copy(direction);
 
@@ -69,7 +66,7 @@ function line(start, direction, x){
 }
 
 
-function avg(points){
+function avg(points) {
     /**
      * @param points: array of Vector3 points
      * @return average point

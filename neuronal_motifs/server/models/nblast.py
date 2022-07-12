@@ -1,9 +1,7 @@
-import zarr
 import pickle
-import numpy as np
 from pathlib import Path
-import time
-from line_profiler_pycharm import profile
+
+import zarr
 
 
 def get_nblast_scores(neuron_id, top_n=None):

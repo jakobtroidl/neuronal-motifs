@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import axios from "axios";
 import './MotifPanel.css'
 import {AppContext} from "../contexts/GlobalContext";
@@ -7,11 +7,18 @@ import SearchIcon from "@mui/icons-material/Search";
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import Button from "@mui/material/Button";
 import {
-    TextField,
+    Box,
     FormControl,
+    FormControlLabel,
+    FormGroup,
+    FormLabel,
     Grid,
+    IconButton,
+    Popper,
+    Switch,
+    TextField,
     Tooltip,
-    IconButton, Popper, Box, FormControlLabel, Switch, FormGroup, FormLabel, Typography
+    Typography
 } from '@mui/material';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -167,66 +174,66 @@ function MotifPanel() {
 
 
                 {resultRows?.length > 0 &&
-                < div className='results'>
-                    <TableContainer component={Paper} sx={{backgroundColor: 'rgba(255, 255, 255, 0.0)'}}>
-                        <Table aria-label="collapsible table" style={{tableLayout: 'fixed'}}>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell width={20}/>
-                                    <TableCell>Name</TableCell>
-                                    <TableCell>
-                                        <Tooltip title="Filter Columns" placement="top">
-                                            <IconButton onClick={handleColumnFilterClick}>
-                                                <ViewColumnIcon/>
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Popper open={columnFilterOpen} anchorEl={columnFilterAnchorEl}>
-                                            <Box sx={{border: 1, p: 1, bgcolor: 'background.paper'}}
-                                            >
-                                                <FormControl component="fieldset" variant="standard"
-                                                             style={{
-                                                                 maxHeight: 250,
-                                                                 overflowY: 'scroll'
-                                                             }}>
-                                                    <FormLabel component="legend">Visible Columns</FormLabel>
-                                                    <FormGroup style={{paddingLeft: 8}}>
-                                                        {getSortedColumns().map(col => {
-                                                            return <FormControlLabel
-                                                                control={
-                                                                    <Switch checked={col[1]}
-                                                                            style={{transitionDuration: 0}}
-                                                                            size="small"
-                                                                            onChange={handleVisibleColumnChange}
-                                                                            name={col[0]}/>
-                                                                }
-                                                                label={
-                                                                    <Typography sx={{fontSize: 12}}>
-                                                                        {col[0]}
-                                                                    </Typography>
-                                                                }
-                                                                key={col[0]}
-                                                            />
-                                                        })
-                                                        }
-                                                    </FormGroup>
-                                                </FormControl>
-                                            </Box>
-                                        </Popper>
-                                    </TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {
-                                    resultRows.map((row) => (
-                                        <CollapsableTableRow key={row.name} row={row}
-                                                             columns={getSortedColumns()}
-                                                             handleClick={handleMotifSelection}/>
-                                    ))
-                                }
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </div>
+                    < div className='results'>
+                        <TableContainer component={Paper} sx={{backgroundColor: 'rgba(255, 255, 255, 0.0)'}}>
+                            <Table aria-label="collapsible table" style={{tableLayout: 'fixed'}}>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell width={20}/>
+                                        <TableCell>Name</TableCell>
+                                        <TableCell>
+                                            <Tooltip title="Filter Columns" placement="top">
+                                                <IconButton onClick={handleColumnFilterClick}>
+                                                    <ViewColumnIcon/>
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Popper open={columnFilterOpen} anchorEl={columnFilterAnchorEl}>
+                                                <Box sx={{border: 1, p: 1, bgcolor: 'background.paper'}}
+                                                >
+                                                    <FormControl component="fieldset" variant="standard"
+                                                                 style={{
+                                                                     maxHeight: 250,
+                                                                     overflowY: 'scroll'
+                                                                 }}>
+                                                        <FormLabel component="legend">Visible Columns</FormLabel>
+                                                        <FormGroup style={{paddingLeft: 8}}>
+                                                            {getSortedColumns().map(col => {
+                                                                return <FormControlLabel
+                                                                    control={
+                                                                        <Switch checked={col[1]}
+                                                                                style={{transitionDuration: 0}}
+                                                                                size="small"
+                                                                                onChange={handleVisibleColumnChange}
+                                                                                name={col[0]}/>
+                                                                    }
+                                                                    label={
+                                                                        <Typography sx={{fontSize: 12}}>
+                                                                            {col[0]}
+                                                                        </Typography>
+                                                                    }
+                                                                    key={col[0]}
+                                                                />
+                                                            })
+                                                            }
+                                                        </FormGroup>
+                                                    </FormControl>
+                                                </Box>
+                                            </Popper>
+                                        </TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {
+                                        resultRows.map((row) => (
+                                            <CollapsableTableRow key={row.name} row={row}
+                                                                 columns={getSortedColumns()}
+                                                                 handleClick={handleMotifSelection}/>
+                                        ))
+                                    }
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </div>
                 }
             </div>
         </div>

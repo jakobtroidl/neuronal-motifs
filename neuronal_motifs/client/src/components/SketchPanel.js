@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import './SketchPanel.css'
 import QueryBuilder from './QueryBuilder'
 import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
@@ -8,7 +8,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import paper from 'paper'
 import {AppContext} from "../contexts/GlobalContext";
 import _ from 'lodash';
-import {Grid, Icon, IconButton, Popover, Tooltip} from '@mui/material';
+import {Grid, IconButton, Popover, Tooltip} from '@mui/material';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {faHand} from '@fortawesome/free-solid-svg-icons'
 import axios from "axios";
@@ -481,8 +481,8 @@ function SketchPanel() {
             return {label: e.label, properties: e.properties, index: i, indices: e.indices}
         })
         let encodedMotif = {nodes: encodedNodes, edges: encodedEdges};
-         const count = await getMotifCount(JSON.stringify(encodedMotif));
-         console.log(count);
+        const count = await getMotifCount(JSON.stringify(encodedMotif));
+        console.log(count);
         context.setMotifQuery(encodedMotif);
     }, [nodes, edges])
 
@@ -493,38 +493,38 @@ function SketchPanel() {
                     <div className="sketch-canvas" style={{cursor: cursor || 'crosshair'}}>
                         <canvas id={sketchPanelId}></canvas>
                         {showPopper && popperLocation && context.selectedSketchElement &&
-                        < Popover
-                            anchorReference="anchorPosition"
-                            open={true}
-                            hideBackdrop={true}
-                            className={'sketch-popover'}
-                            disableEnforceFocus={true}
-                            anchorPosition={popperLocation}
-                            anchorOrigin={{
-                                vertical: 'top',
-                                horizontal: 'left',
-                            }}
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'left',
-                            }}
-                        >
-                            <Grid
-                                container
-                                className={'popover-grid'}
-                                direction="column"
-                                justifyContent="center"
-                                alignItems="flex-start"
-                                style={{position: 'absolute', height: '40.75px'}}
+                            < Popover
+                                anchorReference="anchorPosition"
+                                open={true}
+                                hideBackdrop={true}
+                                className={'sketch-popover'}
+                                disableEnforceFocus={true}
+                                anchorPosition={popperLocation}
+                                anchorOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'left',
+                                }}
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'left',
+                                }}
                             >
+                                <Grid
+                                    container
+                                    className={'popover-grid'}
+                                    direction="column"
+                                    justifyContent="center"
+                                    alignItems="flex-start"
+                                    style={{position: 'absolute', height: '40.75px'}}
+                                >
                                     <span style={{paddingLeft: 10, fontWeight: 'bold', color: '#454545'}}>
                                         {_.capitalize(context.selectedSketchElement.type)} {context.selectedSketchElement.label}
                                     </span>
 
-                            </Grid>
+                                </Grid>
 
-                            <QueryBuilder/>
-                        </Popover>
+                                <QueryBuilder/>
+                            </Popover>
                         }
                     </div>
                 </Grid>

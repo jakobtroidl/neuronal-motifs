@@ -1,6 +1,5 @@
-import navis.interfaces.neuprint as neu
 import navis
-
+import navis.interfaces.neuprint as neu
 import networkit as nk
 
 from neuronal_motifs.server.models.neuron import Neuron

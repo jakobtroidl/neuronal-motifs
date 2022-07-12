@@ -1,8 +1,8 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {AppContext} from "../contexts/GlobalContext";
 import {NodeFields} from "../config/NodeFields";
 import {EdgeFields} from "../config/EdgeFields";
-import {Query, Builder, Utils as QbUtils} from 'react-awesome-query-builder';
+import {Builder, Query, Utils as QbUtils} from 'react-awesome-query-builder';
 import MuiConfig from 'react-awesome-query-builder/lib/config/mui';
 import 'react-awesome-query-builder/lib/css/styles.css';
 import 'react-awesome-query-builder/lib/css/compact_styles.css';
@@ -61,23 +61,23 @@ function QueryBuilder() {
     return (
         <div>
             {tree && context?.selectedSketchElement?.type === 'node' &&
-            <Query
-                {...InitialConfig}
-                fields={NodeFields}
-                value={context.selectedSketchElement.tree || tree}
-                onChange={onChange}
-                renderBuilder={renderBuilder}
-            />
+                <Query
+                    {...InitialConfig}
+                    fields={NodeFields}
+                    value={context.selectedSketchElement.tree || tree}
+                    onChange={onChange}
+                    renderBuilder={renderBuilder}
+                />
             }
 
             {tree && context?.selectedSketchElement?.type === 'edge' &&
-            <Query
-                {...InitialConfig}
-                fields={EdgeFields}
-                value={context.selectedSketchElement.tree || tree}
-                onChange={onChange}
-                renderBuilder={renderBuilder}
-            />
+                <Query
+                    {...InitialConfig}
+                    fields={EdgeFields}
+                    value={context.selectedSketchElement.tree || tree}
+                    onChange={onChange}
+                    renderBuilder={renderBuilder}
+                />
             }
         </div>
     );

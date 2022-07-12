@@ -1,5 +1,5 @@
-import React, {useState, useEffect, useContext} from 'react';
-import SharkViewer, {swcParser, stretch, stretch_inv} from './shark_viewer';
+import React, {useContext, useEffect, useState} from 'react';
+import SharkViewer, {stretch, swcParser} from './shark_viewer';
 import {bundle} from '../services/bundling';
 import ArrowTooltips from './ArrowTooltips'
 import {AppContext} from "../contexts/GlobalContext";

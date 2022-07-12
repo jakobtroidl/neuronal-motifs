@@ -1,11 +1,9 @@
 import json
-import sys
+import os
 import tempfile
 from pathlib import Path
-import os
 
 import networkx as nx
-import numpy as np
 from scipy.spatial import KDTree
 
 

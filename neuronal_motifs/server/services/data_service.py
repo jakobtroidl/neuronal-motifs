@@ -1,11 +1,12 @@
+import navis.interfaces.neuprint as neu
+
 from neuronal_motifs.server.utils import authentication as auth
 from neuronal_motifs.server.utils import data_conversion as conversion
-import navis.interfaces.neuprint as neu
 
 
 def get_swc():
-
-    client = neu.Client(auth.get_data_server(), dataset=auth.get_data_version(), token=auth.get_access_token('neuprint'))
+    client = neu.Client(auth.get_data_server(), dataset=auth.get_data_version(),
+                        token=auth.get_access_token('neuprint'))
 
     # lets test our abstraction on a simple motif
     # A -> B -> C -> A

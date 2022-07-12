@@ -1,7 +1,7 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useContext} from 'react';
 import './Loading.css'
 import {AppContext} from "../contexts/GlobalContext";
-import {Card, LinearProgress, Grid} from "@mui/material";
+import {Grid, LinearProgress} from "@mui/material";
 
 
 function Loading() {
@@ -10,19 +10,19 @@ function Loading() {
     return (
         <div id={loadingId}>
             {context.loadingMessage &&
-            <Grid
-                container
-                direction="column"
-                justifyContent="flex-start"
-                alignItems="stretch"
-            >
-                <Grid item>
-                    <LinearProgress/>
+                <Grid
+                    container
+                    direction="column"
+                    justifyContent="flex-start"
+                    alignItems="stretch"
+                >
+                    <Grid item>
+                        <LinearProgress/>
+                    </Grid>
+                    <Grid item style={{alignContent: 'flex-end', textAlign: 'right', paddingRight: '5px'}}>
+                        <span>{context.loadingMessage}</span>
+                    </Grid>
                 </Grid>
-                <Grid item style={{alignContent: 'flex-end', textAlign: 'right', paddingRight: '5px'}}>
-                    <span>{context.loadingMessage}</span>
-                </Grid>
-            </Grid>
             }
         </div>
 
