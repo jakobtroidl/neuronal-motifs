@@ -1,17 +1,13 @@
 import json
-import asyncio
 import time
-from typing import Optional, List
+from typing import Optional
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import WebSocket
-from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
-from services import data_service
-from services import motifabstraction
-from models import nblast
-import motif_search
+from services import data_service, motifabstraction, motif_search
+from models import nblast, count
 import uvicorn
 
 app = FastAPI()
@@ -110,6 +106,11 @@ def get_swc():
 @app.get("/nblast/{node_id}/{top_n}")
 def get_nblast(node_id: int, top_n: Optional[int] = None):
     return nblast.get_nblast_scores(node_id, top_n)
+
+
+@app.get("/count/motif={motif}")
+def get_motif_count(motif: str):
+    return count.get(motif)
 
 
 if __name__ == "__main__":

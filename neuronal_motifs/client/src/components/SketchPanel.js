@@ -11,6 +11,7 @@ import _ from 'lodash';
 import {Grid, Icon, IconButton, Popover, Tooltip} from '@mui/material';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {faHand} from '@fortawesome/free-solid-svg-icons'
+import axios from "axios";
 
 
 function SketchPanel() {
@@ -34,6 +35,12 @@ function SketchPanel() {
 
     // We track the overall motif in the global context
     const context = useContext(AppContext);
+
+    const getMotifCount = async (motif) => {
+        // get request to backend to get motif count
+        let url = `http://localhost:5050/count/motif=${motif}`;
+        return (await axios.get(url)).data;
+    }
 
 
     const clearSketch = () => {
@@ -457,6 +464,7 @@ function SketchPanel() {
         setTestCircle(tempCircle);
         setPencil(new paper.Tool());
     }, []);
+
     // Update global motif tracker
     useEffect(() => {
         if (edges) {
@@ -465,14 +473,17 @@ function SketchPanel() {
 
     }, [edges])
     // Encode the Nodes and Edges For Query
-    useEffect(() => {
+    useEffect(async () => {
         let encodedNodes = nodes.map((n, i) => {
             return {label: n.label, properties: n.properties, index: i}
         });
         let encodedEdges = edges.map((e, i) => {
             return {label: e.label, properties: e.properties, index: i, indices: e.indices}
         })
-        context.setMotifQuery({nodes: encodedNodes, edges: encodedEdges})
+        let encodedMotif = {nodes: encodedNodes, edges: encodedEdges};
+         const count = await getMotifCount(JSON.stringify(encodedMotif));
+         console.log(count);
+        context.setMotifQuery(encodedMotif);
     }, [nodes, edges])
 
     return (
