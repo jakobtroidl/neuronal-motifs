@@ -14,6 +14,9 @@ export const ContextWrapper = (props) => {
     const [loadingMessage, setLoadingMessage] = useState();
     const [selectedSketchElement, setSelectedSketchElement] = useState(null);
     const [resetUICounter, setResetUICounter] = useState(0);
+    const [absMotifCount, setAbsMotifCount] = useState(null); // count of a motif in the dataset, e.g motif1 occurs 100 times in the dataset
+    const [relativeMotifCount, setRelativeMotifCount] = useState(null); // count of all motifs in the dataset. e.g, motif1 is Highly represented in the dataset
+    const [showWarning, setShowWarning] = useState(false);
 
     return (
         <AppContext.Provider value={
@@ -25,7 +28,10 @@ export const ContextWrapper = (props) => {
                 loadingMessage, setLoadingMessage,
                 neuronColors, setNeuronColors,
                 synapseColors, setSynapseColors,
-                resetUICounter, setResetUICounter
+                resetUICounter, setResetUICounter,
+                absMotifCount, setAbsMotifCount,
+                relativeMotifCount, setRelativeMotifCount,
+                showWarning, setShowWarning
             }}>
             {props.children}
         </AppContext.Provider>

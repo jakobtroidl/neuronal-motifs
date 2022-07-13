@@ -5,6 +5,7 @@ import {AppContext} from "../contexts/GlobalContext";
 import SketchPanel from "./SketchPanel";
 import SearchIcon from "@mui/icons-material/Search";
 import DragHandleIcon from '@mui/icons-material/DragHandle';
+import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 import Button from "@mui/material/Button";
 import {
     Box,
@@ -12,7 +13,6 @@ import {
     FormControlLabel,
     FormGroup,
     FormLabel,
-    Grid,
     IconButton,
     Popper,
     Switch,
@@ -31,18 +31,20 @@ import _ from 'lodash';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import {CollapsableTableRow} from './CollapsableTableRow'
 import {NodeFields} from "../config/NodeFields";
+import InfoButton from "./InfoButton";
 
 function MotifPanel() {
     const [number, setNumber] = useState(1);
-    const [nodeAttribute, setNodeAttribute] = useState("");
-    const [nodeAttributeProperties, setNodeAttributeProperties] = useState([]);
-    const [edgeAttribute, setEdgeAttribute] = useState("");
-    const [edgeAttributeProperties, edgeNodeAttributeProperties] = useState([]);
+    // const [nodeAttribute, setNodeAttribute] = useState("");
+    // const [nodeAttributeProperties, setNodeAttributeProperties] = useState([]);
+    // const [edgeAttribute, setEdgeAttribute] = useState("");
+    // const [edgeAttributeProperties, edgeNodeAttributeProperties] = useState([]);
     const [searchedMotifs, setSearchedMotifs] = useState({});
     const [resultRows, setResultRows] = useState([]);
     const [columnFilterAnchorEl, setColumnFilterAnchorEl] = React.useState(null);
     const [columnFilterOpen, setColumnFilterOpenOpen] = React.useState(false);
     const [visibleColumns, setVisibleColumns] = React.useState({});
+    const [enableAbsMotifCountInfo, setEnableAbsMotifCountInfo] = useState(false);
 
     const handleVisibleColumnChange = (event) => {
         setVisibleColumns({
@@ -97,6 +99,15 @@ function MotifPanel() {
 
     }, [searchedMotifs])
 
+    // catch change in context absmotifcount
+    useEffect(() => {
+        if (context.absMotifCount == null || context.absMotifCount <= 0) {
+            setEnableAbsMotifCountInfo(false);
+        } else {
+            setEnableAbsMotifCountInfo(true);
+        }
+    }, [context.absMotifCount])
+
     const getSortedColumns = () => {
         let sortedColumns = Object.entries(visibleColumns).sort((a, b) => {
             if (a[0] === 'nodeKey') return -1;
@@ -125,51 +136,44 @@ function MotifPanel() {
         setVisibleColumns(columns);
     }, [])
 
+
     return (
         <div id={motifPanelId}>
             <div className='form'>
                 <div className="handle">
                     <DragHandleIcon/>
+                    <InfoButton text={context.absMotifCount} disabled={!enableAbsMotifCountInfo} color="primary"
+                                icon={<SearchIcon/>}/>
+                    {enableAbsMotifCountInfo ? <InfoButton text="Medium" color="secondary"/> : null}
+                    {context.showWarning ? <InfoButton color="error" icon={<PriorityHighIcon/>}/> : null}
+
                 </div>
                 <div id='motif-panel-wrapper'>
-                    <div className="formRow">
-                        <SketchPanel/>
-                    </div>
-                    <div className="formRow" style={{marginTop: "10px"}}>
-                        <Grid
-                            container
-                            direction="row"
-                            justifyContent="space-between"
-                            alignItems="flex-start"
-                        >
-                            <Grid item>
-                                <FormControl sx={{m: 1, maxWidth: 80}}>
-                                    <TextField
-                                        id="outlined-number"
-                                        label="Number"
-                                        type="number"
-                                        InputLabelProps={{
-                                            shrink: true,
-                                        }}
-                                        margin="normal"
-                                        style={{marginTop: 0}}
-                                        defaultValue={1}
-                                        onChange={event => setNumber(_.toNumber(event.target.value))}
-                                    />
-                                </FormControl>
-                            </Grid>
-                            <Grid item>
-                                <FormControl sx={{m: 1, minWidth: 100}}>
-                                    <Button style={{height: 52}} variant="contained" startIcon={<SearchIcon/>}
-                                            onClick={handleSubmit}>
-                                        Search
-                                    </Button>
-                                </FormControl>
-                            </Grid>
+                    <SketchPanel/>
+                    <div className="sketch-panel-options-style">
+                        <FormControl sx={{m: 1, maxWidth: 80}}>
+                            <TextField
+                                id="outlined-number"
+                                label="Number"
+                                type="number"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                size="small"
+                                margin="normal"
+                                style={{marginTop: 0}}
+                                defaultValue={1}
+                                onChange={event => setNumber(_.toNumber(event.target.value))}
+                            />
+                        </FormControl>
 
-                        </Grid>
+                        <FormControl sx={{m: 1, minWidth: 100}}>
+                            <Button size="medium" variant="contained" startIcon={<SearchIcon/>}
+                                    onClick={handleSubmit}>
+                                Search
+                            </Button>
+                        </FormControl>
                     </div>
-
                 </div>
 
 

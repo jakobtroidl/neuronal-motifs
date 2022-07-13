@@ -481,15 +481,19 @@ function SketchPanel() {
             return {label: e.label, properties: e.properties, index: i, indices: e.indices}
         })
         let encodedMotif = {nodes: encodedNodes, edges: encodedEdges};
+
+        // most motif queries fail for n larger than 4, develop heuristics to make more accurate
+        nodes.length > 4 ? context.setShowWarning(true) : context.setShowWarning(false);
+
         const count = await getMotifCount(JSON.stringify(encodedMotif));
-        console.log(count);
+        context.setAbsMotifCount(count);
         context.setMotifQuery(encodedMotif);
     }, [nodes, edges])
 
     return (
         <div className='sketch-panel-style'>
             <Grid container className="canvas-wrapper" spacing={0}>
-                <Grid item xs={11}>
+                <Grid item xs={10.8}>
                     <div className="sketch-canvas" style={{cursor: cursor || 'crosshair'}}>
                         <canvas id={sketchPanelId}></canvas>
                         {showPopper && popperLocation && context.selectedSketchElement &&
@@ -528,11 +532,11 @@ function SketchPanel() {
                         }
                     </div>
                 </Grid>
-                <Grid item xs={1}>
+                <Grid item xs={1.2}>
                     <Grid
                         container
                         direction="column"
-                        style={{position: 'absolute', height: 'auto', width: 'auto'}}>
+                        style={{height: 'auto', width: 'auto'}}>
                         <Tooltip title="Draw Node" placement="right">
                             <IconButton value='node' color={mouseState === 'node' ? "primary" : "default"}
                                         onClick={() => {

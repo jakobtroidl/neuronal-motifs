@@ -2,7 +2,7 @@
     position: absolute;
     top: -99vh;
     left: 1vw;
-    max-width: 400px;
+    width: 29vw;
     margin: 20px;
     padding: 0;
     max-height: 90vh;
@@ -15,7 +15,6 @@
     background-color: rgba(255, 255, 255, 0.5);
     border-radius: 10px;
     box-shadow: rgba(0, 0, 0, 0.35) 0px 0px 15px;
-    width: inherit;
     z-index: 2;
 }
 
@@ -73,8 +72,14 @@
 }
 
 .formRow {
-    display: flex;
     float: left;
+}
+
+.sketch-panel-options-style {
+    float: left;
+    clear: left;
+    margin-top: 10px;
+    margin-left: 20px;
 }
 
 .formColumn {

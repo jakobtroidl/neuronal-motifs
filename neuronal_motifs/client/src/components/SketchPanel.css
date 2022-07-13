@@ -7,8 +7,9 @@ canvas, .canvas-wrapper {
 
 .sketch-panel-style {
     height: 30vh;
-    width: 25vw;
+    width: auto;
     margin: 0 0 0 30px;
+    float: left;
 }
 
 .sketch-canvas {
