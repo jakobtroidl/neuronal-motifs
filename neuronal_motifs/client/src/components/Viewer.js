@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { InteractionManager } from "three.interactive";
 import { Color } from "../utils/rendering";
 import _ from "lodash";
+import BasicMenu from "./ContextMenu";
 
 const setLineVisibility = (scene, visible) => {
   scene.children.forEach((child) => {
@@ -136,6 +137,91 @@ const getTranslationVectors = (count) => {
   return directions;
 };
 
+function addNeurons(
+  motif,
+  context,
+  sharkViewerInstance,
+  scene,
+  interactionManager
+) {
+  motif.neurons.forEach((neuron, i) => {
+    let parsedSwc = swcParser(neuron.skeleton_swc);
+    let color = context.neuronColors[i];
+    let neuronObject = sharkViewerInstance.loadNeuron(
+      neuron.id,
+      color,
+      parsedSwc,
+      true
+    );
+    scene.add(neuronObject);
+  });
+  console.log(scene);
+}
+
+function addAbstractionCenters(motif, context, scene, interactionManager) {
+  motif.neurons.forEach((neuron, i) => {
+    let geometry = new THREE.SphereGeometry(200, 16, 16);
+    let material = new THREE.MeshPhongMaterial({
+      color: context.neuronColors[i],
+    });
+    let mesh = new THREE.Mesh(geometry, material);
+    mesh.name = "abstraction-center-" + neuron.id;
+    mesh.position.x = neuron.abstraction_center[0];
+    mesh.position.y = neuron.abstraction_center[1];
+    mesh.position.z = neuron.abstraction_center[2];
+
+    scene.add(mesh);
+  });
+}
+
+function addSynapses(
+  motif,
+  setDisplayTooltip,
+  setTooltipInfo,
+  scene,
+  interactionManager
+) {
+  motif.synapses.forEach((syn) => {
+    // create a sphere shape
+    let geometry = new THREE.SphereGeometry(100, 16, 16);
+    let material = new THREE.MeshPhongMaterial({ color: Color.orange });
+    let mesh = new THREE.Mesh(geometry, material);
+
+    mesh.name = "syn-" + syn.post.x + "-" + syn.post.y + "-" + syn.post.z;
+    mesh.position.x = (syn.post.x + syn.pre.x) / 2.0;
+    mesh.position.y = (syn.post.y + syn.pre.y) / 2.0;
+    mesh.position.z = (syn.post.z + syn.pre.z) / 2.0;
+    mesh.addEventListener("mouseover", (event) => {
+      mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
+      mesh.material.needsUpdate = true;
+      document.body.style.cursor = "pointer";
+      setDisplayTooltip(true);
+      setTooltipInfo({
+        pre_soma_dist: syn.pre_soma_dist,
+        post_soma_dist: syn.post_soma_dist,
+        event: event,
+      });
+    });
+
+    mesh.addEventListener("mouseout", (event) => {
+      setDisplayTooltip(false);
+      mesh.material = new THREE.MeshPhongMaterial({ color: Color.orange });
+      mesh.material.needsUpdate = true;
+      document.body.style.cursor = "default";
+    });
+
+    scene.add(mesh);
+    interactionManager.add(mesh);
+  });
+}
+
+function addLights(scene) {
+  const ambientLight = new THREE.AmbientLight(Color.white, 1.0);
+  scene.add(ambientLight);
+  const directionalLight = new THREE.DirectionalLight(Color.white, 0.7);
+  scene.add(directionalLight);
+}
+
 function Viewer() {
   const [motif, setMotif] = React.useState();
   const [sharkViewerInstance, setSharkViewerInstance] = useState();
@@ -149,9 +235,31 @@ function Viewer() {
   const [displayTooltip, setDisplayTooltip] = useState(false);
   const [tooltipInfo, setTooltipInfo] = useState({});
 
+  const [displayContextMenu, setDisplayContextMenu] = useState({
+    display: false,
+    position: { x: 0, y: 0 },
+  });
+  const [contextMenuInfo, setContextMenuInfo] = useState([]);
+
+  function onNeuronClick(event, neuron) {
+    console.log(event);
+    if (neuron != null && event.altKey) {
+      console.log(neuron);
+      setDisplayContextMenu({
+        display: true,
+        position: { x: event.clientX, y: event.clientY },
+      });
+    } else {
+      console.log("No neuron selected");
+      setDisplayContextMenu({ display: false, position: { x: 0, y: 0 } });
+    }
+  }
+
   // Instantiates the viewer, will only run once on init
   useEffect(() => {
-    setSharkViewerInstance(new SharkViewer({ dom_element: id }));
+    setSharkViewerInstance(
+      new SharkViewer({ dom_element: id, onRightClick: onNeuronClick })
+    );
   }, []);
 
   // Inits the viewer once it is created
@@ -241,24 +349,9 @@ function Viewer() {
     scene.add(lines);
   }
 
-  useEffect(() => {
-    if (motif && sharkViewerInstance) {
-      // remove all previous loaded objects and reset slider
-      let scene = sharkViewerInstance.scene;
-      scene.remove.apply(scene, scene.children);
-      context.setResetUICounter(context.resetUICounter + 1); // reset slider
-
-      motif.neurons.forEach((neuron, i) => {
-        let parsedSwc = swcParser(neuron.skeleton_swc);
-        let color = context.neuronColors[i];
-        sharkViewerInstance.loadNeuron(neuron.id, color, parsedSwc, true);
-      });
-
-      let groups = getEdgeGroups(motif, 1.0);
-      setEdgeGroups(groups);
-      addEdgeGroupToScene(groups, scene);
-    }
-  }, [motif, sharkViewerInstance]);
+  // useEffect(() => {
+  //
+  // }, [motif, sharkViewerInstance]);
 
   // Updates the motifs, runs when data, viewer, or abstraction state change
   useEffect(() => {
@@ -331,6 +424,7 @@ function Viewer() {
   useEffect(() => {
     if (motif && sharkViewerInstance) {
       if (!sharkViewerInstance.scene.interactionManager) {
+        console.log("recreate interaction manager");
         sharkViewerInstance.scene.interactionManager = new InteractionManager(
           sharkViewerInstance.renderer,
           sharkViewerInstance.camera,
@@ -339,66 +433,48 @@ function Viewer() {
       }
 
       let scene = sharkViewerInstance.scene;
+      scene.remove.apply(scene, scene.children); // remove all previous loaded objects
+
       let interactionManager = sharkViewerInstance.scene.interactionManager;
+      context.setResetUICounter(context.resetUICounter + 1); // reset slider
 
-      const ambientLight = new THREE.AmbientLight(Color.white, 1.0);
-      scene.add(ambientLight);
-      const directionalLight = new THREE.DirectionalLight(Color.white, 0.7);
-      scene.add(directionalLight);
+      let groups = getEdgeGroups(motif, 1.0);
+      setEdgeGroups(groups);
+      addEdgeGroupToScene(groups, scene);
 
-      motif.neurons.forEach((neuron, i) => {
-        let geometry = new THREE.SphereGeometry(200, 16, 16);
-        let material = new THREE.MeshPhongMaterial({
-          color: context.neuronColors[i],
-        });
-        let mesh = new THREE.Mesh(geometry, material);
-        mesh.name = "abstraction-center-" + neuron.id;
-        mesh.position.x = neuron.abstraction_center[0];
-        mesh.position.y = neuron.abstraction_center[1];
-        mesh.position.z = neuron.abstraction_center[2];
+      addLights(scene);
 
-        scene.add(mesh);
-        interactionManager.add(mesh);
-      });
+      addAbstractionCenters(motif, context, scene, interactionManager);
 
-      motif.synapses.forEach((syn) => {
-        // create a sphere shape
-        let geometry = new THREE.SphereGeometry(100, 16, 16);
-        let material = new THREE.MeshPhongMaterial({ color: Color.orange });
-        let mesh = new THREE.Mesh(geometry, material);
+      addSynapses(
+        motif,
+        setDisplayTooltip,
+        setTooltipInfo,
+        scene,
+        interactionManager
+      );
 
-        mesh.name = "syn-" + syn.post.x + "-" + syn.post.y + "-" + syn.post.z;
-        mesh.position.x = (syn.post.x + syn.pre.x) / 2.0;
-        mesh.position.y = (syn.post.y + syn.pre.y) / 2.0;
-        mesh.position.z = (syn.post.z + syn.pre.z) / 2.0;
-        mesh.addEventListener("mouseover", (event) => {
-          mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
-          mesh.material.needsUpdate = true;
-          document.body.style.cursor = "pointer";
-          setDisplayTooltip(true);
-          setTooltipInfo({
-            pre_soma_dist: syn.pre_soma_dist,
-            post_soma_dist: syn.post_soma_dist,
-            event: event,
-          });
-        });
-
-        mesh.addEventListener("mouseout", (event) => {
-          setDisplayTooltip(false);
-          mesh.material = new THREE.MeshPhongMaterial({ color: Color.orange });
-          mesh.material.needsUpdate = true;
-          document.body.style.cursor = "default";
-        });
-
-        scene.add(mesh);
-        interactionManager.add(mesh);
-      });
+      addNeurons(
+        motif,
+        context,
+        sharkViewerInstance,
+        scene,
+        interactionManager
+      );
     }
   }, [motif, sharkViewerInstance]);
 
   return (
     <div id={id} className={className}>
       {displayTooltip && <ArrowTooltips props={tooltipInfo}></ArrowTooltips>}
+      {displayContextMenu.display && (
+        <BasicMenu
+          open={displayContextMenu.display}
+          position={displayContextMenu.position}
+        >
+          {" "}
+        </BasicMenu>
+      )}
     </div>
   );
 }

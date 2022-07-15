@@ -5,10 +5,10 @@ import {
   swcParser,
 } from "./viewer/util";
 
-export { swcParser, stretch, stretch_inv };
+import * as THREE from "three";
 
-const THREE = require("three");
-require("three-obj-loader")(THREE);
+export { swcParser, stretch, stretch_inv };
+//require("three-obj-loader")(THREE);
 
 const OrbitUnlimitedControls =
   require("@janelia/three-orbit-unlimited-controls").default;
@@ -439,6 +439,7 @@ export default class SharkViewer {
     this.maxVolumeSize = 100000;
     this.minLabel = 1000000000;
     this.maxLabel = 0.0;
+    this.onRightClick = null;
 
     this.setValues(args);
     // anything after the above line can not be set by the caller.
@@ -597,7 +598,7 @@ export default class SharkViewer {
     }
   }
 
-  createNeuron(swcJSON, color = undefined) {
+  createNeuron(name, swcJSON, color = undefined) {
     // neuron is object 3d which ensures all components move together
     const neuron = new THREE.Object3D();
     let geometry;
@@ -884,7 +885,7 @@ export default class SharkViewer {
           }
         });
         coneGeom.setIndex(
-          new THREE.Uint32BufferAttribute(coneAttributes.indices.value, 1)
+          new THREE.Uint16BufferAttribute(coneAttributes.indices.value, 1)
         );
         coneGeom.setAttribute(
           "position",
@@ -924,7 +925,7 @@ export default class SharkViewer {
         coneMaterial.extensions.fragDepth = true;
 
         const coneMesh = new THREE.Mesh(coneGeom, coneMaterial);
-        coneMesh.name = "skeleton-edge";
+        coneMesh.name = ""; //"skeleton-edge-" + name;
 
         coneMaterial.onBeforeCompile = (shader) => {
           // console.log( shader )
@@ -1137,7 +1138,11 @@ export default class SharkViewer {
 
     this.raycaster.params.Points.threshold = DEFAULT_POINT_THRESHOLD;
 
-    this.dom_element.addEventListener("click", this.onClick.bind(this), true);
+    this.dom_element.addEventListener(
+      "mousedown",
+      this.onClick.bind(this),
+      true
+    );
   }
 
   cameraCoords() {
@@ -1181,6 +1186,10 @@ export default class SharkViewer {
     }
   }
 
+  // onDeselect(event) {
+  //   this.onRightClick(event, null);
+  // }
+
   // TODO: alt click should target meshes and center the orbit controls
   // on them if intersected.
   onClick(event) {
@@ -1211,6 +1220,7 @@ export default class SharkViewer {
 
     if (points.length > 0) {
       const intersectObject = points[0];
+      this.onRightClick(event, intersectObject.object.parent);
 
       if (event.altKey) {
         if (this.on_toggle_node) {
@@ -1233,6 +1243,8 @@ export default class SharkViewer {
           this.on_select_node(tracingId, sampleNumber, event, points[0].point);
         }
       }
+    } else {
+      this.onRightClick(event, null);
     }
   }
 
@@ -1294,7 +1306,7 @@ export default class SharkViewer {
     onTopable = false,
     frontToBack = false
   ) {
-    const neuron = this.createNeuron(nodes, color);
+    const neuron = this.createNeuron(filename, nodes, color);
     const boundingBox = calculateBoundingBox(nodes);
     const boundingSphere = calculateBoundingSphere(nodes, boundingBox);
     const target = boundingSphere.center;
@@ -1317,7 +1329,7 @@ export default class SharkViewer {
     neuron.isNeuron = true;
     neuron.boundingSphere = boundingSphere;
     const scene = onTopable ? this.sceneOnTopable : this.scene;
-    scene.add(neuron);
+    return neuron;
   }
 
   // use onTopable=true to correspond to loadNeuron(..., onTopable=true)
@@ -1357,35 +1369,35 @@ export default class SharkViewer {
     }
   }
 
-  loadCompartment(id, color, geometryData, updateCamera = true) {
-    const loader = new THREE.OBJLoader();
-    let parsed = loader.parse(geometryData);
-    parsed = applySemiTransparentShader(parsed, color);
-    parsed.name = id;
+  // loadCompartment(id, color, geometryData, updateCamera = true) {
+  //   const loader = new THREE.OBJLoader();
+  //   let parsed = loader.parse(geometryData);
+  //   parsed = applySemiTransparentShader(parsed, color);
+  //   parsed.name = id;
+  //
+  //   this.scene.add(parsed);
+  //   if (updateCamera) {
+  //     this.centerCameraAroundCompartment(parsed);
+  //   }
+  //   this.trackControls.update();
+  //   this.render();
+  // }
 
-    this.scene.add(parsed);
-    if (updateCamera) {
-      this.centerCameraAroundCompartment(parsed);
-    }
-    this.trackControls.update();
-    this.render();
-  }
-
-  loadCompartmentFromURL(id, color, URL, updateCamera = true) {
-    const loader = new THREE.OBJLoader();
-
-    loader.load(URL, (object) => {
-      const exists = this.scene.getObjectByName(id);
-      if (!exists) {
-        const shadedObject = applySemiTransparentShader(object, color);
-        shadedObject.name = id;
-        this.scene.add(object);
-        if (updateCamera) {
-          this.centerCameraAroundCompartment(shadedObject);
-        }
-      }
-    });
-  }
+  // loadCompartmentFromURL(id, color, URL, updateCamera = true) {
+  //   const loader = new THREE.OBJLoader();
+  //
+  //   loader.load(URL, (object) => {
+  //     const exists = this.scene.getObjectByName(id);
+  //     if (!exists) {
+  //       const shadedObject = applySemiTransparentShader(object, color);
+  //       shadedObject.name = id;
+  //       this.scene.add(object);
+  //       if (updateCamera) {
+  //         this.centerCameraAroundCompartment(shadedObject);
+  //       }
+  //     }
+  //   });
+  // }
 
   compartmentLoaded(id) {
     return this.scene.getObjectByName(id) !== undefined;
