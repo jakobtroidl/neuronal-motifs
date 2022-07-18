@@ -885,7 +885,7 @@ export default class SharkViewer {
           }
         });
         coneGeom.setIndex(
-          new THREE.Uint16BufferAttribute(coneAttributes.indices.value, 1)
+          new THREE.Uint32BufferAttribute(coneAttributes.indices.value, 1)
         );
         coneGeom.setAttribute(
           "position",
@@ -925,7 +925,7 @@ export default class SharkViewer {
         coneMaterial.extensions.fragDepth = true;
 
         const coneMesh = new THREE.Mesh(coneGeom, coneMaterial);
-        coneMesh.name = ""; //"skeleton-edge-" + name;
+        coneMesh.name = "skeleton-edge";
 
         coneMaterial.onBeforeCompile = (shader) => {
           // console.log( shader )
