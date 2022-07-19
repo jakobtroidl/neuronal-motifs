@@ -1,6 +1,5 @@
-import networkx as nx
 import pickle as pkl
-import pathlib
+
 from neuronal_motifs.server.models.motif import MyMotif
 from neuronal_motifs.server.utils.data_conversion import *
 
@@ -49,21 +48,6 @@ def get_example_motif():
         f.close()
         return motif.as_json()
 
-
-# def get_pruned_motif(factor):
-#     filepath = "cache/test_motif.pkl"
-#     try:  # try to load from cache
-#         f = open(filepath)
-#         f.close()
-#     except FileNotFoundError:
-#         example_motif_data()  # download data if not available
-#         f = open(filepath)
-#     finally:
-#         f = open(filepath, "rb")
-#         motif = pkl.load(f)
-#         f.close()
-#         motif.simplify(factor=factor)
-#         return motif.as_json()
 
 def compute_motif_data(body_ids, motif):
     yield 'Beginning Computation'

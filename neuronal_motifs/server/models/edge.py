@@ -1,6 +1,5 @@
-import pandas as pd
-from line_profiler_pycharm import profile
 import networkit as nk
+from line_profiler_pycharm import profile
 
 
 class NodeLink3DEdge:
@@ -44,7 +43,7 @@ class NodeLink3DEdge:
         pos = list(zip(x, y, z))
         pos = list(map(list, pos))
         labels = trajectory['abstraction_label'].tolist()
-        labels = list(map(int, labels)) # convert labels to int
+        labels = list(map(int, labels))  # convert labels to int
         return dict(zip(labels, pos))
 
         # self.start_skel_graph.

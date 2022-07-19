@@ -1,8 +1,9 @@
-import sys
+import json
+import os
 import tempfile
 from pathlib import Path
-import os
-import numpy as np
+
+import networkx as nx
 from scipy.spatial import KDTree
 
 
@@ -54,6 +55,19 @@ def treeneuron_to_swc_string(neuron_skeleton):
     map_new_to_old = {int(x): int(y) for x, y in map_old_to_new.items()}
 
     return {'swc': out, 'map': map_new_to_old}
+
+
+def nodes_and_edges_to_networkx(motif):
+    '''
+    Converts node and edge string to networkx graph
+    @param motif: node and edge string
+    @return: directed networkx graph
+    '''
+    graph = nx.DiGraph()
+    motif = json.loads(motif)
+    for edge in motif['edges']:
+        graph.add_edge(edge['indices'][0], edge['indices'][1])
+    return graph
 
 
 # Converts Query Builder Mongo-esque parameters to dotmotif query format

@@ -14,13 +14,13 @@ export function swcParser(swcFile) {
         float, // y
         float, // z
         float, // radius
-        "-1|\\d+" // parent
+        "-1|\\d+", // parent
       ].join(")[ \\t]+(") +
       ")[ \\t]*$",
     "m"
   );
 
-  swcAr.forEach(e => {
+  swcAr.forEach((e) => {
     // if line is good, put into json
     const match = e.match(pattern);
     if (match) {
@@ -33,7 +33,7 @@ export function swcParser(swcFile) {
         y: parseFloat(match[4]),
         z: parseFloat(match[5]),
         radius: parseFloat(match[6]),
-        parent: parseInt(match[7], 10)
+        parent: parseInt(match[7], 10),
       };
     }
   });
@@ -42,12 +42,12 @@ export function swcParser(swcFile) {
   return swcJSON;
 }
 
-export function stretch_inv(y){
-    return ((-2) / (y / 0.63245 - 2) - 1) / 3.7;
+export function stretch_inv(y) {
+  return (-2 / (y / 0.63245 - 2) - 1) / 3.7;
 }
 
-export function stretch(x){
-    return (-2.0 * (1.0 / (3.7 * x + 1.0)) + 2.0) * 0.63245;
+export function stretch(x) {
+  return (-2.0 * (1.0 / (3.7 * x + 1.0)) + 2.0) * 0.63245;
 }
 
 export const NODE_PARTICLE_IMAGE =
