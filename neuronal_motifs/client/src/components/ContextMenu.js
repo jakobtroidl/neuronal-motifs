@@ -18,10 +18,12 @@ function createRow(neuron, nodes, index) {
   return row;
 }
 function determineMenuOptions(motif, neuron) {
+  console.log(motif.nodes);
+
   let nodes = [];
-  motif.forEach((edge) => {
-    nodes.push(edge.fromNode.label);
-    nodes.push(edge.toNode.label);
+  motif.nodes.forEach((node) => {
+    nodes.push(node.label);
+    nodes.push(node.label);
   });
 
   // remove duplicates from nodes
@@ -33,7 +35,10 @@ function determineMenuOptions(motif, neuron) {
   nodes.forEach((row, index) => {
     {
       menuOptions.push(
-        <MenuItem key={row}>
+        <MenuItem
+          key={row}
+          onClick={(event) => handleClick(event, neuron, motif, row)}
+        >
           <ListItemIcon>
             <Stack direction="row" spacing={2}>
               {createRow(neuron, nodes, index)}
@@ -47,16 +52,15 @@ function determineMenuOptions(motif, neuron) {
   return menuOptions;
 }
 
+const handleClick = (event, neuron, motif, row) => {
+  console.log("handleClick");
+};
+
 export default function BasicMenu(props) {
   let open = props.open;
   let position = props.position;
   let neuron = props.neuron;
   let motif = props.motif;
-
-  const handleClick = () => {
-    console.log("handleClick");
-    open = false;
-  };
 
   return (
     <Menu
@@ -64,22 +68,18 @@ export default function BasicMenu(props) {
       anchorReference="anchorPosition"
       anchorPosition={{ left: position.x, top: position.y }}
       open={open}
-      onClose={handleClick}
       MenuListProps={{
         "aria-labelledby": "basic-button",
       }}
     >
-      <MenuItem onClick={handleClick}>
-        <ListItemIcon>
-          <FiberManualRecordIcon
-            style={{ color: neuron.color }}
-            fontSize="small"
-          />
-        </ListItemIcon>
+      <MenuItem>
+        {/*<ListItemIcon>*/}
+        {/*  <FiberManualRecordIcon*/}
+        {/*    style={{ color: neuron.color }}*/}
+        {/*    fontSize="small"*/}
+        {/*  />*/}
+        {/*</ListItemIcon>*/}
         <ListItemText>Search close motifs</ListItemText>
-        {/*<Typography variant="body2" color="text.secondary">*/}
-        {/*  ⌘X*/}
-        {/*</Typography>*/}
       </MenuItem>
       {determineMenuOptions(motif, neuron).map((option) => {
         return option;

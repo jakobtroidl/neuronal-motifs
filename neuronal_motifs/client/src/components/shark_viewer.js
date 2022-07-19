@@ -440,7 +440,7 @@ export default class SharkViewer {
     this.minLabel = 1000000000;
     this.maxLabel = 0.0;
     this.on_Alt_Click = null;
-    this.motifSketch = null;
+    this.motifQuery = null;
 
     this.setValues(args);
     // anything after the above line can not be set by the caller.
@@ -474,12 +474,8 @@ export default class SharkViewer {
     }
   }
 
-  /**
-   * Set the currently sketch motif
-   * @param motifSketch
-   */
-  setMotifSketch(motifSketch) {
-    this.motifSketch = motifSketch;
+  setMotifQuery(motifQuery) {
+    this.motifQuery = motifQuery;
   }
 
   // calculates color based on node type

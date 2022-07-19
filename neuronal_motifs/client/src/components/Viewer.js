@@ -275,7 +275,7 @@ function Viewer() {
         display: true,
         position: { x: event.clientX, y: event.clientY },
         neuron: neuron,
-        motif: this.motifSketch,
+        motif: this.motifQuery,
       });
       //setHighlightNeuron(neuron, true);
     } else {
@@ -290,10 +290,10 @@ function Viewer() {
   }
 
   useEffect(() => {
-    if (context.motifSketch) {
-      sharkViewerInstance.setMotifSketch(context.motifSketch);
+    if (context.motifQuery) {
+      sharkViewerInstance.setMotifQuery(context.motifQuery);
     }
-  }, [context.motifSketch]);
+  }, [context.motifQuery]);
 
   // Instantiates the viewer, will only run once on init
   useEffect(() => {
