@@ -34,6 +34,7 @@ export const ContextWrapper = (props) => {
   const [absMotifCount, setAbsMotifCount] = useState(null); // count of a motif in the dataset, e.g motif1 occurs 100 times in the dataset
   const [relativeMotifCount, setRelativeMotifCount] = useState(null); // count of all motifs in the dataset. e.g, motif1 is Highly represented in the dataset
   const [showWarning, setShowWarning] = useState(false);
+  const [motifSketch, setMotifSketch] = useState();
 
   return (
     <AppContext.Provider
@@ -60,6 +61,8 @@ export const ContextWrapper = (props) => {
         setRelativeMotifCount,
         showWarning,
         setShowWarning,
+        motifSketch,
+        setMotifSketch,
       }}
     >
       {props.children}

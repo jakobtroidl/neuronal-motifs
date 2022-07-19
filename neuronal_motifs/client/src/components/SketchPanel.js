@@ -574,6 +574,7 @@ function SketchPanel() {
   useEffect(() => {
     if (edges) {
       console.log("Edges", edges);
+      context.setMotifSketch(edges);
     }
   }, [edges]);
   // Encode the Nodes and Edges For Query

@@ -439,7 +439,8 @@ export default class SharkViewer {
     this.maxVolumeSize = 100000;
     this.minLabel = 1000000000;
     this.maxLabel = 0.0;
-    this.onRightClick = null;
+    this.on_Alt_Click = null;
+    this.motifSketch = null;
 
     this.setValues(args);
     // anything after the above line can not be set by the caller.
@@ -471,6 +472,14 @@ export default class SharkViewer {
         }
       });
     }
+  }
+
+  /**
+   * Set the currently sketch motif
+   * @param motifSketch
+   */
+  setMotifSketch(motifSketch) {
+    this.motifSketch = motifSketch;
   }
 
   // calculates color based on node type
@@ -603,6 +612,8 @@ export default class SharkViewer {
     const neuron = new THREE.Object3D();
     let geometry;
     let material;
+
+    neuron.color = color;
     // particle mode uses vertex info to place texture image, very fast
     if (this.mode === "particle") {
       // special imposter image contains:
@@ -1220,7 +1231,7 @@ export default class SharkViewer {
 
     if (points.length > 0) {
       const intersectObject = points[0];
-      this.onRightClick(event, intersectObject.object.parent);
+      this.on_Alt_Click(event, intersectObject.object.parent);
 
       if (event.altKey) {
         if (this.on_toggle_node) {
@@ -1244,7 +1255,7 @@ export default class SharkViewer {
         }
       }
     } else {
-      this.onRightClick(event, null);
+      this.on_Alt_Click(event, null);
     }
   }
 

@@ -174,6 +174,26 @@ function addAbstractionCenters(motif, context, scene, interactionManager) {
   });
 }
 
+// function setHighlightNeuron(neuron, highlight) {
+//   if (neuron && neuron.isNeuron) {
+//     console.log("highlighting neuron");
+//     neuron.children.forEach((child) => {
+//       if (highlight) {
+//         // child.oldMaterial = child.material.clone();
+//         let color = new THREE.Color(0xffffff);
+//         child.material.uniforms.typeColor = [color.r, color.g, color.b];
+//         //child.material.color.setHex(0xf44336);
+//         // let color = child.userData.materialShader.color.clone();
+//         // child.material.oldColor = color;
+//         // child.child.userData.materialShader.color = color.multiplyScalar(1.5);
+//       } else {
+//         //child.material.color.setHex(0xffc107);
+//       }
+//       //child.material.needsUpdate = true;
+//     });
+//   }
+// }
+
 function addSynapses(
   motif,
   setDisplayTooltip,
@@ -238,27 +258,47 @@ function Viewer() {
   const [displayContextMenu, setDisplayContextMenu] = useState({
     display: false,
     position: { x: 0, y: 0 },
+    neuron: null,
+    motif: null,
   });
-  const [contextMenuInfo, setContextMenuInfo] = useState([]);
 
   function onNeuronClick(event, neuron) {
-    console.log(event);
+    /**
+     * Callback execute in SharkViewer when a neuron is clicked
+     * @param event: mouse event
+     * @param neuron: neuron object
+     * Displays a context menu on Click + Alt Key
+     */
     if (neuron != null && event.altKey) {
-      console.log(neuron);
+      console.log("click + alt key");
       setDisplayContextMenu({
         display: true,
         position: { x: event.clientX, y: event.clientY },
+        neuron: neuron,
+        motif: this.motifSketch,
       });
+      //setHighlightNeuron(neuron, true);
     } else {
       console.log("No neuron selected");
-      setDisplayContextMenu({ display: false, position: { x: 0, y: 0 } });
+      setDisplayContextMenu({
+        display: false,
+        position: { x: 0, y: 0 },
+        neuron: null,
+        motif: [],
+      });
     }
   }
+
+  useEffect(() => {
+    if (context.motifSketch) {
+      sharkViewerInstance.setMotifSketch(context.motifSketch);
+    }
+  }, [context.motifSketch]);
 
   // Instantiates the viewer, will only run once on init
   useEffect(() => {
     setSharkViewerInstance(
-      new SharkViewer({ dom_element: id, onRightClick: onNeuronClick })
+      new SharkViewer({ dom_element: id, on_Alt_Click: onNeuronClick })
     );
   }, []);
 
@@ -290,6 +330,7 @@ function Viewer() {
   useEffect(async () => {
     if (context.selectedMotif) {
       let selectedMotif = context.selectedMotif;
+      console.log(selectedMotif);
       let bodyIds = selectedMotif.map((m) => m.bodyId);
       bodyIds = JSON.stringify(bodyIds);
       let motifQuery = JSON.stringify(context.motifQuery);
@@ -471,6 +512,8 @@ function Viewer() {
         <BasicMenu
           open={displayContextMenu.display}
           position={displayContextMenu.position}
+          neuron={displayContextMenu.neuron}
+          motif={displayContextMenu.motif}
         >
           {" "}
         </BasicMenu>
