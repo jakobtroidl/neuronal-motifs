@@ -2,6 +2,7 @@ import * as React from "react";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { Avatar, ListItemIcon, ListItemText, Stack } from "@mui/material";
+import { queryMotifs } from "../services/data";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 
 function createRow(neuron, nodes, index) {
@@ -52,8 +53,25 @@ function determineMenuOptions(motif, neuron) {
   return menuOptions;
 }
 
-const handleClick = (event, neuron, motif, row) => {
+const handleClick = async (event, neuron, motif, row) => {
   console.log("handleClick");
+  console.log("clicked neuron -> ", neuron);
+  console.log("clicked motif -> ", motif);
+
+  const idx = motif.nodes.findIndex((node) => node.label === row);
+  if (idx >= 0) {
+    let node_props = motif.nodes[idx].properties;
+    if (node_props === null) {
+      node_props = {};
+    }
+    node_props.bodyId = neuron.name;
+  }
+
+  console.log(motif);
+
+  let results = await queryMotifs(motif, 10);
+
+  console.log(results);
 };
 
 export default function BasicMenu(props) {

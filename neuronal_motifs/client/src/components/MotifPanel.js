@@ -32,6 +32,7 @@ import ViewColumnIcon from "@mui/icons-material/ViewColumn";
 import { CollapsableTableRow } from "./CollapsableTableRow";
 import { NodeFields } from "../config/NodeFields";
 import InfoButton from "./InfoButton";
+import { queryMotifs } from "../services/data";
 
 function MotifPanel() {
   const [number, setNumber] = useState(1);
@@ -72,11 +73,7 @@ function MotifPanel() {
   const fetchMotifs = async () => {
     console.log("Fetch Motifs");
     context.setLoadingMessage("Searching for Motifs");
-    const res = await axios.post("http://localhost:5050/search", {
-      motif: context.motifQuery,
-      lim: number,
-    });
-    const motifs = res.data;
+    const motifs = await queryMotifs(context.motifQuery, number);
     context.setLoadingMessage(null);
     setSearchedMotifs(motifs);
   };
