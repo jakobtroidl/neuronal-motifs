@@ -182,10 +182,7 @@ function MotifPanel() {
 
         {resultRows?.length > 0 && (
           <div className="results">
-            <TableContainer
-              component={Paper}
-              sx={{ backgroundColor: "rgba(255, 255, 255, 0.0)" }}
-            >
+            <TableContainer>
               <Table
                 aria-label="collapsible table"
                 style={{ tableLayout: "fixed" }}
@@ -204,9 +201,7 @@ function MotifPanel() {
                         open={columnFilterOpen}
                         anchorEl={columnFilterAnchorEl}
                       >
-                        <Box
-                          sx={{ border: 1, p: 1, bgcolor: "background.paper" }}
-                        >
+                        <Box>
                           <FormControl
                             component="fieldset"
                             variant="standard"
