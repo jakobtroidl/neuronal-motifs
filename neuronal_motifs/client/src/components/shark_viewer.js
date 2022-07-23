@@ -13,7 +13,7 @@ export { swcParser, stretch, stretch_inv };
 const OrbitUnlimitedControls =
   require("@janelia/three-orbit-unlimited-controls").default;
 
-const DEFAULT_POINT_THRESHOLD = 50;
+const DEFAULT_POINT_THRESHOLD = 150;
 
 const vertexShader = [
   "uniform float particleScale;",
