@@ -16,7 +16,7 @@ def get_motif(ids, motif):
     # ids = [1001453586, 1003474104, 5813091420]
     # motif = [[1], [2], [0]]
     filename = get_cache_filename(ids)
-    filepath = Path("cache/data/" + filename + ".pkl")
+    filepath = Path("cache/data/motifs/" + filename + ".pkl")
     if filepath.is_file() is False:
         # if True:
         yield {'status': 202, 'message': 'Downloading Motif'}
@@ -67,7 +67,7 @@ def compute_motif_data(body_ids, motif):
 
     filename = get_cache_filename(body_ids)
 
-    path = "cache/data/" + filename + ".pkl"
+    path = "cache/data/motifs/" + filename + ".pkl"
     with open(path, "wb") as f:
         print('Write Motif to cache ...')
         pkl.dump(motif, f)

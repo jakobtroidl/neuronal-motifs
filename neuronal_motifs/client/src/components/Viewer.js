@@ -9,6 +9,7 @@ import { InteractionManager } from "three.interactive";
 import { Color } from "../utils/rendering";
 import _ from "lodash";
 import BasicMenu from "./ContextMenu";
+import axios from "axios";
 
 const setLineVisibility = (scene, visible) => {
   scene.children.forEach((child) => {
@@ -194,23 +195,33 @@ function addAbstractionCenters(motif, context, scene, interactionManager) {
 //   }
 // }
 
+function addSynapse(scene, synapse, color) {
+  // create a sphere shape
+  let geometry = new THREE.SphereGeometry(100, 16, 16);
+  let material = new THREE.MeshPhongMaterial({ color: color });
+  let mesh = new THREE.Mesh(geometry, material);
+
+  mesh.name =
+    "syn-" + synapse.post.x + "-" + synapse.post.y + "-" + synapse.post.z;
+  mesh.position.x = (synapse.post.x + synapse.pre.x) / 2.0;
+  mesh.position.y = (synapse.post.y + synapse.pre.y) / 2.0;
+  mesh.position.z = (synapse.post.z + synapse.pre.z) / 2.0;
+
+  scene.add(mesh);
+  return mesh;
+}
+
 function addSynapses(
-  motif,
+  synapses,
   setDisplayTooltip,
   setTooltipInfo,
   scene,
   interactionManager
 ) {
-  motif.synapses.forEach((syn) => {
-    // create a sphere shape
-    let geometry = new THREE.SphereGeometry(100, 16, 16);
-    let material = new THREE.MeshPhongMaterial({ color: Color.orange });
-    let mesh = new THREE.Mesh(geometry, material);
+  synapses.forEach((syn) => {
+    let mesh = addSynapse(scene, syn, Color.orange);
 
-    mesh.name = "syn-" + syn.post.x + "-" + syn.post.y + "-" + syn.post.z;
-    mesh.position.x = (syn.post.x + syn.pre.x) / 2.0;
-    mesh.position.y = (syn.post.y + syn.pre.y) / 2.0;
-    mesh.position.z = (syn.post.z + syn.pre.z) / 2.0;
+    // show tooltip when mouse is over the synapse and change synapse color
     mesh.addEventListener("mouseover", (event) => {
       mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
       mesh.material.needsUpdate = true;
@@ -230,7 +241,6 @@ function addSynapses(
       document.body.style.cursor = "default";
     });
 
-    scene.add(mesh);
     interactionManager.add(mesh);
   });
 }
@@ -288,6 +298,90 @@ function Viewer() {
       });
     }
   }
+
+  useEffect(async () => {
+    if (context.neighborhoodQueryResults && sharkViewerInstance) {
+      if (context.motifQuery) {
+        let results = context.neighborhoodQueryResults.results;
+        let selectedNode = context.neighborhoodQueryResults.selectedNode;
+        let clickedNeuronId = context.neighborhoodQueryResults.clickedNeuronId;
+
+        let query = context.motifQuery;
+        // get all connected neurons to currently selected neuron
+        let inputNeurons = {};
+        let outputNeurons = {};
+        query.edges.forEach((edge) => {
+          if (edge.indices[0] === selectedNode.index) {
+            let neighbor_node = query.nodes.find(
+              (node) => node.index === edge.indices[1]
+            );
+            outputNeurons[neighbor_node.label] = [];
+          }
+          if (edge.indices[1] === selectedNode.index) {
+            let neighbor_node = query.nodes.find(
+              (node) => node.index === edge.indices[0]
+            );
+            inputNeurons[neighbor_node.label] = [];
+          }
+        });
+
+        console.log("clicked neuron id: ", clickedNeuronId);
+        console.log("results: ", results);
+
+        results.forEach((result) => {
+          for (const [label, properties] of Object.entries(result)) {
+            if (label in inputNeurons) {
+              inputNeurons[label].push(properties.bodyId);
+            }
+            if (label in outputNeurons) {
+              outputNeurons[label].push(properties.bodyId);
+            }
+          }
+        });
+
+        console.log(selectedNode);
+        console.log(inputNeurons);
+        console.log(outputNeurons);
+
+        // filter for synapses to draw
+        // axios get request neuron clickedNeuronId
+        let synapses = (
+          await axios.get(
+            `http://localhost:5050/synapses/neuron=${clickedNeuronId}&&inputNeurons=${JSON.stringify(
+              inputNeurons
+            )}&&outputNeurons=${JSON.stringify(outputNeurons)}`
+          )
+        ).data;
+
+        let inputSynapses = synapses.input;
+        let outputSynapses = synapses.output;
+
+        console.log(synapses);
+        console.log(inputSynapses);
+        console.log(outputSynapses);
+
+        // draw synapses in respective colors
+        for (let [label, synapses] of Object.entries(inputSynapses)) {
+          let idx = parseInt(label, 36) - 9;
+          let color = context.neuronColors[idx];
+          console.log(idx, color);
+          synapses.forEach((syn) => {
+            addSynapse(sharkViewerInstance.scene, syn, color);
+          });
+        }
+
+        // draw synapses in respective colors
+        for (let [label, synapses] of Object.entries(outputSynapses)) {
+          let idx = parseInt(label, 36) - 9;
+          let color = context.neuronColors[idx];
+          console.log(idx, color);
+          synapses.forEach((syn) => {
+            addSynapse(sharkViewerInstance.scene, syn, color);
+          });
+        }
+      }
+    }
+  }, [context.neighborhoodQueryResults]);
 
   useEffect(() => {
     if (context.motifQuery) {
@@ -488,7 +582,7 @@ function Viewer() {
       addAbstractionCenters(motif, context, scene, interactionManager);
 
       addSynapses(
-        motif,
+        motif.synapses,
         setDisplayTooltip,
         setTooltipInfo,
         scene,

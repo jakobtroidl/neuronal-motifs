@@ -107,7 +107,7 @@ class MyMotif:
             incoming_synapses = self.data_access.get_synapses(adjacency[neuron.id], [neuron.id])
             synapses = pd.concat([outgoing_synapses, incoming_synapses], ignore_index=True, sort=False)
             all_synapses.append(synapses)
-            neuron.set_synapses(synapses)
+            neuron.set_motif_synapses(synapses)
         self.synapses = pd.concat(all_synapses)
 
     def get_adjacency(self, undirected=True):
