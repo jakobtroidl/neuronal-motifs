@@ -10,6 +10,7 @@ import { Color } from "../utils/rendering";
 import _ from "lodash";
 import BasicMenu from "./ContextMenu";
 import axios from "axios";
+import { Object3D } from "three";
 
 const setLineVisibility = (scene, visible) => {
   scene.children.forEach((child) => {
@@ -257,6 +258,7 @@ function greyOutObjects(sharkViewerInstance, exclude = []) {
   scene.children.forEach((child) => {
     if (!exclude.includes(child.name) && (child.isMesh || child.isObject3D)) {
       if (child.isNeuron) {
+        child.oldColor = child.color;
         sharkViewerInstance.setColor(child, Color.grey);
       } else {
         if (child.material) {
@@ -269,11 +271,16 @@ function greyOutObjects(sharkViewerInstance, exclude = []) {
   });
 }
 
-function restoreColors(scene) {
-  scene.traverse((child) => {
+function restoreColors(sharkViewerInstance) {
+  let scene = sharkViewerInstance.scene;
+  scene.children.forEach((child) => {
     if (child.isMesh || child.isObject3D) {
-      child.material = child.oldMaterial;
-      child.material.needsUpdate = true;
+      if (child.isNeuron && child.oldColor) {
+        sharkViewerInstance.setColor(child, child.oldColor);
+      } else if (child.oldMaterial) {
+        child.material = child.oldMaterial;
+        child.material.needsUpdate = true;
+      }
     }
   });
 }
@@ -290,6 +297,7 @@ function Viewer() {
   // for synapse selecting & highlighting
   const [displayTooltip, setDisplayTooltip] = useState(false);
   const [tooltipInfo, setTooltipInfo] = useState({});
+  let motif_synapse_suggestions_name = "motif-synapse-suggestions";
 
   const [displayContextMenu, setDisplayContextMenu] = useState({
     display: false,
@@ -297,6 +305,27 @@ function Viewer() {
     neuron: null,
     motif: null,
   });
+
+  function removeSynapseSuggestions() {
+    if (sharkViewerInstance) {
+      let scene = sharkViewerInstance.scene;
+      scene.children.forEach((child) => {
+        if (child.name === motif_synapse_suggestions_name) {
+          scene.remove(child);
+        }
+      });
+      console.log(scene);
+    }
+  }
+
+  function handleKeyPress(event) {
+    // check if R key was pressed
+    if (event.key === "r") {
+      console.log("r was pressed");
+      restoreColors(sharkViewerInstance);
+      removeSynapseSuggestions();
+    }
+  }
 
   function onNeuronClick(event, neuron) {
     /**
@@ -351,9 +380,6 @@ function Viewer() {
           }
         });
 
-        console.log("clicked neuron id: ", clickedNeuronId);
-        console.log("results: ", results);
-
         results.forEach((result) => {
           for (const [label, properties] of Object.entries(result)) {
             if (label in inputNeurons) {
@@ -364,10 +390,6 @@ function Viewer() {
             }
           }
         });
-
-        console.log(selectedNode);
-        console.log(inputNeurons);
-        console.log(outputNeurons);
 
         // filter for synapses to draw
         // axios get request neuron clickedNeuronId
@@ -382,29 +404,65 @@ function Viewer() {
         let input = synapses.input;
         let output = synapses.output;
 
-        console.log(sharkViewerInstance.scene);
+        console.log("input: ", input);
+        console.log("output: ", output);
+
+        let interactionManager = sharkViewerInstance.scene?.interactionManager;
 
         greyOutObjects(sharkViewerInstance, [clickedNeuronId]);
 
+        let parent = new THREE.Object3D();
+        parent.name = motif_synapse_suggestions_name;
         // draw synapses in respective colors
         for (let [label, synapses] of Object.entries(input)) {
-          let idx = parseInt(label, 36) - 9;
-          let color = context.neuronColors[idx];
-          console.log(idx, color);
+          // let idx = parseInt(label, 36) - 10;
+          // let color = context.synapseColors[idx];
+          // console.log(idx, color);
           synapses.forEach((syn) => {
-            addSynapse(sharkViewerInstance.scene, syn, color);
+            let mesh = addSynapse(parent, syn, Color.orange);
+
+            mesh.addEventListener("mouseover", (event) => {
+              mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
+              mesh.material.needsUpdate = true;
+              document.body.style.cursor = "pointer";
+            });
+            mesh.addEventListener("mouseout", (event) => {
+              mesh.material = new THREE.MeshPhongMaterial({
+                color: Color.orange,
+              });
+              mesh.material.needsUpdate = true;
+              document.body.style.cursor = "default";
+            });
+            interactionManager.add(mesh);
           });
         }
 
         // draw synapses in respective colors
         for (let [label, synapses] of Object.entries(output)) {
-          let idx = parseInt(label, 36) - 9;
-          let color = context.neuronColors[idx];
-          console.log(idx, color);
+          // let idx = parseInt(label, 36) - 9;
+          // let color = context.synapseColors[idx];
+          // console.log(idx, color);
           synapses.forEach((syn) => {
-            addSynapse(sharkViewerInstance.scene, syn, color);
+            let mesh = addSynapse(parent, syn, Color.pink);
+
+            mesh.addEventListener("mouseover", (event) => {
+              mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
+              mesh.material.needsUpdate = true;
+              document.body.style.cursor = "pointer";
+            });
+            mesh.addEventListener("mouseout", (event) => {
+              mesh.material = new THREE.MeshPhongMaterial({
+                color: Color.pink,
+              });
+              mesh.material.needsUpdate = true;
+              document.body.style.cursor = "default";
+            });
+
+            interactionManager.add(mesh);
           });
         }
+
+        sharkViewerInstance.scene.add(parent);
       }
     }
   }, [context.neighborhoodQueryResults]);
@@ -626,7 +684,7 @@ function Viewer() {
   }, [motif, sharkViewerInstance]);
 
   return (
-    <div id={id} className={className}>
+    <div id={id} className={className} onKeyDown={handleKeyPress}>
       {displayTooltip && <ArrowTooltips props={tooltipInfo}></ArrowTooltips>}
       {displayContextMenu.display && (
         <BasicMenu
