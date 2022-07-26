@@ -252,6 +252,32 @@ function addLights(scene) {
   scene.add(directionalLight);
 }
 
+function greyOutObjects(sharkViewerInstance) {
+  let scene = sharkViewerInstance.scene;
+  scene.children.forEach((child) => {
+    if (child.isMesh || child.isObject3D) {
+      if (child.isNeuron) {
+        sharkViewerInstance.setColor(child, Color.grey);
+      } else {
+        if (child.material) {
+          child.oldMaterial = child.material.clone();
+        }
+        child.material = new THREE.MeshPhongMaterial({ color: Color.grey });
+        child.material.needsUpdate = true;
+      }
+    }
+  });
+}
+
+function restoreColors(scene) {
+  scene.traverse((child) => {
+    if (child.isMesh || child.isObject3D) {
+      child.material = child.oldMaterial;
+      child.material.needsUpdate = true;
+    }
+  });
+}
+
 function Viewer() {
   const [motif, setMotif] = React.useState();
   const [sharkViewerInstance, setSharkViewerInstance] = useState();
@@ -353,15 +379,15 @@ function Viewer() {
           )
         ).data;
 
-        let inputSynapses = synapses.input;
-        let outputSynapses = synapses.output;
+        let input = synapses.input;
+        let output = synapses.output;
 
-        console.log(synapses);
-        console.log(inputSynapses);
-        console.log(outputSynapses);
+        console.log(sharkViewerInstance.scene);
+
+        greyOutObjects(sharkViewerInstance);
 
         // draw synapses in respective colors
-        for (let [label, synapses] of Object.entries(inputSynapses)) {
+        for (let [label, synapses] of Object.entries(input)) {
           let idx = parseInt(label, 36) - 9;
           let color = context.neuronColors[idx];
           console.log(idx, color);
@@ -371,7 +397,7 @@ function Viewer() {
         }
 
         // draw synapses in respective colors
-        for (let [label, synapses] of Object.entries(outputSynapses)) {
+        for (let [label, synapses] of Object.entries(output)) {
           let idx = parseInt(label, 36) - 9;
           let color = context.neuronColors[idx];
           console.log(idx, color);
