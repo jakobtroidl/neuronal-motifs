@@ -252,10 +252,10 @@ function addLights(scene) {
   scene.add(directionalLight);
 }
 
-function greyOutObjects(sharkViewerInstance) {
+function greyOutObjects(sharkViewerInstance, exclude = []) {
   let scene = sharkViewerInstance.scene;
   scene.children.forEach((child) => {
-    if (child.isMesh || child.isObject3D) {
+    if (!exclude.includes(child.name) && (child.isMesh || child.isObject3D)) {
       if (child.isNeuron) {
         sharkViewerInstance.setColor(child, Color.grey);
       } else {
@@ -384,7 +384,7 @@ function Viewer() {
 
         console.log(sharkViewerInstance.scene);
 
-        greyOutObjects(sharkViewerInstance);
+        greyOutObjects(sharkViewerInstance, [clickedNeuronId]);
 
         // draw synapses in respective colors
         for (let [label, synapses] of Object.entries(input)) {
