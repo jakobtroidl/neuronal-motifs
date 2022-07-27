@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import "./MotifPanel.css";
+import "./Global.css";
 import { AppContext } from "../contexts/GlobalContext";
 import SketchPanel from "./SketchPanel";
 import SearchIcon from "@mui/icons-material/Search";
@@ -11,12 +12,47 @@ import _ from "lodash";
 import InfoButton from "./InfoButton";
 import { queryMotifs } from "../services/data";
 import ResultsTable from "./ResultsTable";
+import Box from "@mui/material/Box";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import Typography from "@mui/material/Typography";
+import PropTypes from "prop-types";
+
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Typography>{children}</Typography>}
+    </div>
+  );
+}
+
+TabPanel.propTypes = {
+  children: PropTypes.node,
+  index: PropTypes.number.isRequired,
+  value: PropTypes.number.isRequired,
+};
+
+function a11yProps(index) {
+  return {
+    id: `simple-tab-${index}`,
+    "aria-controls": `simple-tabpanel-${index}`,
+  };
+}
 
 function MotifPanel() {
   const [number, setNumber] = useState(1);
   const [searchedMotifs, setSearchedMotifs] = useState({});
   const [resultRows, setResultRows] = useState([]);
   const [enableAbsMotifCountInfo, setEnableAbsMotifCountInfo] = useState(false);
+  const [selectedTab, setSelectedTab] = React.useState(0);
 
   const motifPanelId = "motif-panel-div";
   const context = useContext(AppContext);
@@ -24,6 +60,10 @@ function MotifPanel() {
   const handleSubmit = () => {
     console.log("handle submit clicked");
     return fetchMotifs();
+  };
+
+  const handleTabChange = (event, newTab) => {
+    setSelectedTab(newTab);
   };
 
   const fetchMotifs = async () => {
@@ -108,11 +148,32 @@ function MotifPanel() {
           </div>
         </div>
 
-        {resultRows?.length > 0 && (
-          <div className="results">
-            <ResultsTable results={resultRows}> {""}</ResultsTable>
-          </div>
-        )}
+        <Box sx={{ width: "100%" }}>
+          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Tabs
+              value={selectedTab}
+              onChange={handleTabChange}
+              aria-label="basic tabs example"
+            >
+              <Tab label="Results" {...a11yProps(0)} />
+              <Tab label="Selection" {...a11yProps(1)} />
+              <Tab label="Settings" {...a11yProps(2)} />
+            </Tabs>
+          </Box>
+          <TabPanel value={selectedTab} index={0}>
+            {resultRows.length > 0 ? (
+              <ResultsTable results={resultRows} />
+            ) : (
+              <span className="hint">Please search for motifs first </span>
+            )}
+          </TabPanel>
+          <TabPanel value={selectedTab} index={1}>
+            <span className="hint">This is where the selection will go </span>
+          </TabPanel>
+          <TabPanel value={selectedTab} index={2}>
+            <span className="hint">This is where the settings will go </span>
+          </TabPanel>
+        </Box>
       </div>
     </div>
   );

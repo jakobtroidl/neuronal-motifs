@@ -1,0 +1,25 @@
+#motif-panel-div .results {
+    position: relative;
+    margin-top: 1px;
+    padding: 0px;
+    border-radius: 0 0 10px 10px;
+    /*box-shadow: 0px 5px 10px 5px rgb(0 0 0 / 15%);*/
+    background-color: rgba(255, 255, 255, 0.5);
+    width: inherit;
+    height: 100%;
+    max-height: 50vh;
+    overflow-y: scroll;
+    z-index: 1;
+}
+
+#motif-panel-div .results .textContainer {
+    display: block;
+    white-space: nowrap;
+    overflow: scroll;
+    text-overflow: ellipsis;
+}
+
+
+#motif-panel-div .results .row-0 {
+    border-top: 3px solid black;
+}
