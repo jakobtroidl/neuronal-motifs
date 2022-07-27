@@ -202,8 +202,7 @@ function addSynapse(scene, synapse, color) {
   let material = new THREE.MeshPhongMaterial({ color: color });
   let mesh = new THREE.Mesh(geometry, material);
 
-  mesh.name =
-    "syn-" + synapse.post.x + "-" + synapse.post.y + "-" + synapse.post.z;
+  mesh.name = "syn-" + synapse.pre_id + "-" + synapse.post_id;
   mesh.position.x = (synapse.post.x + synapse.pre.x) / 2.0;
   mesh.position.y = (synapse.post.y + synapse.pre.y) / 2.0;
   mesh.position.z = (synapse.post.z + synapse.pre.z) / 2.0;
@@ -286,18 +285,24 @@ function restoreColors(sharkViewerInstance) {
 }
 
 function Viewer() {
+  const id = "my_shark_viewer";
+  const className = "shark_viewer";
+  let motif_synapse_suggestions_name = "motif-synapse-suggestions";
+
+  const context = useContext(AppContext);
+
   const [motif, setMotif] = React.useState();
   const [sharkViewerInstance, setSharkViewerInstance] = useState();
   const [prevSliderValue, setPrevSliderValue] = useState();
   const [edgesEnabled, setEdgesEnabled] = useState(false);
   const [edgeGroups, setEdgeGroups] = useState();
-  const id = "my_shark_viewer";
-  const className = "shark_viewer";
-  const context = useContext(AppContext); // Global context holds abstraction state
-  // for synapse selecting & highlighting
-  const [displayTooltip, setDisplayTooltip] = useState(false);
+  const [displayTooltip, setDisplayTooltip] = useState(false); // for synapse selecting & highlighting
   const [tooltipInfo, setTooltipInfo] = useState({});
-  let motif_synapse_suggestions_name = "motif-synapse-suggestions";
+  const [highlightSynapse, setHighlightedSynapse] = useState({
+    highlight: false,
+    pre_id: null,
+    post_id: null,
+  });
 
   const [displayContextMenu, setDisplayContextMenu] = useState({
     display: false,
@@ -314,7 +319,6 @@ function Viewer() {
           scene.remove(child);
         }
       });
-      console.log(scene);
     }
   }
 
@@ -329,7 +333,7 @@ function Viewer() {
 
   function onNeuronClick(event, neuron) {
     /**
-     * Callback execute in SharkViewer when a neuron is clicked
+     * Callback executed in SharkViewer when a neuron is clicked
      * @param event: mouse event
      * @param neuron: neuron object
      * Displays a context menu on Click + Alt Key
@@ -353,6 +357,31 @@ function Viewer() {
       });
     }
   }
+
+  useEffect(() => {
+    if (sharkViewerInstance) {
+      let scene = sharkViewerInstance.scene;
+      scene.traverse((child) => {
+        if (typeof child.name === "string" && child.name.startsWith("syn-")) {
+          let name = child.name.split("-");
+          let pre_id = parseInt(name[1]);
+          let post_id = parseInt(name[2]);
+          if (
+            highlightSynapse.highlight &&
+            (highlightSynapse.pre_id === pre_id ||
+              highlightSynapse.post_id === post_id)
+          ) {
+            child.oldMaterial = child.material.clone();
+            child.material = new THREE.MeshPhongMaterial({ color: Color.red });
+            child.material.needsUpdate = true;
+          } else if (!highlightSynapse.highlight && child.oldMaterial) {
+            child.material = child.oldMaterial;
+            child.material.needsUpdate = true;
+          }
+        }
+      });
+    }
+  }, [highlightSynapse.highlight]);
 
   useEffect(async () => {
     if (context.neighborhoodQueryResults && sharkViewerInstance) {
@@ -404,9 +433,6 @@ function Viewer() {
         let input = synapses.input;
         let output = synapses.output;
 
-        console.log("input: ", input);
-        console.log("output: ", output);
-
         let interactionManager = sharkViewerInstance.scene?.interactionManager;
 
         greyOutObjects(sharkViewerInstance, [clickedNeuronId]);
@@ -422,16 +448,22 @@ function Viewer() {
             let mesh = addSynapse(parent, syn, Color.orange);
 
             mesh.addEventListener("mouseover", (event) => {
-              mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
-              mesh.material.needsUpdate = true;
               document.body.style.cursor = "pointer";
+
+              setHighlightedSynapse({
+                highlight: true,
+                pre_id: syn.pre_id,
+                post_id: null,
+              });
             });
             mesh.addEventListener("mouseout", (event) => {
-              mesh.material = new THREE.MeshPhongMaterial({
-                color: Color.orange,
-              });
-              mesh.material.needsUpdate = true;
               document.body.style.cursor = "default";
+
+              setHighlightedSynapse({
+                highlight: false,
+                pre_id: null,
+                post_id: null,
+              });
             });
             interactionManager.add(mesh);
           });
@@ -446,22 +478,24 @@ function Viewer() {
             let mesh = addSynapse(parent, syn, Color.pink);
 
             mesh.addEventListener("mouseover", (event) => {
-              mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
-              mesh.material.needsUpdate = true;
               document.body.style.cursor = "pointer";
+              setHighlightedSynapse({
+                highlight: true,
+                pre_id: null,
+                post_id: syn.post_id,
+              });
             });
             mesh.addEventListener("mouseout", (event) => {
-              mesh.material = new THREE.MeshPhongMaterial({
-                color: Color.pink,
-              });
-              mesh.material.needsUpdate = true;
               document.body.style.cursor = "default";
+              setHighlightedSynapse({
+                highlight: false,
+                pre_id: null,
+                post_id: null,
+              });
             });
-
             interactionManager.add(mesh);
           });
         }
-
         sharkViewerInstance.scene.add(parent);
       }
     }
