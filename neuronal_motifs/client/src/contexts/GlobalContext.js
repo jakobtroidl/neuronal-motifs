@@ -28,6 +28,9 @@ export const ContextWrapper = (props) => {
     "#D9C226",
     "#263DD9",
   ]);
+
+  const [highlightColor, setHighlightColor] = useState("#0000ff");
+
   const [loadingMessage, setLoadingMessage] = useState();
   const [selectedSketchElement, setSelectedSketchElement] = useState(null);
   const [resetUICounter, setResetUICounter] = useState(0);
@@ -67,6 +70,8 @@ export const ContextWrapper = (props) => {
         setShowWarning,
         neighborhoodQueryResults,
         setNeighborhoodQueryResults,
+        highlightColor,
+        setHighlightColor,
       }}
     >
       {props.children}

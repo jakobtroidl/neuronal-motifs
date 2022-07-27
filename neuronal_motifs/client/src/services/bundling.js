@@ -12,9 +12,6 @@ export function bundle(group, strength, color) {
   let start = group["start"];
   let end = group["end"];
 
-  let pre_id = group["start_id"];
-  let post_id = group["end_id"];
-
   let mean_start = avg(start);
   let mean_end = avg(end);
   let direction = mean_end.sub(mean_start);
@@ -38,7 +35,7 @@ export function bundle(group, strength, color) {
 
     const material = new THREE.LineBasicMaterial({
       color: color,
-      linewidth: 20,
+      linewidth: 20.0,
     });
 
     // Create the final object to add to the scene

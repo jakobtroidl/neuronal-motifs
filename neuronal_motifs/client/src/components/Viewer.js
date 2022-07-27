@@ -11,6 +11,7 @@ import _ from "lodash";
 import BasicMenu from "./ContextMenu";
 import axios from "axios";
 import { Object3D } from "three";
+import { element } from "prop-types";
 
 const setLineVisibility = (scene, visible) => {
   scene.children.forEach((child) => {
@@ -331,6 +332,23 @@ function Viewer() {
     }
   }
 
+  function onLineClick(event, line) {
+    console.log("line click");
+    if (!line.oldColor) {
+      line.oldColor = line.material.clone();
+      line.material = new THREE.LineBasicMaterial({
+        color: Color.blue,
+      });
+    } else {
+      line.material = line.oldColor;
+      line.oldColor = null;
+    }
+
+    line.material.needsUpdate = true;
+
+    console.log(line);
+  }
+
   function onNeuronClick(event, neuron) {
     /**
      * Callback executed in SharkViewer when a neuron is clicked
@@ -510,7 +528,11 @@ function Viewer() {
   // Instantiates the viewer, will only run once on init
   useEffect(() => {
     setSharkViewerInstance(
-      new SharkViewer({ dom_element: id, on_Alt_Click: onNeuronClick })
+      new SharkViewer({
+        dom_element: id,
+        on_Alt_Click: onNeuronClick,
+        lineClick: onLineClick,
+      })
     );
   }, []);
 
@@ -599,12 +621,9 @@ function Viewer() {
       });
       i++;
     }
+
     scene.add(lines);
   }
-
-  // useEffect(() => {
-  //
-  // }, [motif, sharkViewerInstance]);
 
   // Updates the motifs, runs when data, viewer, or abstraction state change
   useEffect(() => {

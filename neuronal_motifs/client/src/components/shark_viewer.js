@@ -13,6 +13,7 @@ const OrbitUnlimitedControls =
   require("@janelia/three-orbit-unlimited-controls").default;
 
 const DEFAULT_POINT_THRESHOLD = 150;
+const DEFAULT_LINE_THRESHOLD = 100;
 
 const vertexShader = [
   "uniform float particleScale;",
@@ -434,6 +435,7 @@ export default class SharkViewer {
     this.minLabel = 1000000000;
     this.maxLabel = 0.0;
     this.on_Alt_Click = null;
+    this.lineClick = null;
     this.motifQuery = null;
 
     this.setValues(args);
@@ -1103,6 +1105,7 @@ export default class SharkViewer {
     });
 
     this.raycaster.params.Points.threshold = DEFAULT_POINT_THRESHOLD;
+    this.raycaster.params.Line.threshold = DEFAULT_LINE_THRESHOLD;
 
     this.dom_element.addEventListener(
       "mousedown",
@@ -1169,23 +1172,29 @@ export default class SharkViewer {
     this.raycaster.setFromCamera(mouse, this.camera);
 
     const intersects = this.raycaster.intersectObjects(
-      [].concat(this.scene.children, this.sceneOnTopable.children),
+      [].concat(this.scene.children),
       true
     );
 
-    const points = intersects
-      .filter((o) => o.object.type === "Points")
-      .filter(
-        (o) => o.object.userData.materialShader.uniforms.alpha.value > 0.0
-      )
-      .sort((a, b) =>
-        a.distanceToRay === b.distanceToRay
-          ? a.distance - b.distance
-          : a.distanceToRay - b.distanceToRay
-      );
+    //const points = intersects;
+    // .filter((o) => o.object.type === "Points")
+    // .filter(
+    //   (o) => o.object.userData.materialShader.uniforms.alpha.value > 0.0
+    // )
+    // .sort((a, b) =>
+    //   a.distanceToRay === b.distanceToRay
+    //     ? a.distance - b.distance
+    //     : a.distanceToRay - b.distanceToRay
+    // );
 
-    if (points.length > 0) {
-      const intersectObject = points[0];
+    if (intersects.length > 0) {
+      const intersectObject = intersects[0];
+      console.log(intersectObject);
+
+      // check of intersected object is of type line
+      if (intersectObject.object.type === "Line") {
+        this.lineClick(event, intersectObject.object);
+      }
       this.on_Alt_Click(event, intersectObject.object.parent);
 
       if (event.altKey) {
@@ -1198,7 +1207,7 @@ export default class SharkViewer {
         }
       } else {
         if (event.shiftKey && this.trackControls.clicked) {
-          this.trackControls.target = points[0].point;
+          this.trackControls.target = intersects[0].point;
         }
 
         if (this.on_select_node) {
@@ -1206,7 +1215,12 @@ export default class SharkViewer {
             intersectObject.object.userData.indexLookup[intersectObject.index];
           const tracingId = intersectObject.object.parent.name;
 
-          this.on_select_node(tracingId, sampleNumber, event, points[0].point);
+          this.on_select_node(
+            tracingId,
+            sampleNumber,
+            event,
+            intersects[0].point
+          );
         }
       }
     } else {
@@ -1239,6 +1253,7 @@ export default class SharkViewer {
 
   // render the scene
   render() {
+    // capture mouse over events
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
 
