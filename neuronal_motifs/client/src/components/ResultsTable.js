@@ -80,10 +80,10 @@ export default function ResultsTable(props) {
       <TableContainer>
         <Table aria-label="collapsible table" style={{ tableLayout: "fixed" }}>
           <TableHead>
-            <TableRow>
-              <TableCell width={20} />
-              <TableCell>Name</TableCell>
-              <TableCell>
+            <TableRow style={{ borderBottom: "1px solid lightgrey" }}>
+              <TableCell width={20} style={{ borderBottom: "unset" }} />
+              <TableCell style={{ borderBottom: "unset" }}>Name</TableCell>
+              <TableCell style={{ borderBottom: "unset" }}>
                 <Tooltip title="Filter Columns" placement="top">
                   <IconButton onClick={handleColumnFilterClick}>
                     <ViewColumnIcon />

@@ -15,8 +15,8 @@ export function CollapsableTableRow(props) {
 
   return (
     <React.Fragment>
-      <TableRow sx={{ "& > *": { borderBottom: "unset" } }}>
-        <TableCell>
+      <TableRow>
+        <TableCell style={{ borderBottom: "unset", borderTop: "unset" }}>
           <IconButton
             aria-label="expand row"
             size="small"
@@ -27,13 +27,20 @@ export function CollapsableTableRow(props) {
             {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
           </IconButton>
         </TableCell>
-        <TableCell component="th" scope="row">
+        <TableCell
+          component="th"
+          scope="row"
+          style={{ borderBottom: "unset", borderTop: "unset" }}
+        >
           {row.name}
         </TableCell>
       </TableRow>
       <TableRow className={"motif-selection-div"}>
         <TableCell
-          style={{ paddingBottom: 0, paddingTop: 0 }}
+          style={{
+            paddingBottom: 0,
+            paddingTop: 0,
+          }}
           colSpan={6}
           onClick={() => {
             handleClick(row);
