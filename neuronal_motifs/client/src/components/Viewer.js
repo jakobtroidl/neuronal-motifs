@@ -380,7 +380,12 @@ function Viewer() {
     if (sharkViewerInstance) {
       let scene = sharkViewerInstance.scene;
       scene.traverse((child) => {
-        if (typeof child.name === "string" && child.name.startsWith("syn-")) {
+        if (
+          child.parent &&
+          child.parent.name === motif_synapse_suggestions_name &&
+          typeof child.name === "string" &&
+          child.name.startsWith("syn-")
+        ) {
           let name = child.name.split("-");
           let pre_id = parseInt(name[1]);
           let post_id = parseInt(name[2]);
@@ -429,8 +434,11 @@ function Viewer() {
       let interactionManager = sharkViewerInstance.scene?.interactionManager;
       for (let [label, synapses] of Object.entries(synapses_suggestions)) {
         synapses.forEach((syn) => {
-          let mesh = addSynapse(parent, syn, Color.orange);
-
+          let mesh = addSynapse(
+            parent,
+            syn,
+            type === "input" ? Color.orange : Color.blue
+          );
           mesh.addEventListener("mouseover", (event) =>
             onSynapseSuggestionEvent(
               "pointer",
@@ -449,65 +457,70 @@ function Viewer() {
   }
 
   useEffect(async () => {
-    if (context.neighborhoodQueryResults && sharkViewerInstance) {
-      if (context.motifQuery) {
-        let results = context.neighborhoodQueryResults.results;
-        let selectedNode = context.neighborhoodQueryResults.selectedNode;
-        let clickedNeuronId = context.neighborhoodQueryResults.clickedNeuronId;
+    if (
+      context.neighborhoodQuery &&
+      sharkViewerInstance &&
+      context.motifQuery
+    ) {
+      let results = context.neighborhoodQuery.results;
+      let selectedNode = context.neighborhoodQuery.selectedNode;
+      let clickedNeuronId = context.neighborhoodQuery.clickedNeuronId;
+      let query = context.motifQuery;
 
-        let query = context.motifQuery;
-        // get all connected neurons to currently selected neuron
-        let inputNeurons = {};
-        let outputNeurons = {};
-        query.edges.forEach((edge) => {
-          if (edge.indices[0] === selectedNode.index) {
-            let neighbor_node = query.nodes.find(
-              (node) => node.index === edge.indices[1]
-            );
-            outputNeurons[neighbor_node.label] = [];
+      console.log("neighborhood query results");
+      console.log(context.neighborhoodQuery);
+
+      // get all connected neurons to currently selected neuron
+      let inputNeurons = {};
+      let outputNeurons = {};
+      query.edges.forEach((edge) => {
+        if (edge.indices[0] === selectedNode.index) {
+          let neighbor_node = query.nodes.find(
+            (node) => node.index === edge.indices[1]
+          );
+          outputNeurons[neighbor_node.label] = [];
+        }
+        if (edge.indices[1] === selectedNode.index) {
+          let neighbor_node = query.nodes.find(
+            (node) => node.index === edge.indices[0]
+          );
+          inputNeurons[neighbor_node.label] = [];
+        }
+      });
+
+      results.forEach((result) => {
+        for (const [label, properties] of Object.entries(result)) {
+          if (label in inputNeurons) {
+            inputNeurons[label].push(properties.bodyId);
           }
-          if (edge.indices[1] === selectedNode.index) {
-            let neighbor_node = query.nodes.find(
-              (node) => node.index === edge.indices[0]
-            );
-            inputNeurons[neighbor_node.label] = [];
+          if (label in outputNeurons) {
+            outputNeurons[label].push(properties.bodyId);
           }
-        });
+        }
+      });
 
-        results.forEach((result) => {
-          for (const [label, properties] of Object.entries(result)) {
-            if (label in inputNeurons) {
-              inputNeurons[label].push(properties.bodyId);
-            }
-            if (label in outputNeurons) {
-              outputNeurons[label].push(properties.bodyId);
-            }
-          }
-        });
+      // filter for synapses to draw
+      let synapses = (
+        await axios.get(
+          `http://localhost:5050/synapses/neuron=${clickedNeuronId}&&inputNeurons=${JSON.stringify(
+            inputNeurons
+          )}&&outputNeurons=${JSON.stringify(outputNeurons)}`
+        )
+      ).data;
 
-        // filter for synapses to draw
-        let synapses = (
-          await axios.get(
-            `http://localhost:5050/synapses/neuron=${clickedNeuronId}&&inputNeurons=${JSON.stringify(
-              inputNeurons
-            )}&&outputNeurons=${JSON.stringify(outputNeurons)}`
-          )
-        ).data;
+      // change other neurons color before adding synapse suggestions
+      greyOutObjects(sharkViewerInstance, [clickedNeuronId]);
 
-        // change other neurons color before adding synapse suggestions
-        greyOutObjects(sharkViewerInstance, [clickedNeuronId]);
+      // add synapse suggestions
+      let parent = new THREE.Object3D();
+      parent.name = motif_synapse_suggestions_name;
+      addSynapseSuggestions(synapses.input, "input", parent);
+      addSynapseSuggestions(synapses.output, "output", parent);
+      sharkViewerInstance.scene.add(parent);
 
-        // add synapse suggestions
-        let parent = new THREE.Object3D();
-        parent.name = motif_synapse_suggestions_name;
-        addSynapseSuggestions(synapses.input, "input", parent);
-        addSynapseSuggestions(synapses.output, "output", parent);
-        sharkViewerInstance.scene.add(parent);
-
-        console.log(sharkViewerInstance.scene);
-      }
+      console.log(sharkViewerInstance.scene);
     }
-  }, [context.neighborhoodQueryResults]);
+  }, [context.neighborhoodQuery]);
 
   useEffect(() => {
     if (context.motifQuery) {

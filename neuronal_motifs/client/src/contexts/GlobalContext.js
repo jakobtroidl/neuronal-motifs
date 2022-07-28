@@ -41,7 +41,7 @@ export const ContextWrapper = (props) => {
   const [showWarning, setShowWarning] = useState(false);
 
   // neighborhood query results
-  const [neighborhoodQueryResults, setNeighborhoodQueryResults] = useState({});
+  const [neighborhoodQuery, setNeighborhoodQuery] = useState({});
 
   return (
     <AppContext.Provider
@@ -68,8 +68,8 @@ export const ContextWrapper = (props) => {
         setRelativeMotifCount,
         showWarning,
         setShowWarning,
-        neighborhoodQueryResults,
-        setNeighborhoodQueryResults,
+        neighborhoodQuery,
+        setNeighborhoodQuery,
         highlightColor,
         setHighlightColor,
       }}

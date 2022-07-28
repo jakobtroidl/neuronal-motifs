@@ -82,7 +82,7 @@ export default function BasicMenu(props) {
     console.log("motif: ", motif_copy);
 
     let results = await queryMotifs(motif_copy, 10);
-    context.setNeighborhoodQueryResults({
+    context.setNeighborhoodQuery({
       results: results,
       selectedNode: motif_copy.nodes[idx],
       clickedNeuronId: neuron.name,
@@ -100,12 +100,6 @@ export default function BasicMenu(props) {
       }}
     >
       <MenuItem>
-        {/*<ListItemIcon>*/}
-        {/*  <FiberManualRecordIcon*/}
-        {/*    style={{ color: neuron.color }}*/}
-        {/*    fontSize="small"*/}
-        {/*  />*/}
-        {/*</ListItemIcon>*/}
         <ListItemText>Search close motifs</ListItemText>
       </MenuItem>
       {determineMenuOptions(motif, neuron).map((option) => {
