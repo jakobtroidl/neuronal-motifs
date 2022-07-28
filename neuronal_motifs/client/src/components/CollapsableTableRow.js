@@ -67,7 +67,6 @@ export function CollapsableTableRow(props) {
                       key={neuron.nodeKey}
                       style={{
                         background: hexToRgbA(context.neuronColors[index], 0.4),
-                        borderRadius: "20px",
                       }}
                     >
                       {columns
