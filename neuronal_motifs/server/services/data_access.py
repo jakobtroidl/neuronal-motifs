@@ -75,12 +75,11 @@ class DataAccess:
                 cached_neurons.append(neuron)
 
         print("{} neurons loaded from cache".format(len(cached_neurons)))
-        print("{} neurons to download".format(len(neurons_to_download)))
+        print("{} neuron(s) to download".format(len(neurons_to_download)))
 
         downloaded_neurons = []
         if len(neurons_to_download) > 0:
             skeletons = neu.fetch_skeletons(x=neurons_to_download, with_synapses=True, parallel=True)
-            self.dump_neurons_to_cache(skeletons)
 
             for skel in skeletons:
                 healed_skel = navis.heal_skeleton(skel)
@@ -97,7 +96,6 @@ class DataAccess:
                 neuron = Neuron(id=skel.id, skeleton=healed_skel, skel_graph=nk_graph, outgoing_synapses=outgoing,
                                 incoming_synapses=incoming)
                 downloaded_neurons.append(neuron)
-
             self.dump_neurons_to_cache(downloaded_neurons)
 
         print("Download. Done.")
