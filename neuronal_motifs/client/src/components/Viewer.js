@@ -401,6 +401,53 @@ function Viewer() {
     }
   }, [highlightSynapse.highlight]);
 
+  function onSynapseSuggestionEvent(
+    cursor = "default",
+    show = true,
+    pre_id = null,
+    post_id = null
+  ) {
+    document.body.style.cursor = cursor;
+    setHighlightedSynapse({
+      highlight: show,
+      pre_id: pre_id,
+      post_id: post_id,
+    });
+  }
+
+  function addSynapseSuggestions(
+    synapses_suggestions,
+    type = "input",
+    parent = null
+  ) {
+    /**
+     * @param synapses: array of synapse objects
+     * @param type: 'input' or 'output'
+     * @param parent: parent object 3D
+     */
+    if (sharkViewerInstance) {
+      let interactionManager = sharkViewerInstance.scene?.interactionManager;
+      for (let [label, synapses] of Object.entries(synapses_suggestions)) {
+        synapses.forEach((syn) => {
+          let mesh = addSynapse(parent, syn, Color.orange);
+
+          mesh.addEventListener("mouseover", (event) =>
+            onSynapseSuggestionEvent(
+              "pointer",
+              true,
+              type === "input" ? syn.pre_id : null,
+              type === "output" ? syn.post_id : null
+            )
+          );
+          mesh.addEventListener("mouseout", (event) =>
+            onSynapseSuggestionEvent("default", false, null, null)
+          );
+          interactionManager.add(mesh);
+        });
+      }
+    }
+  }
+
   useEffect(async () => {
     if (context.neighborhoodQueryResults && sharkViewerInstance) {
       if (context.motifQuery) {
@@ -439,7 +486,6 @@ function Viewer() {
         });
 
         // filter for synapses to draw
-        // axios get request neuron clickedNeuronId
         let synapses = (
           await axios.get(
             `http://localhost:5050/synapses/neuron=${clickedNeuronId}&&inputNeurons=${JSON.stringify(
@@ -448,73 +494,17 @@ function Viewer() {
           )
         ).data;
 
-        let input = synapses.input;
-        let output = synapses.output;
-
-        let interactionManager = sharkViewerInstance.scene?.interactionManager;
-
+        // change other neurons color before adding synapse suggestions
         greyOutObjects(sharkViewerInstance, [clickedNeuronId]);
 
+        // add synapse suggestions
         let parent = new THREE.Object3D();
         parent.name = motif_synapse_suggestions_name;
-        // draw synapses in respective colors
-        for (let [label, synapses] of Object.entries(input)) {
-          // let idx = parseInt(label, 36) - 10;
-          // let color = context.synapseColors[idx];
-          // console.log(idx, color);
-          synapses.forEach((syn) => {
-            let mesh = addSynapse(parent, syn, Color.orange);
-
-            mesh.addEventListener("mouseover", (event) => {
-              document.body.style.cursor = "pointer";
-
-              setHighlightedSynapse({
-                highlight: true,
-                pre_id: syn.pre_id,
-                post_id: null,
-              });
-            });
-            mesh.addEventListener("mouseout", (event) => {
-              document.body.style.cursor = "default";
-
-              setHighlightedSynapse({
-                highlight: false,
-                pre_id: null,
-                post_id: null,
-              });
-            });
-            interactionManager.add(mesh);
-          });
-        }
-
-        // draw synapses in respective colors
-        for (let [label, synapses] of Object.entries(output)) {
-          // let idx = parseInt(label, 36) - 9;
-          // let color = context.synapseColors[idx];
-          // console.log(idx, color);
-          synapses.forEach((syn) => {
-            let mesh = addSynapse(parent, syn, Color.pink);
-
-            mesh.addEventListener("mouseover", (event) => {
-              document.body.style.cursor = "pointer";
-              setHighlightedSynapse({
-                highlight: true,
-                pre_id: null,
-                post_id: syn.post_id,
-              });
-            });
-            mesh.addEventListener("mouseout", (event) => {
-              document.body.style.cursor = "default";
-              setHighlightedSynapse({
-                highlight: false,
-                pre_id: null,
-                post_id: null,
-              });
-            });
-            interactionManager.add(mesh);
-          });
-        }
+        addSynapseSuggestions(synapses.input, "input", parent);
+        addSynapseSuggestions(synapses.output, "output", parent);
         sharkViewerInstance.scene.add(parent);
+
+        console.log(sharkViewerInstance.scene);
       }
     }
   }, [context.neighborhoodQueryResults]);
