@@ -329,6 +329,7 @@ function Viewer() {
       console.log("r was pressed");
       restoreColors(sharkViewerInstance);
       removeSynapseSuggestions();
+      context.setNeighborhoodQuery(null);
     }
   }
 
@@ -406,6 +407,37 @@ function Viewer() {
     }
   }, [highlightSynapse.highlight]);
 
+  function onSynapseSuggestionClick(synapse, type = "input") {
+    /**
+     * @param synapse: clicked on synapse object
+     * @param type: synapse type. can be "input" or "output"
+     */
+    console.log("synapse suggestion click");
+    if (context.neighborhoodQuery) {
+      let neighborhoodQuery = context.neighborhoodQuery;
+      let selected_label = neighborhoodQuery.selectedNode.label;
+      neighborhoodQuery.results.forEach((result) => {
+        // iterate over all elements in result
+        for (const [label, neuron] of Object.entries(result)) {
+          if (selected_label !== label) {
+            if (
+              (type === "input" && neuron.bodyId === synapse.pre_id) ||
+              (type === "output" && neuron.bodyId === synapse.post_id)
+            ) {
+              console.log("add this motif to scene");
+              console.log(result);
+              context.setSelectedMotif(Object.values(result));
+              return true;
+              // TODO how to handle multiple motifs that match pattern?
+            }
+          }
+        }
+      });
+      return false;
+    }
+    return false;
+  }
+
   function onSynapseSuggestionEvent(
     cursor = "default",
     show = true,
@@ -449,6 +481,9 @@ function Viewer() {
           );
           mesh.addEventListener("mouseout", (event) =>
             onSynapseSuggestionEvent("default", false, null, null)
+          );
+          mesh.addEventListener("click", (event) =>
+            onSynapseSuggestionClick(syn, type)
           );
           interactionManager.add(mesh);
         });
@@ -499,12 +534,13 @@ function Viewer() {
         }
       });
 
+      let inputNeuronsJSON = JSON.stringify(inputNeurons);
+      let outputNeuronsJSON = JSON.stringify(outputNeurons);
+
       // filter for synapses to draw
       let synapses = (
         await axios.get(
-          `http://localhost:5050/synapses/neuron=${clickedNeuronId}&&inputNeurons=${JSON.stringify(
-            inputNeurons
-          )}&&outputNeurons=${JSON.stringify(outputNeurons)}`
+          `http://localhost:5050/synapses/neuron=${clickedNeuronId}&&inputNeurons=${inputNeuronsJSON}&&outputNeurons=${outputNeuronsJSON}`
         )
       ).data;
 

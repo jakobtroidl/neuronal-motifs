@@ -41,7 +41,7 @@ export const ContextWrapper = (props) => {
   const [showWarning, setShowWarning] = useState(false);
 
   // neighborhood query results
-  const [neighborhoodQuery, setNeighborhoodQuery] = useState({});
+  const [neighborhoodQuery, setNeighborhoodQuery] = useState(null);
 
   return (
     <AppContext.Provider
