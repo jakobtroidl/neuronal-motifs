@@ -1155,10 +1155,6 @@ export default class SharkViewer {
     }
   }
 
-  // onDeselect(event) {
-  //   this.onRightClick(event, null);
-  // }
-
   // TODO: alt click should target meshes and center the orbit controls
   // on them if intersected.
   onClick(event) {
@@ -1176,21 +1172,8 @@ export default class SharkViewer {
       true
     );
 
-    //const points = intersects;
-    // .filter((o) => o.object.type === "Points")
-    // .filter(
-    //   (o) => o.object.userData.materialShader.uniforms.alpha.value > 0.0
-    // )
-    // .sort((a, b) =>
-    //   a.distanceToRay === b.distanceToRay
-    //     ? a.distance - b.distance
-    //     : a.distanceToRay - b.distanceToRay
-    // );
-
     if (intersects.length > 0) {
       const intersectObject = intersects[0];
-      console.log(intersectObject);
-
       // check of intersected object is of type line
       if (intersectObject.object.type === "Line") {
         this.lineClick(event, intersectObject.object);
