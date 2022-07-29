@@ -1,9 +1,10 @@
+import pickle as pkl
 from pathlib import Path
 
 import navis
 import navis.interfaces.neuprint as neu
 import networkit as nk
-import pickle as pkl
+import numpy as np
 
 from neuronal_motifs.server.models.neuron import Neuron
 from neuronal_motifs.server.utils.authentication import *
@@ -13,11 +14,8 @@ class DataAccess:
     def __init__(self):
         neu.Client(get_data_server(), dataset=get_data_version(), token=get_access_token('neuprint'))
 
-    def get_neuron_metadata(self):
-        n = navis.example_neurons(n=1, kind='skeleton')
-        test = ''
-
-    def load_neuron_from_cache(self, neuron_id):
+    @staticmethod
+    def load_neuron_from_cache(neuron_id):
         """
         Loads neuron from cache, if exists. Returns None otherwise
         @param neuron_id: int
@@ -32,7 +30,8 @@ class DataAccess:
                 f.close()
         return neuron
 
-    def dump_neurons_to_cache(self, neurons):
+    @staticmethod
+    def dump_neurons_to_cache(neurons):
         """
         Dumps a list of neurons to cache
         @param neurons: [int] list of neuron ids
@@ -59,6 +58,39 @@ class DataAccess:
             output_results[label] = neuron.filter_synapses(output_ids, type='out')
         return {'input': input_results, 'output': output_results}
 
+    def ingest_neurons(self, neurons, batch_size=200):
+        """
+        Ingests a list of neurons into the database
+        @param batch_size: divide neurons into batches of this size
+        @param neurons: list of Neuron objects
+        """
+        batches = np.array_split(neurons, batch_size)
+        for batch in batches:
+            if len(batch) > 0:
+                downloaded_neurons = self.precompute_neurons(batch)
+                self.dump_neurons_to_cache(downloaded_neurons)
+
+    @staticmethod
+    def precompute_neurons(batch):
+        downloaded_neurons = []
+        skeletons = neu.fetch_skeletons(x=batch, with_synapses=True, parallel=True)
+        for skel in skeletons:
+            healed_skel = navis.heal_skeleton(skel)
+
+            # extract method
+            nk_graph = nk.nxadapter.nx2nk(navis.neuron2nx(healed_skel))
+            nk_graph = nk.graphtools.toUndirected(nk_graph)
+            nk_graph.indexEdges()
+
+            # fetch all synapses from server
+            outgoing = neu.fetch_synapse_connections(skel.id, None, batch_size=500)
+            incoming = neu.fetch_synapse_connections(None, skel.id, batch_size=500)
+
+            neuron = Neuron(id=skel.id, skeleton=healed_skel, skel_graph=nk_graph, outgoing_synapses=outgoing,
+                            incoming_synapses=incoming)
+            downloaded_neurons.append(neuron)
+        return downloaded_neurons
+
     def get_neurons(self, body_ids):
         """
         @param body_ids: array of neuron body ids
@@ -79,30 +111,13 @@ class DataAccess:
 
         downloaded_neurons = []
         if len(neurons_to_download) > 0:
-            skeletons = neu.fetch_skeletons(x=neurons_to_download, with_synapses=True, parallel=True)
-
-            for skel in skeletons:
-                healed_skel = navis.heal_skeleton(skel)
-
-                # extract method
-                nk_graph = nk.nxadapter.nx2nk(navis.neuron2nx(healed_skel))
-                nk_graph = nk.graphtools.toUndirected(nk_graph)
-                nk_graph.indexEdges()
-
-                # fetch all synapses from server
-                outgoing = neu.fetch_synapse_connections(skel.id, None, batch_size=500)
-                incoming = neu.fetch_synapse_connections(None, skel.id, batch_size=500)
-
-                neuron = Neuron(id=skel.id, skeleton=healed_skel, skel_graph=nk_graph, outgoing_synapses=outgoing,
-                                incoming_synapses=incoming)
-                downloaded_neurons.append(neuron)
+            downloaded_neurons = self.precompute_neurons(neurons_to_download)
             self.dump_neurons_to_cache(downloaded_neurons)
-
         print("Download. Done.")
-        out = downloaded_neurons + cached_neurons
-        return out
+        return downloaded_neurons + cached_neurons
 
-    def get_synapses(self, from_neurons, to_neighbors):
+    @staticmethod
+    def get_synapses(from_neurons, to_neighbors):
         """
         Returns synapses of all the neighbors of a given neuron
         @param from_neurons: neuron ids of which the neighbours are looked at
