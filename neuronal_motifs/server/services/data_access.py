@@ -106,8 +106,8 @@ class DataAccess:
                 nk_graph.indexEdges()
 
                 # fetch all synapses from server
-                outgoing = neu.fetch_synapse_connections(skel.id, None, batch_size=1000)
-                incoming = neu.fetch_synapse_connections(None, skel.id, batch_size=1000)
+                outgoing = neu.fetch_synapse_connections(source_criteria=skel.id, batch_size=200)
+                incoming = neu.fetch_synapse_connections(target_criteria=skel.id, batch_size=200)
 
                 neuron = Neuron(id=skel.id, skeleton=healed_skel, skel_graph=nk_graph, outgoing_synapses=outgoing,
                                 incoming_synapses=incoming)
