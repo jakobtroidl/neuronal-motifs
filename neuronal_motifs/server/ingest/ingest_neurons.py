@@ -5,14 +5,11 @@ CLI for ingesting neurons'
 import click
 import numpy as np
 
+from flask import Flask
 from flask.cli import AppGroup
 import neuronal_motifs.server.services.data_access as data_access
-ingest_cli = AppGroup("ingest")
 
 
-@ingest_cli.command("ingest_neurons")
-@click.argument("--neurons", type=click.Path(exists=True))
-@click.argument("--id_position", type=int, default=0)
 def ingest_hemibrain(neurons, id_position):
     """
     Ingests neurons from a file
@@ -42,3 +39,10 @@ def get_neuron_ids(neurons, id_position):
                 neuron_id = int(line[id_position])
                 neuron_ids.append(neuron_id)
     return np.asarray(neuron_ids)
+
+
+if __name__ == '__main__':
+    path = '../cache/data/meta/traced-neurons.csv'
+    index = 0
+
+    ingest_hemibrain(path, index)
