@@ -14,6 +14,6 @@ dependencies:
       - PyQt5==5.15.6
       - dotmotif==0.11.0
       - navis
-      - neuprint-python==0.4.16
+      - neuprint-python==0.4.24
       - uvicorn[standard]
       - zarr
