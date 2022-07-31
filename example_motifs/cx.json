@@ -1,0 +1,71 @@
+{
+  "nodes": [
+    {
+      "label": "A",
+      "properties": {
+        "CX": true
+      },
+      "index": 0,
+      "position": [
+        "Point",
+        40.20313,
+        311.07813
+      ]
+    },
+    {
+      "label": "B",
+      "properties": {
+        "CX": true
+      },
+      "index": 1,
+      "position": [
+        "Point",
+        142.20313,
+        73.07813
+      ]
+    },
+    {
+      "label": "C",
+      "properties": null,
+      "index": 2,
+      "position": [
+        "Point",
+        255.20313,
+        307.07813
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "label": "A -> C",
+      "properties": {
+        "weight": {
+          "$gt": 20
+        }
+      },
+      "index": 0,
+      "indices": [
+        0,
+        2
+      ]
+    },
+    {
+      "label": "A -> B",
+      "properties": null,
+      "index": 1,
+      "indices": [
+        0,
+        1
+      ]
+    },
+    {
+      "label": "B -> C",
+      "properties": null,
+      "index": 2,
+      "indices": [
+        1,
+        2
+      ]
+    }
+  ]
+}

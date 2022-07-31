@@ -47,6 +47,7 @@ function SketchPanel() {
 
   const importMotif = () => {
     console.log("importing motif");
+    clearSketch(); // clear sketch
     // import file using file picker
     let fileInput = document.createElement("input");
     fileInput.type = "file";
@@ -399,7 +400,13 @@ function SketchPanel() {
       }
     };
   };
-  const addEdge = (fromNode, toNode, edgeLine, properties = null) => {
+  const addEdge = (
+    fromNode,
+    toNode,
+    edgeLine,
+    properties = null,
+    addEdgeImmediately = true
+  ) => {
     let nodeIndices = [
       _.findLastIndex(nodes, fromNode),
       _.findLastIndex(nodes, toNode),
@@ -420,7 +427,12 @@ function SketchPanel() {
       properties
     );
 
-    setEdges([...edges, newEdgeObj]);
+    addEdgePropertyLabel(newEdgeObj);
+
+    if (addEdgeImmediately) {
+      setEdges([...edges, newEdgeObj]);
+    }
+    return newEdgeObj;
   };
 
   const createEdge = (
@@ -547,6 +559,7 @@ function SketchPanel() {
 
   useEffect(() => {
     if (importData && edgeImportUpdate) {
+      let newEdges = [];
       importData.edges.forEach((edge) => {
         let myInputStartNode = importData.nodes.find(
           (node) => node.index === edge.indices[0]
@@ -570,9 +583,12 @@ function SketchPanel() {
         path.segments[1].point = endNode.circle.getNearestPoint(
           startNode.circle.position
         );
-        addEdge(startNode, endNode, path, edge.properties);
+        let newEdge = addEdge(startNode, endNode, path, edge.properties, false);
+        newEdges.push(newEdge);
       });
 
+      // add new edges to edges
+      setEdges([...edges, ...newEdges]);
       setEdgeImportUpdate(false);
       setImportData(null);
     }
