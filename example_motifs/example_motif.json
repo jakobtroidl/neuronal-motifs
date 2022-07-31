@@ -1,0 +1,41 @@
+{
+  "nodes": [
+    {
+      "label": "A",
+      "properties": {
+        "CRE(L)": true
+      },
+      "index": 0,
+      "position": [
+        "Point",
+        46.20313,
+        344.50781
+      ]
+    },
+    {
+      "label": "B",
+      "properties": null,
+      "index": 1,
+      "position": [
+        "Point",
+        196.20313,
+        88.50781
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "label": "A -> B",
+      "properties": {
+        "weight": {
+          "$gt": 10
+        }
+      },
+      "index": 0,
+      "indices": [
+        0,
+        1
+      ]
+    }
+  ]
+}

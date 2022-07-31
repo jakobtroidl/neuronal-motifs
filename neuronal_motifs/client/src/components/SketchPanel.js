@@ -11,6 +11,8 @@ import _ from "lodash";
 import { Grid, IconButton, Popover, Tooltip } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHand } from "@fortawesome/free-solid-svg-icons";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import axios from "axios";
 
 function SketchPanel() {
@@ -40,6 +42,49 @@ function SketchPanel() {
     return (await axios.get(url)).data;
   };
 
+  const importMotif = () => {
+    console.log("importing motif");
+    // import file using file picker
+    let fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.onchange = (e) => {
+      let file = e.target.files[0];
+      // parse file to object
+      let reader = new FileReader();
+      reader.readAsText(file, "UTF-8");
+      reader.onload = (e) => {
+        let data = JSON.parse(e.target.result);
+        console.log(data);
+        data.nodes.forEach((node) => {
+          let point = new paper.Point(node.position[1], node.position[2]);
+          addCircle(point, node.label, node.index);
+        });
+        data.edges.forEach((edge) => {
+          console.log("add edge");
+        });
+      };
+    };
+
+    fileInput.click();
+  };
+
+  const exportMotif = () => {
+    console.log("exporting motif");
+    console.log(nodes);
+    console.log(edges);
+    let out = getEncodedMotif(nodes, edges);
+    // download out as JSON file
+    let json = JSON.stringify(out);
+    let blob = new Blob([json], { type: "application/json" });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "motif.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   const clearSketch = () => {
     console.log("Clearing");
     paper?.project?.activeLayer?.removeChildren();
@@ -48,6 +93,45 @@ function SketchPanel() {
     setNodes([]);
     setEdges([]);
   };
+
+  const addCircle = (point, letter, index) => {
+    // add circle to paper
+    let circle = new paper.Path.Circle(point, circleRadius);
+    circle.strokeColor = "#000000";
+    circle.strokeWidth = 3;
+    circle.fillColor = context.neuronColors[index];
+    circle.opacity = 1.0;
+    circle.position = point;
+
+    placeCircle(circle, letter);
+  };
+
+  const placeCircle = (circle, letter) => {
+    circle.opacity = 1;
+    let textPoint = [circle.position.x, circle.position.y + 7];
+    let label = new paper.PointText({
+      point: textPoint,
+      justification: "center",
+      fillColor: "white",
+      font: "Roboto",
+      fontSize: 20,
+    });
+    label.content = letter;
+    currentPath?.remove();
+    currentPath = null;
+    let circleGroup = new paper.Group([circle, label]);
+    setNodes((nodes) => [
+      ...nodes,
+      {
+        circle: circle,
+        label: letter,
+        properties: null,
+        type: "node",
+        circleGroup: circleGroup,
+      },
+    ]);
+  };
+
   const bindPencilEvents = () => {
     currentPath = null;
     pencil.onMouseMove = function (event) {
@@ -165,32 +249,10 @@ function SketchPanel() {
         if (!currentPath) return;
         // Create new node
         let numNodes = nodes?.length || 0;
+        let letter = String.fromCharCode(65 + numNodes);
         let circle = currentPath.clone();
-        circle.opacity = 1;
-        let textPoint = [circle.position.x, circle.position.y + 7];
-        let label = new paper.PointText({
-          point: textPoint,
-          justification: "center",
-          fillColor: "white",
-          font: "Roboto",
-          fontSize: 20,
-        });
-        let labelLetter = String.fromCharCode(65 + numNodes);
-        label.content = labelLetter;
-        currentPath?.remove();
-        currentPath = null;
-        let circleGroup = new paper.Group([circle, label]);
-        setNodes((nodes) => [
-          ...nodes,
-          {
-            circle: circle,
-            label: labelLetter,
-            properties: null,
-            type: "node",
-            circleGroup: circleGroup,
-          },
-        ]);
-      } else if (mouseState == "edge") {
+        placeCircle(circle, letter);
+      } else if (mouseState === "edge") {
         let intersections = _.findLastIndex(
           nodes.map((n) => {
             return n.circle.contains(event.point);
@@ -576,10 +638,15 @@ function SketchPanel() {
       console.log("Edges", edges);
     }
   }, [edges]);
-  // Encode the Nodes and Edges For Query
-  useEffect(async () => {
+
+  const getEncodedMotif = (nodes, edges) => {
     let encodedNodes = nodes.map((n, i) => {
-      return { label: n.label, properties: n.properties, index: i };
+      return {
+        label: n.label,
+        properties: n.properties,
+        index: i,
+        position: n.circle.position,
+      };
     });
     let encodedEdges = edges.map((e, i) => {
       return {
@@ -589,7 +656,22 @@ function SketchPanel() {
         indices: e.indices,
       };
     });
-    let encodedMotif = { nodes: encodedNodes, edges: encodedEdges };
+    return { nodes: encodedNodes, edges: encodedEdges };
+  };
+  // Encode the Nodes and Edges For Query
+  useEffect(async () => {
+    // let encodedNodes = nodes.map((n, i) => {
+    //   return { label: n.label, properties: n.properties, index: i, position: n.circle.position };
+    // });
+    // let encodedEdges = edges.map((e, i) => {
+    //   return {
+    //     label: e.label,
+    //     properties: e.properties,
+    //     index: i,
+    //     indices: e.indices,
+    //   };
+    // });
+    let encodedMotif = getEncodedMotif(nodes, edges);
 
     // most motif queries fail for n larger than 4, develop heuristics to make more accurate
     nodes.length > 4
@@ -722,6 +804,24 @@ function SketchPanel() {
                   style={{ height: "0.95em", width: "0.95em" }}
                   icon={faHand}
                 />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Import Motif" placement="right">
+              <IconButton
+                value="edit"
+                color={mouseState === "move" ? "primary" : "default"}
+                onClick={() => importMotif()}
+              >
+                <ArrowBackIosNewIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Export Motif" placement="right">
+              <IconButton
+                value="edit"
+                color={mouseState === "move" ? "primary" : "default"}
+                onClick={() => exportMotif()}
+              >
+                <ArrowForwardIosIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           </Grid>
