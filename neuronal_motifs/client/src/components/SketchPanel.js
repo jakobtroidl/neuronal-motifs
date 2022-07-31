@@ -19,6 +19,9 @@ function SketchPanel() {
   const sketchPanelId = "sketch-panel";
   let [nodes, setNodes] = useState([]);
   let [edges, setEdges] = useState([]);
+  let [importData, setImportData] = useState(null);
+  let [nodeImportUpdate, setNodeImportUpdate] = useState(false);
+  let [edgeImportUpdate, setEdgeImportUpdate] = useState(false);
   // States are node (add nodes), edge (add edges), edit(change node/edge properties)
   let [mouseState, setMouseState] = useState("node");
   let [cursor, setCursor] = useState("crosshair");
@@ -54,14 +57,8 @@ function SketchPanel() {
       reader.readAsText(file, "UTF-8");
       reader.onload = (e) => {
         let data = JSON.parse(e.target.result);
-        console.log(data);
-        data.nodes.forEach((node) => {
-          let point = new paper.Point(node.position[1], node.position[2]);
-          addCircle(point, node.label, node.index);
-        });
-        data.edges.forEach((edge) => {
-          console.log("add edge");
-        });
+        setImportData(data);
+        setNodeImportUpdate(true);
       };
     };
 
@@ -94,7 +91,7 @@ function SketchPanel() {
     setEdges([]);
   };
 
-  const addCircle = (point, letter, index) => {
+  const addCircle = (point, letter, index, properties = null) => {
     // add circle to paper
     let circle = new paper.Path.Circle(point, circleRadius);
     circle.strokeColor = "#000000";
@@ -103,10 +100,10 @@ function SketchPanel() {
     circle.opacity = 1.0;
     circle.position = point;
 
-    placeCircle(circle, letter);
+    placeCircle(circle, letter, properties);
   };
 
-  const placeCircle = (circle, letter) => {
+  const placeCircle = (circle, letter, properties = null) => {
     circle.opacity = 1;
     let textPoint = [circle.position.x, circle.position.y + 7];
     let label = new paper.PointText({
@@ -125,7 +122,7 @@ function SketchPanel() {
       {
         circle: circle,
         label: letter,
-        properties: null,
+        properties: properties,
         type: "node",
         circleGroup: circleGroup,
       },
@@ -402,7 +399,7 @@ function SketchPanel() {
       }
     };
   };
-  const addEdge = (fromNode, toNode, edgeLine) => {
+  const addEdge = (fromNode, toNode, edgeLine, properties = null) => {
     let nodeIndices = [
       _.findLastIndex(nodes, fromNode),
       _.findLastIndex(nodes, toNode),
@@ -415,7 +412,13 @@ function SketchPanel() {
       edgeLine.remove();
       return;
     }
-    const newEdgeObj = createEdge(fromNode, toNode, edgeLine, nodeIndices);
+    const newEdgeObj = createEdge(
+      fromNode,
+      toNode,
+      edgeLine,
+      nodeIndices,
+      properties
+    );
 
     setEdges([...edges, newEdgeObj]);
   };
@@ -528,6 +531,52 @@ function SketchPanel() {
       return { label: n.label, position: n.circle.position };
     });
   };
+
+  useEffect(() => {
+    if (importData && nodeImportUpdate) {
+      console.log(importData);
+      importData.nodes.forEach((node) => {
+        let point = new paper.Point(node.position[1], node.position[2]);
+        addCircle(point, node.label, node.index, node.properties);
+      });
+
+      setNodeImportUpdate(false);
+      setEdgeImportUpdate(true);
+    }
+  }, [nodeImportUpdate]);
+
+  useEffect(() => {
+    if (importData && edgeImportUpdate) {
+      importData.edges.forEach((edge) => {
+        let myInputStartNode = importData.nodes.find(
+          (node) => node.index === edge.indices[0]
+        );
+        let myInputEndNode = importData.nodes.find(
+          (node) => node.index === edge.indices[1]
+        );
+
+        let path = new paper.Path();
+        path.strokeColor = "#000000";
+        path.strokeWidth = 3;
+        path.opacity = 1.0;
+        path.add([myInputStartNode.position[1], myInputStartNode.position[2]]);
+        path.add([myInputEndNode.position[1], myInputEndNode.position[2]]);
+
+        let startNode = nodes[edge.indices[0]];
+        let endNode = nodes[edge.indices[1]];
+        path.segments[0].point = startNode.circle.getNearestPoint(
+          endNode.circle.position
+        );
+        path.segments[1].point = endNode.circle.getNearestPoint(
+          startNode.circle.position
+        );
+        addEdge(startNode, endNode, path, edge.properties);
+      });
+
+      setEdgeImportUpdate(false);
+      setImportData(null);
+    }
+  }, [edgeImportUpdate]);
 
   // Checks for edges going opposite to each other and offsets them so they are distinguishable
   useEffect(() => {
