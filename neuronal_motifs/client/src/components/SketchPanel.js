@@ -13,6 +13,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHand } from "@fortawesome/free-solid-svg-icons";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import { Builder, Query, Utils as QbUtils } from "react-awesome-query-builder";
 import axios from "axios";
 
 function SketchPanel() {
@@ -92,19 +93,24 @@ function SketchPanel() {
     setEdges([]);
   };
 
-  const addCircle = (point, letter, index, properties = null) => {
+  const addCircle = (point, node) => {
     // add circle to paper
     let circle = new paper.Path.Circle(point, circleRadius);
     circle.strokeColor = "#000000";
     circle.strokeWidth = 3;
-    circle.fillColor = context.neuronColors[index];
+    circle.fillColor = context.neuronColors[node.index];
     circle.opacity = 1.0;
     circle.position = point;
 
-    placeCircle(circle, letter, properties);
+    placeCircle(
+      circle,
+      node.label,
+      node.properties,
+      "tree" in node ? node.tree : null
+    );
   };
 
-  const placeCircle = (circle, letter, properties = null) => {
+  const placeCircle = (circle, letter, properties = null, tree = null) => {
     circle.opacity = 1;
     let textPoint = [circle.position.x, circle.position.y + 7];
     let label = new paper.PointText({
@@ -118,16 +124,31 @@ function SketchPanel() {
     currentPath?.remove();
     currentPath = null;
     let circleGroup = new paper.Group([circle, label]);
-    setNodes((nodes) => [
-      ...nodes,
-      {
-        circle: circle,
-        label: letter,
-        properties: properties,
-        type: "node",
-        circleGroup: circleGroup,
-      },
-    ]);
+
+    if (tree !== null) {
+      setNodes((nodes) => [
+        ...nodes,
+        {
+          circle: circle,
+          label: letter,
+          properties: properties,
+          type: "node",
+          circleGroup: circleGroup,
+          tree: QbUtils.loadTree(tree),
+        },
+      ]);
+    } else {
+      setNodes((nodes) => [
+        ...nodes,
+        {
+          circle: circle,
+          label: letter,
+          properties: properties,
+          type: "node",
+          circleGroup: circleGroup,
+        },
+      ]);
+    }
   };
 
   const bindPencilEvents = () => {
@@ -405,6 +426,7 @@ function SketchPanel() {
     toNode,
     edgeLine,
     properties = null,
+    tree = null,
     addEdgeImmediately = true
   ) => {
     let nodeIndices = [
@@ -424,7 +446,8 @@ function SketchPanel() {
       toNode,
       edgeLine,
       nodeIndices,
-      properties
+      properties,
+      tree
     );
 
     addEdgePropertyLabel(newEdgeObj);
@@ -490,7 +513,12 @@ function SketchPanel() {
     edgeObj["type"] = "edge";
     edgeObj["label"] = `${edgeObj.fromNode.label} -> ${edgeObj.toNode.label}`;
     edgeObj["properties"] = properties;
-    edgeObj["tree"] = tree;
+    if (tree !== null) {
+      edgeObj["tree"] = QbUtils.loadTree(tree);
+    } else {
+      edgeObj["tree"] = tree;
+    }
+
     if (propertyLabel) edgeObj = addEdgePropertyLabel(edgeObj);
     return edgeObj;
   };
@@ -549,7 +577,7 @@ function SketchPanel() {
       console.log(importData);
       importData.nodes.forEach((node) => {
         let point = new paper.Point(node.position[1], node.position[2]);
-        addCircle(point, node.label, node.index, node.properties);
+        addCircle(point, node);
       });
 
       setNodeImportUpdate(false);
@@ -583,7 +611,15 @@ function SketchPanel() {
         path.segments[1].point = endNode.circle.getNearestPoint(
           startNode.circle.position
         );
-        let newEdge = addEdge(startNode, endNode, path, edge.properties, false);
+        let tree = "tree" in edge ? edge.tree : null;
+        let newEdge = addEdge(
+          startNode,
+          endNode,
+          path,
+          edge.properties,
+          tree,
+          false
+        );
         newEdges.push(newEdge);
       });
 
@@ -711,6 +747,7 @@ function SketchPanel() {
         properties: n.properties,
         index: i,
         position: n.circle.position,
+        tree: n.tree,
       };
     });
     let encodedEdges = edges.map((e, i) => {
@@ -719,23 +756,13 @@ function SketchPanel() {
         properties: e.properties,
         index: i,
         indices: e.indices,
+        tree: e.tree,
       };
     });
     return { nodes: encodedNodes, edges: encodedEdges };
   };
   // Encode the Nodes and Edges For Query
   useEffect(async () => {
-    // let encodedNodes = nodes.map((n, i) => {
-    //   return { label: n.label, properties: n.properties, index: i, position: n.circle.position };
-    // });
-    // let encodedEdges = edges.map((e, i) => {
-    //   return {
-    //     label: e.label,
-    //     properties: e.properties,
-    //     index: i,
-    //     indices: e.indices,
-    //   };
-    // });
     let encodedMotif = getEncodedMotif(nodes, edges);
 
     // most motif queries fail for n larger than 4, develop heuristics to make more accurate
