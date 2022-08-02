@@ -1,22 +1,25 @@
-import React from "react";
+import React, { useContext } from "react";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
-import { Box, Collapse, IconButton } from "@mui/material";
+import { Box, Collapse, hexToRgb, IconButton } from "@mui/material";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import Table from "@mui/material/Table";
 import TableHead from "@mui/material/TableHead";
 import TableBody from "@mui/material/TableBody";
 import PropTypes from "prop-types";
+import { AppContext } from "../contexts/GlobalContext";
+import { hexToRgbA } from "../utils/rendering";
 
 export function CollapsableTableRow(props) {
   const { row, handleClick, columns } = props;
   const [open, setOpen] = React.useState(false);
+  const context = useContext(AppContext);
 
   return (
     <React.Fragment>
-      <TableRow sx={{ "& > *": { borderBottom: "unset" } }}>
-        <TableCell>
+      <TableRow>
+        <TableCell style={{ borderBottom: "unset", borderTop: "unset" }}>
           <IconButton
             aria-label="expand row"
             size="small"
@@ -27,13 +30,20 @@ export function CollapsableTableRow(props) {
             {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
           </IconButton>
         </TableCell>
-        <TableCell component="th" scope="row">
+        <TableCell
+          component="th"
+          scope="row"
+          style={{ borderBottom: "unset", borderTop: "unset" }}
+        >
           {row.name}
         </TableCell>
       </TableRow>
       <TableRow className={"motif-selection-div"}>
         <TableCell
-          style={{ paddingBottom: 0, paddingTop: 0 }}
+          style={{
+            paddingBottom: 0,
+            paddingTop: 0,
+          }}
           colSpan={6}
           onClick={() => {
             handleClick(row);
@@ -52,8 +62,13 @@ export function CollapsableTableRow(props) {
                   </TableRow>
                 </TableHead>
                 <TableBody style={{ overFlowX: "scroll" }}>
-                  {row.neurons.map((neuron) => (
-                    <TableRow key={neuron.nodeKey}>
+                  {row.neurons.map((neuron, index) => (
+                    <TableRow
+                      key={neuron.nodeKey}
+                      style={{
+                        background: hexToRgbA(context.neuronColors[index], 0.4),
+                      }}
+                    >
                       {columns
                         .filter((e) => e[1])
                         .map((col) => {

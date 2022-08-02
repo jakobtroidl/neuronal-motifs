@@ -4,6 +4,7 @@ import navis
 import networkit as nk
 import networkx as nx
 import numpy as np
+import pandas as pd
 from line_profiler_pycharm import profile
 
 from neuronal_motifs.server.utils import data_conversion as conversion
@@ -121,8 +122,7 @@ def compute_labels_to_abstraction_center(labels, edges, center_id, unlabeled_nod
 
 
 class Neuron:
-    def __init__(self, id, skeleton=None, skel_graph=None, mesh=None, synapses=None, skeleton_labels=None,
-                 distances=None):
+    def __init__(self, id, skeleton=None, skel_graph=None, mesh=None, incoming_synapses=None, outgoing_synapses=None):
         """
         @param id: body id of the neuron. Acts as a unique identifier
         @param skeleton: stick figure skeleton of the neuron
@@ -135,6 +135,9 @@ class Neuron:
         self.mesh = mesh
         self.distances = None
         self.abstraction_center = None
+        self.motif_synapses = None
+        self.incoming_synapses = incoming_synapses
+        self.outgoing_synapses = outgoing_synapses
 
     def as_json(self):
         """
@@ -153,11 +156,79 @@ class Neuron:
 
         return neuron
 
+    def connection_to(self, neuron_id):
+        """
+        Checks if this neuron connects to neuron_id
+        @param neuron_id: int
+        @return: returns true if connects, false otherwise
+        """
+        if neuron_id in self.outgoing_synapses["bodyId_post"]:
+            return True
+        return False
+
+    def connection_from(self, neuron_id):
+        """
+        Check if this neuron receives connection from neuron_id
+        @param neuron_id: int
+        @return: True if receives connection, False otherwise
+        """
+        if neuron_id in self.incoming_synapses["bodyId_pre"]:
+            return True
+        return False
+
+    def get_motif_synapses(self):
+        """
+        Returns the synapses that are part of the currently selected motif
+        @return: synapse pd.df
+        """
+        return self.motif_synapses
+
+    def filter_synapses(self, connections, type='in', export="object"):
+        """
+        Filters synapses based on list of incoming/outgoing neuron ids
+        @param export: ['as_json', 'object'] determines the objects output type
+        @param connections: [int] list of neuron ids
+        @param type: 'in' for input connections or 'out' for output connections
+        @return: pd.df of filtered synapses
+        """
+        # filter incoming synapses for value of id in bodyId_pre
+        if type == 'in':
+            synapses = self.incoming_synapses.loc[self.incoming_synapses['bodyId_pre'].isin(connections)]
+        elif type == 'out':
+            synapses = self.outgoing_synapses.loc[self.outgoing_synapses['bodyId_post'].isin(connections)]
+        else:
+            raise ValueError("type must be 'in' or 'out'")
+
+        if export == 'as_json':
+            return synapses.to_json(orient='records')
+        if export == 'object':
+            return conversion.synapse_array_to_object(synapses)
+        return synapses
+
+    def get_synapses_as_json(self):
+        """
+        Returns synapse objects as json object
+        @return: json object of incoming and outgoing synapses
+        """
+        synapses = {
+            'neuron_id': self.id,
+            'incoming': self.incoming_synapses.to_json(orient='records'),
+            'outgoing': self.outgoing_synapses.to_json(orient='records')
+        }
+        return synapses
+
     def get_max_skeleton_label(self):
         return int(self.skeleton.nodes['abstraction_label'].max())
 
     def get_min_skeleton_label(self):
         return int(self.skeleton.nodes['abstraction_label'].min())
+
+    def get_all_synapses(self):
+        """
+        Returns all synapses of this neuron (incoming and outgoing)
+        @return: pd.df of all synapses
+        """
+        return pd.concat([self.incoming_synapses, self.outgoing_synapses])
 
     def compute_abstraction_root(self, to="position"):
         """
@@ -196,9 +267,6 @@ class Neuron:
     def get_soma(self):
         return self.skeleton.soma
 
-    def get_synapses(self):
-        return self.synapses
-
     def set_mesh(self, mesh):
         """
         @param mesh: sets mesh data to neuron object
@@ -211,14 +279,11 @@ class Neuron:
         """
         self.skeleton = skeleton
 
-    def set_synapses(self, synapses):
+    def set_motif_synapses(self, synapses):
         """
         @param synapses: set synapse data to neuron object
         """
-        self.synapses = synapses
-
-    # def set_skeleton_abstractions(self, num_of_levels):
-    #     self.skeleton_abstractions = self.compute_abstraction_levels(num_of_levels)
+        self.motif_synapses = synapses
 
     @profile
     def compute_distance_to_motif_path_optimized(self, graph, motif_synapse_nodes, motif_nodes):
@@ -272,8 +337,6 @@ class Neuron:
         idx = np.where(labels < 0)[0]
         labels[idx] = labels[idx] + delta
         labels[idx] = labels[idx] * -1
-        foo = labels[idx]
-        rt_idx = labels[root_id]
         return labels
 
     def get_closest_connector(self, x, y, z):
@@ -311,7 +374,8 @@ class Neuron:
         # fig.show()
 
         nodes = []  # node ids close to synapses
-        for id, synapse in self.synapses.iterrows():  # iterate over all synapses that this neuron has with neurons
+        for id, synapse in self.motif_synapses.iterrows():  # iterate over all synapses that this neuron has with
+            # neurons
             if self.id == synapse.loc['bodyId_pre']:
                 x_pre = synapse['x_pre']  # x location pre synapse
                 y_pre = synapse['y_pre']  # y location pre synapse
@@ -329,29 +393,3 @@ class Neuron:
                 nodes.append(node_id)
 
         return list(OrderedDict.fromkeys(nodes))  # remove duplicates
-
-    # def compute_abstraction_levels(self, num_of_levels):
-    #     """
-    #     Generates [num_of_levels] abstractions of this neuron, by pruning branches of a certain distance to the motif path
-    #     @param num_of_levels: number of abstraction levels
-    #     @return: list of abstracted TreeNeurons
-    #     """
-    #     levels = np.linspace(0, 1, num_of_levels, endpoint=True)
-    #     results = Parallel(n_jobs=8)(delayed(self.prune_to_motif_path)(levels[i]) for i in range(levels.size))
-    #     results = sorted(results, key=lambda x: x[0])  # sort based on abstraction level
-    #     return list(map(itemgetter(1), results))  # only return TreeNeuron
-    #
-    # def prune_to_motif_path(self, factor):
-    #     """
-    #     Prunes the given skeleton to the motif path
-    #     @param factor: float [0, 1]. 0 -> full skeleton is returned. 1 -> only motif path is returned
-    #     @return: pruned skeleton
-    #     """
-    #     node_ids = np.arange(1, self.skeleton_labels.shape[0] + 1)
-    #     labels = self.skeleton_labels
-    #
-    #     max_label = np.max(labels)
-    #     threshold = int(max_label * (1.0 - factor))  # convert scale factor to pruning threshold
-    #     mask = labels > threshold
-    #
-    #     return [factor, navis.remove_nodes(self.skeleton, node_ids[mask])]

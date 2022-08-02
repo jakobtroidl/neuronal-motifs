@@ -9,6 +9,9 @@ import { InteractionManager } from "three.interactive";
 import { Color } from "../utils/rendering";
 import _ from "lodash";
 import BasicMenu from "./ContextMenu";
+import axios from "axios";
+import { Object3D } from "three";
+import { element } from "prop-types";
 
 const setLineVisibility = (scene, visible) => {
   scene.children.forEach((child) => {
@@ -194,23 +197,32 @@ function addAbstractionCenters(motif, context, scene, interactionManager) {
 //   }
 // }
 
+function addSynapse(scene, synapse, color) {
+  // create a sphere shape
+  let geometry = new THREE.SphereGeometry(100, 16, 16);
+  let material = new THREE.MeshPhongMaterial({ color: color });
+  let mesh = new THREE.Mesh(geometry, material);
+
+  mesh.name = "syn-" + synapse.pre_id + "-" + synapse.post_id;
+  mesh.position.x = (synapse.post.x + synapse.pre.x) / 2.0;
+  mesh.position.y = (synapse.post.y + synapse.pre.y) / 2.0;
+  mesh.position.z = (synapse.post.z + synapse.pre.z) / 2.0;
+
+  scene.add(mesh);
+  return mesh;
+}
+
 function addSynapses(
-  motif,
+  synapses,
   setDisplayTooltip,
   setTooltipInfo,
   scene,
   interactionManager
 ) {
-  motif.synapses.forEach((syn) => {
-    // create a sphere shape
-    let geometry = new THREE.SphereGeometry(100, 16, 16);
-    let material = new THREE.MeshPhongMaterial({ color: Color.orange });
-    let mesh = new THREE.Mesh(geometry, material);
+  synapses.forEach((syn) => {
+    let mesh = addSynapse(scene, syn, Color.orange);
 
-    mesh.name = "syn-" + syn.post.x + "-" + syn.post.y + "-" + syn.post.z;
-    mesh.position.x = (syn.post.x + syn.pre.x) / 2.0;
-    mesh.position.y = (syn.post.y + syn.pre.y) / 2.0;
-    mesh.position.z = (syn.post.z + syn.pre.z) / 2.0;
+    // show tooltip when mouse is over the synapse and change synapse color
     mesh.addEventListener("mouseover", (event) => {
       mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
       mesh.material.needsUpdate = true;
@@ -230,7 +242,6 @@ function addSynapses(
       document.body.style.cursor = "default";
     });
 
-    scene.add(mesh);
     interactionManager.add(mesh);
   });
 }
@@ -242,18 +253,57 @@ function addLights(scene) {
   scene.add(directionalLight);
 }
 
+function greyOutObjects(sharkViewerInstance, exclude = []) {
+  let scene = sharkViewerInstance.scene;
+  scene.children.forEach((child) => {
+    if (!exclude.includes(child.name) && (child.isMesh || child.isObject3D)) {
+      if (child.isNeuron) {
+        child.oldColor = child.color;
+        sharkViewerInstance.setColor(child, Color.grey);
+      } else {
+        if (child.material) {
+          child.oldMaterial = child.material.clone();
+        }
+        child.material = new THREE.MeshPhongMaterial({ color: Color.grey });
+        child.material.needsUpdate = true;
+      }
+    }
+  });
+}
+
+function restoreColors(sharkViewerInstance) {
+  let scene = sharkViewerInstance.scene;
+  scene.children.forEach((child) => {
+    if (child.isMesh || child.isObject3D) {
+      if (child.isNeuron && child.oldColor) {
+        sharkViewerInstance.setColor(child, child.oldColor);
+      } else if (child.oldMaterial) {
+        child.material = child.oldMaterial;
+        child.material.needsUpdate = true;
+      }
+    }
+  });
+}
+
 function Viewer() {
+  const id = "my_shark_viewer";
+  const className = "shark_viewer";
+  let motif_synapse_suggestions_name = "motif-synapse-suggestions";
+
+  const context = useContext(AppContext);
+
   const [motif, setMotif] = React.useState();
   const [sharkViewerInstance, setSharkViewerInstance] = useState();
   const [prevSliderValue, setPrevSliderValue] = useState();
   const [edgesEnabled, setEdgesEnabled] = useState(false);
   const [edgeGroups, setEdgeGroups] = useState();
-  const id = "my_shark_viewer";
-  const className = "shark_viewer";
-  const context = useContext(AppContext); // Global context holds abstraction state
-  // for synapse selecting & highlighting
-  const [displayTooltip, setDisplayTooltip] = useState(false);
+  const [displayTooltip, setDisplayTooltip] = useState(false); // for synapse selecting & highlighting
   const [tooltipInfo, setTooltipInfo] = useState({});
+  const [highlightSynapse, setHighlightedSynapse] = useState({
+    highlight: false,
+    pre_id: null,
+    post_id: null,
+  });
 
   const [displayContextMenu, setDisplayContextMenu] = useState({
     display: false,
@@ -262,9 +312,47 @@ function Viewer() {
     motif: null,
   });
 
+  function removeSynapseSuggestions() {
+    if (sharkViewerInstance) {
+      let scene = sharkViewerInstance.scene;
+      scene.children.forEach((child) => {
+        if (child.name === motif_synapse_suggestions_name) {
+          scene.remove(child);
+        }
+      });
+    }
+  }
+
+  function handleKeyPress(event) {
+    // check if R key was pressed
+    if (event.key === "r") {
+      console.log("r was pressed");
+      restoreColors(sharkViewerInstance);
+      removeSynapseSuggestions();
+      context.setNeighborhoodQuery(null);
+    }
+  }
+
+  function onLineClick(event, line) {
+    console.log("line click");
+    if (!line.oldColor) {
+      line.oldColor = line.material.clone();
+      line.material = new THREE.LineBasicMaterial({
+        color: Color.blue,
+      });
+    } else {
+      line.material = line.oldColor;
+      line.oldColor = null;
+    }
+
+    line.material.needsUpdate = true;
+
+    console.log(line);
+  }
+
   function onNeuronClick(event, neuron) {
     /**
-     * Callback execute in SharkViewer when a neuron is clicked
+     * Callback executed in SharkViewer when a neuron is clicked
      * @param event: mouse event
      * @param neuron: neuron object
      * Displays a context menu on Click + Alt Key
@@ -290,6 +378,187 @@ function Viewer() {
   }
 
   useEffect(() => {
+    if (sharkViewerInstance) {
+      let scene = sharkViewerInstance.scene;
+      scene.traverse((child) => {
+        if (
+          child.parent &&
+          child.parent.name === motif_synapse_suggestions_name &&
+          typeof child.name === "string" &&
+          child.name.startsWith("syn-")
+        ) {
+          let name = child.name.split("-");
+          let pre_id = parseInt(name[1]);
+          let post_id = parseInt(name[2]);
+          if (
+            highlightSynapse.highlight &&
+            (highlightSynapse.pre_id === pre_id ||
+              highlightSynapse.post_id === post_id)
+          ) {
+            child.oldMaterial = child.material.clone();
+            child.material = new THREE.MeshPhongMaterial({ color: Color.red });
+            child.material.needsUpdate = true;
+          } else if (!highlightSynapse.highlight && child.oldMaterial) {
+            child.material = child.oldMaterial;
+            child.material.needsUpdate = true;
+          }
+        }
+      });
+    }
+  }, [highlightSynapse.highlight]);
+
+  function onSynapseSuggestionClick(synapse, type = "input") {
+    /**
+     * @param synapse: clicked on synapse object
+     * @param type: synapse type. can be "input" or "output"
+     */
+    console.log("synapse suggestion click");
+    if (context.neighborhoodQuery) {
+      let neighborhoodQuery = context.neighborhoodQuery;
+      let selected_label = neighborhoodQuery.selectedNode.label;
+      neighborhoodQuery.results.forEach((result) => {
+        // iterate over all elements in result
+        for (const [label, neuron] of Object.entries(result)) {
+          if (selected_label !== label) {
+            if (
+              (type === "input" && neuron.bodyId === synapse.pre_id) ||
+              (type === "output" && neuron.bodyId === synapse.post_id)
+            ) {
+              console.log("add this motif to scene");
+              console.log(result);
+              context.setSelectedMotif(Object.values(result));
+              return true;
+              // TODO how to handle multiple motifs that match pattern?
+            }
+          }
+        }
+      });
+      return false;
+    }
+    return false;
+  }
+
+  function onSynapseSuggestionEvent(
+    cursor = "default",
+    show = true,
+    pre_id = null,
+    post_id = null
+  ) {
+    document.body.style.cursor = cursor;
+    setHighlightedSynapse({
+      highlight: show,
+      pre_id: pre_id,
+      post_id: post_id,
+    });
+  }
+
+  function addSynapseSuggestions(
+    synapses_suggestions,
+    type = "input",
+    parent = null
+  ) {
+    /**
+     * @param synapses: array of synapse objects
+     * @param type: 'input' or 'output'
+     * @param parent: parent object 3D
+     */
+    if (sharkViewerInstance) {
+      let interactionManager = sharkViewerInstance.scene?.interactionManager;
+      for (let [label, synapses] of Object.entries(synapses_suggestions)) {
+        synapses.forEach((syn) => {
+          let mesh = addSynapse(
+            parent,
+            syn,
+            type === "input" ? Color.orange : Color.blue
+          );
+          mesh.addEventListener("mouseover", (event) =>
+            onSynapseSuggestionEvent(
+              "pointer",
+              true,
+              type === "input" ? syn.pre_id : null,
+              type === "output" ? syn.post_id : null
+            )
+          );
+          mesh.addEventListener("mouseout", (event) =>
+            onSynapseSuggestionEvent("default", false, null, null)
+          );
+          mesh.addEventListener("click", (event) =>
+            onSynapseSuggestionClick(syn, type)
+          );
+          interactionManager.add(mesh);
+        });
+      }
+    }
+  }
+
+  useEffect(async () => {
+    if (
+      context.neighborhoodQuery &&
+      sharkViewerInstance &&
+      context.motifQuery
+    ) {
+      let results = context.neighborhoodQuery.results;
+      let selectedNode = context.neighborhoodQuery.selectedNode;
+      let clickedNeuronId = context.neighborhoodQuery.clickedNeuronId;
+      let query = context.motifQuery;
+
+      console.log("neighborhood query results");
+      console.log(context.neighborhoodQuery);
+
+      // get all connected neurons to currently selected neuron
+      let inputNeurons = {};
+      let outputNeurons = {};
+      query.edges.forEach((edge) => {
+        if (edge.indices[0] === selectedNode.index) {
+          let neighbor_node = query.nodes.find(
+            (node) => node.index === edge.indices[1]
+          );
+          outputNeurons[neighbor_node.label] = [];
+        }
+        if (edge.indices[1] === selectedNode.index) {
+          let neighbor_node = query.nodes.find(
+            (node) => node.index === edge.indices[0]
+          );
+          inputNeurons[neighbor_node.label] = [];
+        }
+      });
+
+      results.forEach((result) => {
+        for (const [label, properties] of Object.entries(result)) {
+          if (label in inputNeurons) {
+            inputNeurons[label].push(properties.bodyId);
+          }
+          if (label in outputNeurons) {
+            outputNeurons[label].push(properties.bodyId);
+          }
+        }
+      });
+
+      let inputNeuronsJSON = JSON.stringify(inputNeurons);
+      let outputNeuronsJSON = JSON.stringify(outputNeurons);
+
+      // filter for synapses to draw
+      let synapses = (
+        await axios.get(
+          `http://localhost:5050/synapses/neuron=${clickedNeuronId}&&inputNeurons=${inputNeuronsJSON}&&outputNeurons=${outputNeuronsJSON}`
+        )
+      ).data;
+
+      // change other neurons color before adding synapse suggestions
+      greyOutObjects(sharkViewerInstance, [clickedNeuronId]);
+
+      // add synapse suggestions
+      let parent = new THREE.Object3D();
+      parent.name = motif_synapse_suggestions_name;
+      addSynapseSuggestions(synapses.input, "input", parent);
+      addSynapseSuggestions(synapses.output, "output", parent);
+      sharkViewerInstance.scene.add(parent);
+
+      console.log(sharkViewerInstance.scene);
+    }
+  }, [context.neighborhoodQuery]);
+
+  useEffect(() => {
     if (context.motifQuery) {
       sharkViewerInstance.setMotifQuery(context.motifQuery);
     }
@@ -298,7 +567,11 @@ function Viewer() {
   // Instantiates the viewer, will only run once on init
   useEffect(() => {
     setSharkViewerInstance(
-      new SharkViewer({ dom_element: id, on_Alt_Click: onNeuronClick })
+      new SharkViewer({
+        dom_element: id,
+        on_Alt_Click: onNeuronClick,
+        lineClick: onLineClick,
+      })
     );
   }, []);
 
@@ -387,12 +660,9 @@ function Viewer() {
       });
       i++;
     }
+
     scene.add(lines);
   }
-
-  // useEffect(() => {
-  //
-  // }, [motif, sharkViewerInstance]);
 
   // Updates the motifs, runs when data, viewer, or abstraction state change
   useEffect(() => {
@@ -488,7 +758,7 @@ function Viewer() {
       addAbstractionCenters(motif, context, scene, interactionManager);
 
       addSynapses(
-        motif,
+        motif.synapses,
         setDisplayTooltip,
         setTooltipInfo,
         scene,
@@ -506,7 +776,7 @@ function Viewer() {
   }, [motif, sharkViewerInstance]);
 
   return (
-    <div id={id} className={className}>
+    <div id={id} className={className} onKeyDown={handleKeyPress}>
       {displayTooltip && <ArrowTooltips props={tooltipInfo}></ArrowTooltips>}
       {displayContextMenu.display && (
         <BasicMenu

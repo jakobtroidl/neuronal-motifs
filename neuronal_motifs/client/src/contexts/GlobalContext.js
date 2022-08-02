@@ -28,12 +28,20 @@ export const ContextWrapper = (props) => {
     "#D9C226",
     "#263DD9",
   ]);
+
+  const [highlightColor, setHighlightColor] = useState("#0000ff");
+
   const [loadingMessage, setLoadingMessage] = useState();
   const [selectedSketchElement, setSelectedSketchElement] = useState(null);
   const [resetUICounter, setResetUICounter] = useState(0);
+
+  // motif occurences stats
   const [absMotifCount, setAbsMotifCount] = useState(null); // count of a motif in the dataset, e.g motif1 occurs 100 times in the dataset
   const [relativeMotifCount, setRelativeMotifCount] = useState(null); // count of all motifs in the dataset. e.g, motif1 is Highly represented in the dataset
   const [showWarning, setShowWarning] = useState(false);
+
+  // neighborhood query results
+  const [neighborhoodQuery, setNeighborhoodQuery] = useState(null);
 
   return (
     <AppContext.Provider
@@ -60,6 +68,10 @@ export const ContextWrapper = (props) => {
         setRelativeMotifCount,
         showWarning,
         setShowWarning,
+        neighborhoodQuery,
+        setNeighborhoodQuery,
+        highlightColor,
+        setHighlightColor,
       }}
     >
       {props.children}

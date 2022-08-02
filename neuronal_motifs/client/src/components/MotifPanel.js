@@ -1,63 +1,59 @@
 import React, { useContext, useEffect, useState } from "react";
-import axios from "axios";
 import "./MotifPanel.css";
+import "./Global.css";
 import { AppContext } from "../contexts/GlobalContext";
 import SketchPanel from "./SketchPanel";
 import SearchIcon from "@mui/icons-material/Search";
 import DragHandleIcon from "@mui/icons-material/DragHandle";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import Button from "@mui/material/Button";
-import {
-  Box,
-  FormControl,
-  FormControlLabel,
-  FormGroup,
-  FormLabel,
-  IconButton,
-  Popper,
-  Switch,
-  TextField,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import Paper from "@mui/material/Paper";
+import { FormControl, TextField } from "@mui/material";
 import _ from "lodash";
-import ViewColumnIcon from "@mui/icons-material/ViewColumn";
-import { CollapsableTableRow } from "./CollapsableTableRow";
-import { NodeFields } from "../config/NodeFields";
 import InfoButton from "./InfoButton";
 import { queryMotifs } from "../services/data";
+import ResultsTable from "./ResultsTable";
+import Box from "@mui/material/Box";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import Typography from "@mui/material/Typography";
+import PropTypes from "prop-types";
+
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Typography>{children}</Typography>}
+    </div>
+  );
+}
+
+TabPanel.propTypes = {
+  children: PropTypes.node,
+  index: PropTypes.number.isRequired,
+  value: PropTypes.number.isRequired,
+};
+
+function a11yProps(index) {
+  return {
+    id: `simple-tab-${index}`,
+    "aria-controls": `simple-tabpanel-${index}`,
+  };
+}
 
 function MotifPanel() {
   const [number, setNumber] = useState(1);
-  // const [nodeAttribute, setNodeAttribute] = useState("");
-  // const [nodeAttributeProperties, setNodeAttributeProperties] = useState([]);
-  // const [edgeAttribute, setEdgeAttribute] = useState("");
-  // const [edgeAttributeProperties, edgeNodeAttributeProperties] = useState([]);
   const [searchedMotifs, setSearchedMotifs] = useState({});
   const [resultRows, setResultRows] = useState([]);
-  const [columnFilterAnchorEl, setColumnFilterAnchorEl] = React.useState(null);
-  const [columnFilterOpen, setColumnFilterOpenOpen] = React.useState(false);
-  const [visibleColumns, setVisibleColumns] = React.useState({});
   const [enableAbsMotifCountInfo, setEnableAbsMotifCountInfo] = useState(false);
+  const [selectedTab, setSelectedTab] = React.useState(0);
 
-  const handleVisibleColumnChange = (event) => {
-    setVisibleColumns({
-      ...visibleColumns,
-      [event.target.name]: event.target.checked,
-    });
-  };
-
-  const handleColumnFilterClick = (event) => {
-    setColumnFilterAnchorEl(event.currentTarget);
-    setColumnFilterOpenOpen((previousOpen) => !previousOpen);
-  };
   const motifPanelId = "motif-panel-div";
   const context = useContext(AppContext);
 
@@ -66,8 +62,8 @@ function MotifPanel() {
     return fetchMotifs();
   };
 
-  const handleMotifSelection = (motif) => {
-    context.setSelectedMotif(motif.neurons);
+  const handleTabChange = (event, newTab) => {
+    setSelectedTab(newTab);
   };
 
   const fetchMotifs = async () => {
@@ -101,34 +97,6 @@ function MotifPanel() {
       setEnableAbsMotifCountInfo(true);
     }
   }, [context.absMotifCount]);
-
-  const getSortedColumns = () => {
-    let sortedColumns = Object.entries(visibleColumns).sort((a, b) => {
-      if (a[0] === "nodeKey") return -1;
-      if (b[0] === "nodeKey") return 1;
-      if (a[0] === "bodyId") return -1;
-      if (b[0] === "bodyId") return 1;
-      if (a[0] === "instance") return -1;
-      if (b[0] === "instance") return 1;
-      if (a[0] === "status") return -1;
-      if (b[0] === "status") return 1;
-      return a[1] === b[1] ? 0 : a[1] ? -1 : 1;
-    });
-    return sortedColumns;
-  };
-
-  // Creat list of visible columns
-  useEffect(() => {
-    let columns = {};
-    Object.keys(NodeFields).map((k) => {
-      columns[k] = false;
-    });
-    columns["nodeKey"] = true;
-    columns["bodyId"] = true;
-    columns["instance"] = true;
-    columns["status"] = true;
-    setVisibleColumns(columns);
-  }, []);
 
   return (
     <div id={motifPanelId}>
@@ -180,82 +148,32 @@ function MotifPanel() {
           </div>
         </div>
 
-        {resultRows?.length > 0 && (
-          <div className="results">
-            <TableContainer>
-              <Table
-                aria-label="collapsible table"
-                style={{ tableLayout: "fixed" }}
-              >
-                <TableHead>
-                  <TableRow>
-                    <TableCell width={20} />
-                    <TableCell>Name</TableCell>
-                    <TableCell>
-                      <Tooltip title="Filter Columns" placement="top">
-                        <IconButton onClick={handleColumnFilterClick}>
-                          <ViewColumnIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Popper
-                        open={columnFilterOpen}
-                        anchorEl={columnFilterAnchorEl}
-                      >
-                        <Box>
-                          <FormControl
-                            component="fieldset"
-                            variant="standard"
-                            style={{
-                              maxHeight: 250,
-                              overflowY: "scroll",
-                            }}
-                          >
-                            <FormLabel component="legend">
-                              Visible Columns
-                            </FormLabel>
-                            <FormGroup style={{ paddingLeft: 8 }}>
-                              {getSortedColumns().map((col) => {
-                                return (
-                                  <FormControlLabel
-                                    control={
-                                      <Switch
-                                        checked={col[1]}
-                                        style={{ transitionDuration: 0 }}
-                                        size="small"
-                                        onChange={handleVisibleColumnChange}
-                                        name={col[0]}
-                                      />
-                                    }
-                                    label={
-                                      <Typography sx={{ fontSize: 12 }}>
-                                        {col[0]}
-                                      </Typography>
-                                    }
-                                    key={col[0]}
-                                  />
-                                );
-                              })}
-                            </FormGroup>
-                          </FormControl>
-                        </Box>
-                      </Popper>
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {resultRows.map((row) => (
-                    <CollapsableTableRow
-                      key={row.name}
-                      row={row}
-                      columns={getSortedColumns()}
-                      handleClick={handleMotifSelection}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </div>
-        )}
+        <Box sx={{ width: "100%" }}>
+          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Tabs
+              value={selectedTab}
+              onChange={handleTabChange}
+              aria-label="basic tabs example"
+            >
+              <Tab label="Results" {...a11yProps(0)} />
+              <Tab label="Selection" {...a11yProps(1)} />
+              <Tab label="Settings" {...a11yProps(2)} />
+            </Tabs>
+          </Box>
+          <TabPanel value={selectedTab} index={0}>
+            {resultRows.length > 0 ? (
+              <ResultsTable results={resultRows} />
+            ) : (
+              <span className="hint">Please search for motifs first </span>
+            )}
+          </TabPanel>
+          <TabPanel value={selectedTab} index={1}>
+            <span className="hint">This is where the selection will go </span>
+          </TabPanel>
+          <TabPanel value={selectedTab} index={2}>
+            <span className="hint">This is where the settings will go </span>
+          </TabPanel>
+        </Box>
       </div>
     </div>
   );

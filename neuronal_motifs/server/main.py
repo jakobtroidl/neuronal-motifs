@@ -9,7 +9,7 @@ from fastapi import WebSocket
 from starlette.middleware.cors import CORSMiddleware
 
 from models import nblast, count
-from services import data_service, motifabstraction, motif_search
+from services import data_service, motifabstraction, motif_search, data_access
 
 app = FastAPI()
 
@@ -96,6 +96,16 @@ async def ws_get_motif_data(websocket: WebSocket):
             await websocket.receive_text()
     except StopIteration:
         print('Done Fetching Motif')
+
+
+@app.get("/synapses/neuron={neuron_id}&&inputNeurons={input_neurons}&&outputNeurons={output_neurons}")
+def filter_synapses(neuron_id, input_neurons, output_neurons):
+    access = data_access.DataAccess()
+    neuron_id = int(neuron_id)
+    input_neurons = json.loads(input_neurons)
+    output_neurons = json.loads(output_neurons)
+    return access.filter_synapses_by_group(neuron_id, input_neurons, output_neurons)
+
 
 
 @app.get("/get_swc")

@@ -8,25 +8,23 @@ import {
 import * as THREE from "three";
 
 export { swcParser, stretch, stretch_inv };
-//require("three-obj-loader")(THREE);
 
 const OrbitUnlimitedControls =
   require("@janelia/three-orbit-unlimited-controls").default;
 
 const DEFAULT_POINT_THRESHOLD = 150;
+const DEFAULT_LINE_THRESHOLD = 100;
 
 const vertexShader = [
   "uniform float particleScale;",
   "attribute float radius;",
   "attribute vec3 typeColor;",
   "attribute float label;",
-  "varying vec3 vColor;",
   "varying vec4 mvPosition;",
   "varying float vRadius;",
   "varying float vLabel;",
   "void main() ",
   "{",
-  "vColor = vec3(typeColor); // set RGB color associated to vertex; use later in fragment shader.",
   "mvPosition = modelViewMatrix * vec4(position, 1.0);",
   "vLabel = label;",
   "// gl_PointSize = size;",
@@ -40,7 +38,7 @@ const fragmentShader = [
   "uniform sampler2D sphereTexture; // Imposter image of sphere",
   "uniform mat4 projectionMatrix;",
   "uniform float abstraction_threshold;",
-  "varying vec3 vColor; // colors associated to vertices; assigned by vertex shader",
+  "uniform vec3 color;",
   "varying vec4 mvPosition;",
   "varying float vRadius;",
   "varying float vLabel;",
@@ -52,11 +50,11 @@ const fragmentShader = [
   "// avoid further computation at invisible corners",
   "if (sphereColors.a < 0.3 || vLabel > abstraction_threshold) discard;",
   "// calculates a color for the particle",
-  "// gl_FragColor = vec4(vColor, 1.0);",
+  "// gl_FragColor = vec4(color, 1.0);",
   "// sets a white particle texture to desired color",
   "// gl_FragColor = sqrt(gl_FragColor * texture2D(sphereTexture, uv)) + vec4(0.1, 0.1, 0.1, 0.0);",
   "// red channel contains colorizable sphere image",
-  "vec3 baseColor = vColor * sphereColors.r;",
+  "vec3 baseColor = color * sphereColors.r;",
   "// green channel contains (white?) specular highlight",
   "vec3 highlightColor = baseColor + sphereColors.ggg;",
   "gl_FragColor = vec4(highlightColor, sphereColors.a);",
@@ -108,9 +106,7 @@ const fragmentShader = [
 
 const vertexShaderCone = [
   "attribute float radius;",
-  "attribute vec3 typeColor;",
   "attribute float label;",
-  "varying vec3 vColor;",
   "varying vec2 sphereUv;",
   "varying vec4 mvPosition;",
   "varying float depthScale;",
@@ -127,7 +123,6 @@ const vertexShaderCone = [
   "	mvPosition += vec4(radius * sideDir, 0.0);",
   "	gl_Position = projectionMatrix * mvPosition;",
   "	// Pass and interpolate color",
-  "	vColor = typeColor;",
   "	// Texture coordinates",
   "	sphereUv = uv - vec2(0.5, 0.5); // map from [0,1] range to [-.5,.5], before rotation",
   '	// If sideDir is "up" on screen, make sure u is positive',
@@ -154,7 +149,7 @@ const fragmentShaderCone = [
   "uniform sampler2D sphereTexture; // Imposter image of sphere",
   "uniform mat4 projectionMatrix;",
   "uniform float abstraction_threshold;",
-  "varying vec3 vColor;",
+  "uniform vec3 color; // colors associated to vertices; assigned by vertex shader",
   "varying vec2 sphereUv;",
   "varying vec4 mvPosition;",
   "varying float depthScale;",
@@ -163,7 +158,7 @@ const fragmentShaderCone = [
   "{",
   "	vec4 sphereColors = texture2D(sphereTexture, sphereUv);",
   "	if (sphereColors.a < 0.3 || vLabel > abstraction_threshold) discard;",
-  "	vec3 baseColor = vColor * sphereColors.r;",
+  "	vec3 baseColor = color * sphereColors.r;",
   "	vec3 highlightColor = baseColor + sphereColors.ggg;",
   "	gl_FragColor = vec4(highlightColor, sphereColors.a);",
   "#ifdef GL_EXT_frag_depth",
@@ -440,6 +435,7 @@ export default class SharkViewer {
     this.minLabel = 1000000000;
     this.maxLabel = 0.0;
     this.on_Alt_Click = null;
+    this.lineClick = null;
     this.motifQuery = null;
 
     this.setValues(args);
@@ -603,6 +599,27 @@ export default class SharkViewer {
     }
   }
 
+  setColor(neuron, color) {
+    if (neuron.isNeuron) {
+      neuron.children.forEach((child) => {
+        if (
+          typeof child.name === "string" &&
+          child.name.includes("skeleton-vertex")
+        ) {
+          // insert your code here, for example:
+          child.material.uniforms.color.value = new THREE.Color(color);
+        }
+        if (
+          typeof child.name === "string" &&
+          child.name.includes("skeleton-edge")
+        ) {
+          // insert your code here, for example:
+          child.material.uniforms.color.value = new THREE.Color(color);
+        }
+      });
+    }
+  }
+
   createNeuron(name, swcJSON, color = undefined) {
     // neuron is object 3d which ensures all components move together
     const neuron = new THREE.Object3D();
@@ -645,6 +662,7 @@ export default class SharkViewer {
         particleScale: { type: "f", value: particleScale },
         sphereTexture: { type: "t", value: sphereImg },
         abstraction_threshold: { type: "f", value: threshold },
+        color: { value: new THREE.Color(neuron.color) },
       };
 
       const indexLookup = {};
@@ -746,6 +764,7 @@ export default class SharkViewer {
         const coneUniforms = {
           sphereTexture: { type: "t", value: sphereImg },
           abstraction_threshold: { type: "f", value: threshold },
+          color: { value: new THREE.Color(neuron.color) },
         };
         const uvs = [
           new THREE.Vector2(0.5, 0),
@@ -786,9 +805,6 @@ export default class SharkViewer {
             coneAttributes.vertices.value.push(cone.child.vertex.y);
             coneAttributes.vertices.value.push(cone.child.vertex.z);
             coneAttributes.radius.value.push(childRadius);
-            coneAttributes.typeColor.value.push(nodeColor.r);
-            coneAttributes.typeColor.value.push(nodeColor.g);
-            coneAttributes.typeColor.value.push(nodeColor.b);
             coneAttributes.normals.value.push(cone.normal1.x);
             coneAttributes.normals.value.push(cone.normal1.y);
             coneAttributes.normals.value.push(cone.normal1.z);
@@ -803,9 +819,6 @@ export default class SharkViewer {
             coneAttributes.vertices.value.push(cone.child.vertex.y);
             coneAttributes.vertices.value.push(cone.child.vertex.z);
             coneAttributes.radius.value.push(childRadius);
-            coneAttributes.typeColor.value.push(nodeColor.r);
-            coneAttributes.typeColor.value.push(nodeColor.g);
-            coneAttributes.typeColor.value.push(nodeColor.b);
             coneAttributes.normals.value.push(cone.normal2.x);
             coneAttributes.normals.value.push(cone.normal2.y);
             coneAttributes.normals.value.push(cone.normal2.z);
@@ -820,9 +833,6 @@ export default class SharkViewer {
             coneAttributes.vertices.value.push(cone.parent.vertex.y);
             coneAttributes.vertices.value.push(cone.parent.vertex.z);
             coneAttributes.radius.value.push(parentRadius);
-            coneAttributes.typeColor.value.push(nodeColor.r);
-            coneAttributes.typeColor.value.push(nodeColor.g);
-            coneAttributes.typeColor.value.push(nodeColor.b);
             coneAttributes.normals.value.push(cone.normal2.x);
             coneAttributes.normals.value.push(cone.normal2.y);
             coneAttributes.normals.value.push(cone.normal2.z);
@@ -844,9 +854,6 @@ export default class SharkViewer {
             coneAttributes.vertices.value.push(cone.parent.vertex.y);
             coneAttributes.vertices.value.push(cone.parent.vertex.z);
             coneAttributes.radius.value.push(parentRadius);
-            coneAttributes.typeColor.value.push(nodeColor.r);
-            coneAttributes.typeColor.value.push(nodeColor.g);
-            coneAttributes.typeColor.value.push(nodeColor.b);
             coneAttributes.normals.value.push(cone.normal1.x);
             coneAttributes.normals.value.push(cone.normal1.y);
             coneAttributes.normals.value.push(cone.normal1.z);
@@ -861,9 +868,6 @@ export default class SharkViewer {
             coneAttributes.vertices.value.push(cone.parent.vertex.y);
             coneAttributes.vertices.value.push(cone.parent.vertex.z);
             coneAttributes.radius.value.push(parentRadius);
-            coneAttributes.typeColor.value.push(nodeColor.r);
-            coneAttributes.typeColor.value.push(nodeColor.g);
-            coneAttributes.typeColor.value.push(nodeColor.b);
             coneAttributes.normals.value.push(cone.normal2.x);
             coneAttributes.normals.value.push(cone.normal2.y);
             coneAttributes.normals.value.push(cone.normal2.z);
@@ -878,9 +882,6 @@ export default class SharkViewer {
             coneAttributes.vertices.value.push(cone.child.vertex.y);
             coneAttributes.vertices.value.push(cone.child.vertex.z);
             coneAttributes.radius.value.push(childRadius);
-            coneAttributes.typeColor.value.push(nodeColor.r);
-            coneAttributes.typeColor.value.push(nodeColor.g);
-            coneAttributes.typeColor.value.push(nodeColor.b);
             coneAttributes.normals.value.push(cone.normal1.x);
             coneAttributes.normals.value.push(cone.normal1.y);
             coneAttributes.normals.value.push(cone.normal1.z);
@@ -901,10 +902,6 @@ export default class SharkViewer {
         coneGeom.setAttribute(
           "radius",
           new THREE.Float32BufferAttribute(coneAttributes.radius.value, 1)
-        );
-        coneGeom.setAttribute(
-          "typeColor",
-          new THREE.Float32BufferAttribute(coneAttributes.typeColor.value, 3)
         );
         coneGeom.setAttribute(
           "normal",
@@ -952,42 +949,6 @@ export default class SharkViewer {
         neuron.add(coneMesh);
       }
     }
-    // // sphere mode renders 3d sphere
-    // else if (this.mode === "sphere") {
-    //   Object.keys(swcJSON).forEach(node => {
-    //     const sphere = this.generateSphere(swcJSON[node]);
-    //     neuron.add(sphere);
-    //     if (this.show_cones) {
-    //       if (swcJSON[node].parent !== -1) {
-    //         const cone = this.generateConeGeometry(
-    //           swcJSON[node],
-    //           swcJSON[swcJSON[node].parent]
-    //         );
-    //         neuron.add(cone);
-    //       }
-    //     }
-    //   });
-    // }
-    //
-    // if (this.mode === "skeleton" || this.show_cones === false) {
-    //   material = new THREE.LineBasicMaterial({
-    //     color: this.colors[this.colors.length - 1]
-    //   });
-    //   if (this.mode === "skeleton") material.color.set(this.colors[0]);
-    //   geometry = new THREE.Geometry();
-    //   Object.keys(swcJSON).forEach(node => {
-    //     if (swcJSON[node].parent !== -1) {
-    //       const vertices = generateSkeleton(
-    //         swcJSON[node],
-    //         swcJSON[swcJSON[node].parent]
-    //       );
-    //       geometry.vertices.push(vertices.child);
-    //       geometry.vertices.push(vertices.parent);
-    //     }
-    //   });
-    //   const line = new THREE.LineSegments(geometry, material);
-    //   neuron.add(line);
-    // }
     return neuron;
   }
 
@@ -1144,6 +1105,7 @@ export default class SharkViewer {
     });
 
     this.raycaster.params.Points.threshold = DEFAULT_POINT_THRESHOLD;
+    this.raycaster.params.Line.threshold = DEFAULT_LINE_THRESHOLD;
 
     this.dom_element.addEventListener(
       "mousedown",
@@ -1193,10 +1155,6 @@ export default class SharkViewer {
     }
   }
 
-  // onDeselect(event) {
-  //   this.onRightClick(event, null);
-  // }
-
   // TODO: alt click should target meshes and center the orbit controls
   // on them if intersected.
   onClick(event) {
@@ -1210,23 +1168,16 @@ export default class SharkViewer {
     this.raycaster.setFromCamera(mouse, this.camera);
 
     const intersects = this.raycaster.intersectObjects(
-      [].concat(this.scene.children, this.sceneOnTopable.children),
+      [].concat(this.scene.children),
       true
     );
 
-    const points = intersects
-      .filter((o) => o.object.type === "Points")
-      .filter(
-        (o) => o.object.userData.materialShader.uniforms.alpha.value > 0.0
-      )
-      .sort((a, b) =>
-        a.distanceToRay === b.distanceToRay
-          ? a.distance - b.distance
-          : a.distanceToRay - b.distanceToRay
-      );
-
-    if (points.length > 0) {
-      const intersectObject = points[0];
+    if (intersects.length > 0) {
+      const intersectObject = intersects[0];
+      // check of intersected object is of type line
+      if (intersectObject.object.type === "Line") {
+        this.lineClick(event, intersectObject.object);
+      }
       this.on_Alt_Click(event, intersectObject.object.parent);
 
       if (event.altKey) {
@@ -1239,7 +1190,7 @@ export default class SharkViewer {
         }
       } else {
         if (event.shiftKey && this.trackControls.clicked) {
-          this.trackControls.target = points[0].point;
+          this.trackControls.target = intersects[0].point;
         }
 
         if (this.on_select_node) {
@@ -1247,7 +1198,12 @@ export default class SharkViewer {
             intersectObject.object.userData.indexLookup[intersectObject.index];
           const tracingId = intersectObject.object.parent.name;
 
-          this.on_select_node(tracingId, sampleNumber, event, points[0].point);
+          this.on_select_node(
+            tracingId,
+            sampleNumber,
+            event,
+            intersects[0].point
+          );
         }
       }
     } else {
@@ -1280,6 +1236,7 @@ export default class SharkViewer {
 
   // render the scene
   render() {
+    // capture mouse over events
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
 

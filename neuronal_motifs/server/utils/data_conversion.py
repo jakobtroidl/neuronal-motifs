@@ -121,9 +121,9 @@ def edges_to_json(edges):
 
 def synapse_array_to_object(synapse_df):
     """
-    TODO
-    @param synapse_df:
-    @return:
+    Convert df of synapses to serializable objecy
+    @param synapse_df: pd.df
+    @return: list of synapse objects
     """
     synapses = [] * len(synapse_df.index)
     for index, synapse in synapse_df.iterrows():
@@ -133,7 +133,9 @@ def synapse_array_to_object(synapse_df):
 
         syn_pre_id = synapse['bodyId_pre']
         syn_pre = {'x': x_pre, 'y': y_pre, 'z': z_pre}
-        syn_pre_soma_distance = synapse['soma_distance_pre']
+        syn_pre_soma_distance = 0
+        if 'soma_distance_pre' in synapse_df.columns:
+            syn_pre_soma_distance = synapse['soma_distance_pre']
 
         x_post = synapse['x_post']
         y_post = synapse['y_post']
@@ -141,7 +143,9 @@ def synapse_array_to_object(synapse_df):
 
         syn_post_id = synapse['bodyId_post']
         syn_post = {'x': x_post, 'y': y_post, 'z': z_post}
-        syn_post_soma_distance = synapse['soma_distance_post']
+        syn_post_soma_distance = 0
+        if 'soma_distance_post' in synapse_df.columns:
+            syn_post_soma_distance = synapse['soma_distance_post']
 
         syn = {'pre_id': syn_pre_id, 'post_id': syn_post_id, 'pre': syn_pre, 'post': syn_post,
                'pre_soma_dist': syn_pre_soma_distance, 'post_soma_dist': syn_post_soma_distance}

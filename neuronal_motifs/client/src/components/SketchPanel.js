@@ -11,12 +11,18 @@ import _ from "lodash";
 import { Grid, IconButton, Popover, Tooltip } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHand } from "@fortawesome/free-solid-svg-icons";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import { Builder, Query, Utils as QbUtils } from "react-awesome-query-builder";
 import axios from "axios";
 
 function SketchPanel() {
   const sketchPanelId = "sketch-panel";
   let [nodes, setNodes] = useState([]);
   let [edges, setEdges] = useState([]);
+  let [importData, setImportData] = useState(null);
+  let [nodeImportUpdate, setNodeImportUpdate] = useState(false);
+  let [edgeImportUpdate, setEdgeImportUpdate] = useState(false);
   // States are node (add nodes), edge (add edges), edit(change node/edge properties)
   let [mouseState, setMouseState] = useState("node");
   let [cursor, setCursor] = useState("crosshair");
@@ -40,6 +46,44 @@ function SketchPanel() {
     return (await axios.get(url)).data;
   };
 
+  const importMotif = () => {
+    console.log("importing motif");
+    clearSketch(); // clear sketch
+    // import file using file picker
+    let fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.onchange = (e) => {
+      let file = e.target.files[0];
+      // parse file to object
+      let reader = new FileReader();
+      reader.readAsText(file, "UTF-8");
+      reader.onload = (e) => {
+        let data = JSON.parse(e.target.result);
+        setImportData(data);
+        setNodeImportUpdate(true);
+      };
+    };
+
+    fileInput.click();
+  };
+
+  const exportMotif = () => {
+    console.log("exporting motif");
+    console.log(nodes);
+    console.log(edges);
+    let out = getEncodedMotif(nodes, edges);
+    // download out as JSON file
+    let json = JSON.stringify(out);
+    let blob = new Blob([json], { type: "application/json" });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "motif.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   const clearSketch = () => {
     console.log("Clearing");
     paper?.project?.activeLayer?.removeChildren();
@@ -48,6 +92,65 @@ function SketchPanel() {
     setNodes([]);
     setEdges([]);
   };
+
+  const addCircle = (point, node) => {
+    // add circle to paper
+    let circle = new paper.Path.Circle(point, circleRadius);
+    circle.strokeColor = "#000000";
+    circle.strokeWidth = 3;
+    circle.fillColor = context.neuronColors[node.index];
+    circle.opacity = 1.0;
+    circle.position = point;
+
+    placeCircle(
+      circle,
+      node.label,
+      node.properties,
+      "tree" in node ? node.tree : null
+    );
+  };
+
+  const placeCircle = (circle, letter, properties = null, tree = null) => {
+    circle.opacity = 1;
+    let textPoint = [circle.position.x, circle.position.y + 7];
+    let label = new paper.PointText({
+      point: textPoint,
+      justification: "center",
+      fillColor: "white",
+      font: "Roboto",
+      fontSize: 20,
+    });
+    label.content = letter;
+    currentPath?.remove();
+    currentPath = null;
+    let circleGroup = new paper.Group([circle, label]);
+
+    if (tree !== null) {
+      setNodes((nodes) => [
+        ...nodes,
+        {
+          circle: circle,
+          label: letter,
+          properties: properties,
+          type: "node",
+          circleGroup: circleGroup,
+          tree: QbUtils.loadTree(tree),
+        },
+      ]);
+    } else {
+      setNodes((nodes) => [
+        ...nodes,
+        {
+          circle: circle,
+          label: letter,
+          properties: properties,
+          type: "node",
+          circleGroup: circleGroup,
+        },
+      ]);
+    }
+  };
+
   const bindPencilEvents = () => {
     currentPath = null;
     pencil.onMouseMove = function (event) {
@@ -165,32 +268,10 @@ function SketchPanel() {
         if (!currentPath) return;
         // Create new node
         let numNodes = nodes?.length || 0;
+        let letter = String.fromCharCode(65 + numNodes);
         let circle = currentPath.clone();
-        circle.opacity = 1;
-        let textPoint = [circle.position.x, circle.position.y + 7];
-        let label = new paper.PointText({
-          point: textPoint,
-          justification: "center",
-          fillColor: "white",
-          font: "Roboto",
-          fontSize: 20,
-        });
-        let labelLetter = String.fromCharCode(65 + numNodes);
-        label.content = labelLetter;
-        currentPath?.remove();
-        currentPath = null;
-        let circleGroup = new paper.Group([circle, label]);
-        setNodes((nodes) => [
-          ...nodes,
-          {
-            circle: circle,
-            label: labelLetter,
-            properties: null,
-            type: "node",
-            circleGroup: circleGroup,
-          },
-        ]);
-      } else if (mouseState == "edge") {
+        placeCircle(circle, letter);
+      } else if (mouseState === "edge") {
         let intersections = _.findLastIndex(
           nodes.map((n) => {
             return n.circle.contains(event.point);
@@ -340,7 +421,14 @@ function SketchPanel() {
       }
     };
   };
-  const addEdge = (fromNode, toNode, edgeLine) => {
+  const addEdge = (
+    fromNode,
+    toNode,
+    edgeLine,
+    properties = null,
+    tree = null,
+    addEdgeImmediately = true
+  ) => {
     let nodeIndices = [
       _.findLastIndex(nodes, fromNode),
       _.findLastIndex(nodes, toNode),
@@ -353,9 +441,21 @@ function SketchPanel() {
       edgeLine.remove();
       return;
     }
-    const newEdgeObj = createEdge(fromNode, toNode, edgeLine, nodeIndices);
+    const newEdgeObj = createEdge(
+      fromNode,
+      toNode,
+      edgeLine,
+      nodeIndices,
+      properties,
+      tree
+    );
 
-    setEdges([...edges, newEdgeObj]);
+    addEdgePropertyLabel(newEdgeObj);
+
+    if (addEdgeImmediately) {
+      setEdges([...edges, newEdgeObj]);
+    }
+    return newEdgeObj;
   };
 
   const createEdge = (
@@ -413,7 +513,12 @@ function SketchPanel() {
     edgeObj["type"] = "edge";
     edgeObj["label"] = `${edgeObj.fromNode.label} -> ${edgeObj.toNode.label}`;
     edgeObj["properties"] = properties;
-    edgeObj["tree"] = tree;
+    if (tree !== null) {
+      edgeObj["tree"] = QbUtils.loadTree(tree);
+    } else {
+      edgeObj["tree"] = tree;
+    }
+
     if (propertyLabel) edgeObj = addEdgePropertyLabel(edgeObj);
     return edgeObj;
   };
@@ -466,6 +571,64 @@ function SketchPanel() {
       return { label: n.label, position: n.circle.position };
     });
   };
+
+  useEffect(() => {
+    if (importData && nodeImportUpdate) {
+      console.log(importData);
+      importData.nodes.forEach((node) => {
+        let point = new paper.Point(node.position[1], node.position[2]);
+        addCircle(point, node);
+      });
+
+      setNodeImportUpdate(false);
+      setEdgeImportUpdate(true);
+    }
+  }, [nodeImportUpdate]);
+
+  useEffect(() => {
+    if (importData && edgeImportUpdate) {
+      let newEdges = [];
+      importData.edges.forEach((edge) => {
+        let myInputStartNode = importData.nodes.find(
+          (node) => node.index === edge.indices[0]
+        );
+        let myInputEndNode = importData.nodes.find(
+          (node) => node.index === edge.indices[1]
+        );
+
+        let path = new paper.Path();
+        path.strokeColor = "#000000";
+        path.strokeWidth = 3;
+        path.opacity = 1.0;
+        path.add([myInputStartNode.position[1], myInputStartNode.position[2]]);
+        path.add([myInputEndNode.position[1], myInputEndNode.position[2]]);
+
+        let startNode = nodes[edge.indices[0]];
+        let endNode = nodes[edge.indices[1]];
+        path.segments[0].point = startNode.circle.getNearestPoint(
+          endNode.circle.position
+        );
+        path.segments[1].point = endNode.circle.getNearestPoint(
+          startNode.circle.position
+        );
+        let tree = "tree" in edge ? edge.tree : null;
+        let newEdge = addEdge(
+          startNode,
+          endNode,
+          path,
+          edge.properties,
+          tree,
+          false
+        );
+        newEdges.push(newEdge);
+      });
+
+      // add new edges to edges
+      setEdges([...edges, ...newEdges]);
+      setEdgeImportUpdate(false);
+      setImportData(null);
+    }
+  }, [edgeImportUpdate]);
 
   // Checks for edges going opposite to each other and offsets them so they are distinguishable
   useEffect(() => {
@@ -576,10 +739,16 @@ function SketchPanel() {
       console.log("Edges", edges);
     }
   }, [edges]);
-  // Encode the Nodes and Edges For Query
-  useEffect(async () => {
+
+  const getEncodedMotif = (nodes, edges) => {
     let encodedNodes = nodes.map((n, i) => {
-      return { label: n.label, properties: n.properties, index: i };
+      return {
+        label: n.label,
+        properties: n.properties,
+        index: i,
+        position: n.circle.position,
+        tree: n.tree,
+      };
     });
     let encodedEdges = edges.map((e, i) => {
       return {
@@ -587,9 +756,14 @@ function SketchPanel() {
         properties: e.properties,
         index: i,
         indices: e.indices,
+        tree: e.tree,
       };
     });
-    let encodedMotif = { nodes: encodedNodes, edges: encodedEdges };
+    return { nodes: encodedNodes, edges: encodedEdges };
+  };
+  // Encode the Nodes and Edges For Query
+  useEffect(async () => {
+    let encodedMotif = getEncodedMotif(nodes, edges);
 
     // most motif queries fail for n larger than 4, develop heuristics to make more accurate
     nodes.length > 4
@@ -722,6 +896,24 @@ function SketchPanel() {
                   style={{ height: "0.95em", width: "0.95em" }}
                   icon={faHand}
                 />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Import Motif" placement="right">
+              <IconButton
+                value="edit"
+                color={mouseState === "move" ? "primary" : "default"}
+                onClick={() => importMotif()}
+              >
+                <ArrowBackIosNewIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Export Motif" placement="right">
+              <IconButton
+                value="edit"
+                color={mouseState === "move" ? "primary" : "default"}
+                onClick={() => exportMotif()}
+              >
+                <ArrowForwardIosIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           </Grid>
