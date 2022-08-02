@@ -79,18 +79,20 @@ def nodes_and_edges_to_motif_string(motif):
     # First list every edge like A -> B [weight > x]
     for edge in edges:
         edge_str = edge['label']
-        if 'properties' in edge and edge['properties'] is not None:
+        properties = edge['properties']
+        if 'properties' in edge and properties is not None and 'weight' in properties.keys():
             edge_str += ' ['
-            for i, prop in enumerate(list(edge['properties'].items())):
+            for i, prop in enumerate(list(properties.items())):
                 if i != 0:
                     edge_str += ', '
-                edge_str += prop[0]
-                if type(prop[1]) == int or type(prop[1]) == float:
-                    edge_str += ' == ' + str(prop[1])
-                elif '$lt' in prop[1]:
-                    edge_str += ' < ' + str(prop[1]['$lt'])
-                elif '$gt' in prop[1]:
-                    edge_str += ' > ' + str(prop[1]['$gt'])
+                if prop[0] == 'weight':
+                    edge_str += prop[0]
+                    if type(prop[1]) == int or type(prop[1]) == float:
+                        edge_str += ' == ' + str(prop[1])
+                    elif '$lt' in prop[1]:
+                        edge_str += ' < ' + str(prop[1]['$lt'])
+                    elif '$gt' in prop[1]:
+                        edge_str += ' > ' + str(prop[1]['$gt'])
             edge_str += ']'
         edge_str += ' \n'
         output += edge_str
@@ -108,6 +110,8 @@ def nodes_and_edges_to_motif_string(motif):
                 elif '$gt' in prop[1]:
                     node_str += str(node['label']) + "['" + str(prop[0]) + "'] > " + str(prop[1]['$gt']) + '\n'
         output += node_str
+
+    print(output)
     return output
 
 

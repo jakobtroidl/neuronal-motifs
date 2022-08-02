@@ -511,6 +511,12 @@ function SketchPanel() {
     secondCircle?.remove();
     circle?.remove();
     edgeObj["type"] = "edge";
+    // if ("allow" in properties && properties.allow === false) {
+    //   edgeObj["label"] = `${edgeObj.fromNode.label} !> ${edgeObj.toNode.label}`;
+    // } else {
+    //
+    // }
+    console.log("properties: ", properties);
     edgeObj["label"] = `${edgeObj.fromNode.label} -> ${edgeObj.toNode.label}`;
     edgeObj["properties"] = properties;
     if (tree !== null) {
@@ -546,12 +552,17 @@ function SketchPanel() {
     intersectionsCircles.map((i) => i.remove());
 
     let labelText = "";
-    if (_.isNumber(e.properties.weight)) {
-      labelText = e.properties.weight;
-    } else if (e.properties.weight["$lt"]) {
-      labelText = "< " + e.properties.weight["$lt"];
-    } else if (e.properties.weight["$gt"]) {
-      labelText = "> " + e.properties.weight["$gt"];
+    if ("weight" in e.properties) {
+      if (_.isNumber(e.properties.weight)) {
+        labelText = e.properties.weight;
+      } else if (e.properties.weight["$lt"]) {
+        labelText = "< " + e.properties.weight["$lt"];
+      } else if (e.properties.weight["$gt"]) {
+        labelText = "> " + e.properties.weight["$gt"];
+      }
+    }
+    if ("allow" in e.properties) {
+      // TODO add property label that shows edge is forbidden
     }
 
     let propertyLabel = new paper.PointText({
@@ -700,6 +711,16 @@ function SketchPanel() {
           edges.map((e) => {
             // Update the edge with the query properties
             if (_.isEqual(e.edgeLine, context.selectedSketchElement.edgeLine)) {
+              let props = context.selectedSketchElement.properties;
+              if (
+                props !== undefined &&
+                props !== null &&
+                "allow" in props &&
+                props.allow === false
+              ) {
+                // replace character in string
+                e.label = e.label.replace("-", "!"); // disallow edges
+              }
               e.tree = context.selectedSketchElement.tree;
               e.properties = context.selectedSketchElement.properties;
               e = addEdgePropertyLabel(e);

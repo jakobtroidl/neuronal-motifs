@@ -5,4 +5,10 @@ export const EdgeFields = {
     operators: ["equal", "less", "greater"],
     valueSources: ["value"],
   },
+  allow: {
+    label: "allow",
+    type: "boolean",
+    operators: ["equal"],
+    valueSources: ["value"],
+  },
 };

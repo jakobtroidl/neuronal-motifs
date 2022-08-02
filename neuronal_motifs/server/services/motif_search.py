@@ -1,13 +1,18 @@
 from dotmotif import Motif
 from dotmotif.executors.NeuPrintExecutor import NeuPrintExecutor
-from services.data_access import *
-from services.motifabstraction import *
-from utils.data_conversion import nodes_and_edges_to_motif_string
+# from services.data_access import *
+# from services.motifabstraction import *
+# from utils.data_conversion import nodes_and_edges_to_motif_string
+
+from neuronal_motifs.server.utils.authentication import get_access_token
+from neuronal_motifs.server.utils.data_conversion import nodes_and_edges_to_motif_string
 
 
 def search_hemibrain_motif(motif_specs, lim):
     E = NeuPrintExecutor(host='https://neuprint.janelia.org/', dataset='hemibrain:v1.2.1',
                          token=get_access_token('neuprint'))
+
+    print(motif_specs)
 
     motif_source = nodes_and_edges_to_motif_string(motif_specs)
 
