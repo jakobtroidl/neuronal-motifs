@@ -12,3 +12,5 @@ neuronal_motifs/client/node_modules/
 *.pyc
 
 *.pclprof
+
+neuronal_motifs/server/secrets/access_token.json
