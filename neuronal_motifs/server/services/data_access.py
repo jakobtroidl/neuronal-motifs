@@ -23,7 +23,7 @@ def load_neuron_from_cache(neuron_id):
     @param neuron_id: int
     @return: Neuron skeleton (pd.DataFrame)
     """
-    path = Path(Params.root + "/cache/data/neurons/" + str(neuron_id) + ".pkl")
+    path = Path(Params.root + "server/cache/data/neurons/" + str(neuron_id) + ".pkl")
     neuron = None
     if file_exists(path):
         # load neuron from filepath
@@ -106,8 +106,8 @@ class DataAccess:
                 nk_graph.indexEdges()
 
                 # fetch all synapses from server
-                outgoing = neu.fetch_synapse_connections(source_criteria=skel.id, batch_size=200)
-                incoming = neu.fetch_synapse_connections(target_criteria=skel.id, batch_size=200)
+                outgoing = neu.fetch_synapse_connections(source_criteria=skel.id, batch_size=50)
+                incoming = neu.fetch_synapse_connections(target_criteria=skel.id, batch_size=50)
 
                 neuron = Neuron(id=skel.id, skeleton=healed_skel, skel_graph=nk_graph, outgoing_synapses=outgoing,
                                 incoming_synapses=incoming)

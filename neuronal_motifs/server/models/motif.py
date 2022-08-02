@@ -17,7 +17,7 @@ class MyMotif:
         self.neurons = self.data_access.get_neurons(neuron_ids)
         self.synapses = synapses
         self.nodeLinkEdges = edges
-        self.download_synapses()
+        self.compute_motif_synapses()
 
     def as_json(self):
         """
@@ -94,17 +94,16 @@ class MyMotif:
             neuron.compute_skeleton_labels(synapse_nodes)
             print("Done. Took {} sec".format(time.time() - t))
 
-    def download_synapses(self):
+    def compute_motif_synapses(self):
         """
-        Downloads all relevant synapses for the neurons in that given motif and safes them in each neuron object
+        Relevant synapses for the neurons in that given motif and safes them in each neuron object
         """
-        print('Download Synapses')
 
         all_synapses = []
         adjacency = self.get_adjacency(undirected=True)
         for neuron in self.neurons:  # download relevant synapses
-            outgoing_synapses = self.data_access.get_synapses([neuron.id], adjacency[neuron.id])
-            incoming_synapses = self.data_access.get_synapses(adjacency[neuron.id], [neuron.id])
+            outgoing_synapses = neuron.outgoing_synapses.loc[neuron.outgoing_synapses['bodyId_post'].isin(adjacency[neuron.id])]
+            incoming_synapses = neuron.incoming_synapses.loc[neuron.incoming_synapses['bodyId_pre'].isin(adjacency[neuron.id])]
             synapses = pd.concat([outgoing_synapses, incoming_synapses], ignore_index=True, sort=False)
             all_synapses.append(synapses)
             neuron.set_motif_synapses(synapses)
