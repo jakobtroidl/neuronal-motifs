@@ -3,7 +3,6 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { Avatar, ListItemIcon, ListItemText, Stack } from "@mui/material";
 import { queryMotifs } from "../services/data";
-import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import { useContext } from "react";
 import { AppContext } from "../contexts/GlobalContext";
 import { cloneDeep } from "lodash";
@@ -31,8 +30,6 @@ export default function BasicMenu(props) {
   let motif = props.motif;
 
   function determineMenuOptions(motif, neuron) {
-    console.log(motif.nodes);
-
     let nodes = [];
     motif.nodes.forEach((node) => {
       nodes.push(node.label);
@@ -78,8 +75,6 @@ export default function BasicMenu(props) {
       node_props.bodyId = neuron.name;
       motif_copy.nodes[idx].properties = node_props;
     }
-
-    console.log("motif: ", motif_copy);
 
     let results = await queryMotifs(motif_copy, 10);
     context.setNeighborhoodQuery({

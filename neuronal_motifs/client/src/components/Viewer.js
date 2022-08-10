@@ -10,8 +10,6 @@ import { Color } from "../utils/rendering";
 import _ from "lodash";
 import BasicMenu from "./ContextMenu";
 import axios from "axios";
-import { Object3D } from "three";
-import { element } from "prop-types";
 
 const setLineVisibility = (scene, visible) => {
   scene.children.forEach((child) => {
@@ -158,7 +156,6 @@ function addNeurons(
     );
     scene.add(neuronObject);
   });
-  console.log(scene);
 }
 
 function addAbstractionCenters(motif, context, scene, interactionManager) {
@@ -176,26 +173,6 @@ function addAbstractionCenters(motif, context, scene, interactionManager) {
     scene.add(mesh);
   });
 }
-
-// function setHighlightNeuron(neuron, highlight) {
-//   if (neuron && neuron.isNeuron) {
-//     console.log("highlighting neuron");
-//     neuron.children.forEach((child) => {
-//       if (highlight) {
-//         // child.oldMaterial = child.material.clone();
-//         let color = new THREE.Color(0xffffff);
-//         child.material.uniforms.typeColor = [color.r, color.g, color.b];
-//         //child.material.color.setHex(0xf44336);
-//         // let color = child.userData.materialShader.color.clone();
-//         // child.material.oldColor = color;
-//         // child.child.userData.materialShader.color = color.multiplyScalar(1.5);
-//       } else {
-//         //child.material.color.setHex(0xffc107);
-//       }
-//       //child.material.needsUpdate = true;
-//     });
-//   }
-// }
 
 function addSynapse(scene, synapse, color) {
   // create a sphere shape
@@ -346,8 +323,6 @@ function Viewer() {
     }
 
     line.material.needsUpdate = true;
-
-    console.log(line);
   }
 
   function onNeuronClick(event, neuron) {
@@ -502,9 +477,6 @@ function Viewer() {
       let clickedNeuronId = context.neighborhoodQuery.clickedNeuronId;
       let query = context.motifQuery;
 
-      console.log("neighborhood query results");
-      console.log(context.neighborhoodQuery);
-
       // get all connected neurons to currently selected neuron
       let inputNeurons = {};
       let outputNeurons = {};
@@ -553,8 +525,6 @@ function Viewer() {
       addSynapseSuggestions(synapses.input, "input", parent);
       addSynapseSuggestions(synapses.output, "output", parent);
       sharkViewerInstance.scene.add(parent);
-
-      console.log(sharkViewerInstance.scene);
     }
   }, [context.neighborhoodQuery]);
 
