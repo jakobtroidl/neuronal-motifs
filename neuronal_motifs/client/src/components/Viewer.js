@@ -138,13 +138,7 @@ const getTranslationVectors = (count) => {
   return directions;
 };
 
-function addNeurons(
-  motif,
-  context,
-  sharkViewerInstance,
-  scene,
-  interactionManager
-) {
+function addNeurons(motif, context, sharkViewerInstance, scene, updateCamera) {
   motif.neurons.forEach((neuron, i) => {
     let parsedSwc = swcParser(neuron.skeleton_swc);
     let color = context.neuronColors[i];
@@ -152,7 +146,7 @@ function addNeurons(
       neuron.id,
       color,
       parsedSwc,
-      true
+      updateCamera
     );
     scene.add(neuronObject);
   });
@@ -401,7 +395,11 @@ function Viewer() {
             ) {
               console.log("add this motif to scene");
               console.log(result);
-              context.setSelectedMotif(Object.values(result));
+              console.log(context.selectedMotifs);
+              context.setSelectedMotifs([
+                ...context.selectedMotifs,
+                Object.values(result),
+              ]);
               return true;
               // TODO how to handle multiple motifs that match pattern?
             }
@@ -571,8 +569,8 @@ function Viewer() {
 
   // Fetches the data, only runs on init
   useEffect(async () => {
-    if (context.selectedMotif) {
-      let selectedMotif = context.selectedMotif;
+    if (context.selectedMotifs) {
+      let selectedMotif = context.selectedMotifs.at(-1); // get the latest motif
       console.log(selectedMotif);
       let bodyIds = selectedMotif.map((m) => m.bodyId);
       bodyIds = JSON.stringify(bodyIds);
@@ -585,10 +583,10 @@ function Viewer() {
       };
 
       ws.onmessage = function (event) {
-        console.log(
-          `[message] Data received from server: ${event.data}`,
-          new Date().getSeconds()
-        );
+        // console.log(
+        //   `[message] Data received from server: ${event.data}`,
+        //   new Date().getSeconds()
+        // );
         let data = JSON.parse(event.data);
         if (data?.status === 200) {
           setMotif(data.payload);
@@ -612,7 +610,7 @@ function Viewer() {
         }
       };
     }
-  }, [context.selectedMotif]);
+  }, [context.selectedMotifs]);
 
   function addEdgeGroupToScene(groups, scene) {
     let lines_identifier = "lines";
@@ -714,7 +712,7 @@ function Viewer() {
       }
 
       let scene = sharkViewerInstance.scene;
-      scene.remove.apply(scene, scene.children); // remove all previous loaded objects
+      //scene.remove.apply(scene, scene.children); // remove all previous loaded objects
 
       let interactionManager = sharkViewerInstance.scene.interactionManager;
       context.setResetUICounter(context.resetUICounter + 1); // reset slider
@@ -735,13 +733,12 @@ function Viewer() {
         interactionManager
       );
 
-      addNeurons(
-        motif,
-        context,
-        sharkViewerInstance,
-        scene,
-        interactionManager
-      );
+      let updateCamera = true;
+      if (context.resetUICounter > 0) {
+        updateCamera = false;
+      }
+
+      addNeurons(motif, context, sharkViewerInstance, scene, updateCamera);
     }
   }, [motif, sharkViewerInstance]);
 

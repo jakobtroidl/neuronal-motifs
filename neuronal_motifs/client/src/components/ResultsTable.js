@@ -44,7 +44,7 @@ export default function ResultsTable(props) {
   };
 
   const handleMotifSelection = (motif) => {
-    context.setSelectedMotif(motif.neurons);
+    context.setSelectedMotifs([...context.selectedMotifs, motif.neurons]);
   };
 
   const getSortedColumns = () => {
