@@ -123,7 +123,7 @@ class DataAccess:
         neurons_to_download = []  # list of neuron ids that have yet to be downloaded
         for id in body_ids:
             neuron = load_neuron_from_cache(id)
-            if neuron is None:
+            if neuron is None or not isinstance(neuron, Neuron):
                 neurons_to_download.append(id)
             else:
                 # download neuron
