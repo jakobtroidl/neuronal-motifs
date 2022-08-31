@@ -69,7 +69,7 @@ export function CollapsableTableRow(props) {
           }}
         >
           <Collapse in={open}>
-            <Box overflow={"scroll"}>
+            <Box overflow={"auto"}>
               <Table size="small" aria-label="motifs">
                 <TableHead>
                   <TableRow>
