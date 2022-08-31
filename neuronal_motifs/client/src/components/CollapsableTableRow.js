@@ -10,11 +10,17 @@ import TableBody from "@mui/material/TableBody";
 import PropTypes from "prop-types";
 import { AppContext } from "../contexts/GlobalContext";
 import { hexToRgbA } from "../utils/rendering";
+import CloseIcon from "@mui/icons-material/Close";
 
 export function CollapsableTableRow(props) {
-  const { row, handleClick, columns } = props;
+  const { row, columns, handleClick, handleDelete } = props;
   const [open, setOpen] = React.useState(false);
   const context = useContext(AppContext);
+  let deletable = false;
+
+  if (handleDelete) {
+    deletable = true;
+  }
 
   return (
     <React.Fragment>
@@ -37,12 +43,25 @@ export function CollapsableTableRow(props) {
         >
           {row.name}
         </TableCell>
+        <TableCell
+          style={{ borderBottom: "unset", borderTop: "unset" }}
+          //align={"right"}
+        >
+          <IconButton
+            aria-label="delete row"
+            size="small"
+            onClick={(e) => {
+              handleDelete(row);
+            }}
+          >
+            {<CloseIcon />}
+          </IconButton>
+        </TableCell>
       </TableRow>
       <TableRow className={"motif-selection-div"}>
         <TableCell
           style={{
-            paddingBottom: 0,
-            paddingTop: 0,
+            padding: 0,
           }}
           colSpan={6}
           onClick={() => {
@@ -50,7 +69,7 @@ export function CollapsableTableRow(props) {
           }}
         >
           <Collapse in={open}>
-            <Box sx={{ margin: 1 }}>
+            <Box overflow={"scroll"}>
               <Table size="small" aria-label="motifs">
                 <TableHead>
                   <TableRow>
@@ -61,7 +80,7 @@ export function CollapsableTableRow(props) {
                       })}
                   </TableRow>
                 </TableHead>
-                <TableBody style={{ overFlowX: "scroll" }}>
+                <TableBody>
                   {row.neurons.map((neuron, index) => (
                     <TableRow
                       key={neuron.nodeKey}
@@ -102,4 +121,5 @@ CollapsableTableRow.propTypes = {
     ).isRequired,
   }).isRequired,
   handleClick: PropTypes.func,
+  handleDelete: PropTypes.func,
 };
