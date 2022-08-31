@@ -572,7 +572,7 @@ function Viewer() {
     if (context.selectedMotifs) {
       let selectedMotif = context.selectedMotifs.at(-1); // get the latest motif
       console.log(selectedMotif);
-      let bodyIds = selectedMotif.map((m) => m.bodyId);
+      let bodyIds = selectedMotif.neurons.map((n) => n.bodyId);
       bodyIds = JSON.stringify(bodyIds);
       let motifQuery = JSON.stringify(context.motifQuery);
       const ws = new WebSocket(`ws://localhost:5050/display_motif_ws/`);
