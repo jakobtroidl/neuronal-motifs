@@ -41,6 +41,10 @@ export default function SelectionTable(props) {
     console.log("Clicked on selected motif");
   }
 
+  function handleDelete(row) {
+    console.log("Deleted selected motif");
+  }
+
   return (
     <div className="results">
       <TableContainer>
@@ -52,6 +56,7 @@ export default function SelectionTable(props) {
                 row={row}
                 columns={columns}
                 handleClick={handleClick}
+                handleDelete={handleDelete}
               />
             ))}
           </TableBody>
