@@ -176,19 +176,48 @@ function addAbstractionCenters(motif, context, scene, interactionManager) {
   });
 }
 
-function addSynapse(scene, synapse, color) {
+function getSynapseName(synapse, flipped = false) {
+  let pre = synapse.pre_id;
+  let post = synapse.post_id;
+  let pre_loc = synapse.pre.x + "-" + synapse.pre.y + "-" + synapse.pre.z;
+  let post_loc = synapse.post.x + "-" + synapse.post.y + "-" + synapse.post.z;
+
+  if (flipped) {
+    return "syn-" + post_loc + "-" + pre_loc;
+  } else {
+    return "syn-" + pre_loc + "-" + post_loc;
+  }
+}
+
+function addSynapse(scene, synapse, color, motif) {
   // create a sphere shape
-  let geometry = new THREE.SphereGeometry(100, 16, 16);
-  let material = new THREE.MeshPhongMaterial({ color: color });
-  let mesh = new THREE.Mesh(geometry, material);
+  let name_variant1 = getSynapseName(synapse, false);
+  let name_variant2 = getSynapseName(synapse, true);
+  if (
+    !scene.getObjectByName(name_variant1) &&
+    !scene.getObjectByName(name_variant2)
+  ) {
+    let geometry = new THREE.SphereGeometry(100, 16, 16);
+    let material = new THREE.MeshPhongMaterial({ color: color });
+    let mesh = new THREE.Mesh(geometry, material);
 
-  mesh.name = "syn-" + synapse.pre_id + "-" + synapse.post_id;
-  mesh.position.x = (synapse.post.x + synapse.pre.x) / 2.0;
-  mesh.position.y = (synapse.post.y + synapse.pre.y) / 2.0;
-  mesh.position.z = (synapse.post.z + synapse.pre.z) / 2.0;
+    mesh.name = name_variant1;
+    mesh.position.x = (synapse.post.x + synapse.pre.x) / 2.0;
+    mesh.position.y = (synapse.post.y + synapse.pre.y) / 2.0;
+    mesh.position.z = (synapse.post.z + synapse.pre.z) / 2.0;
 
-  scene.add(mesh);
-  return mesh;
+    mesh.motifs = [motif];
+
+    scene.add(mesh);
+    return mesh;
+  } else {
+    let mesh = scene.getObjectByName(name_variant1);
+    if (!mesh) {
+      mesh = scene.getObjectByName(name_variant2);
+    }
+    mesh.motifs.push(motif);
+    return mesh;
+  }
 }
 
 function addSynapses(
@@ -196,32 +225,34 @@ function addSynapses(
   setDisplayTooltip,
   setTooltipInfo,
   scene,
-  interactionManager
+  interactionManager,
+  motif
 ) {
   synapses.forEach((syn) => {
-    let mesh = addSynapse(scene, syn, Color.orange);
-
-    // show tooltip when mouse is over the synapse and change synapse color
-    mesh.addEventListener("mouseover", (event) => {
-      mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
-      mesh.material.needsUpdate = true;
-      document.body.style.cursor = "pointer";
-      setDisplayTooltip(true);
-      setTooltipInfo({
-        pre_soma_dist: syn.pre_soma_dist,
-        post_soma_dist: syn.post_soma_dist,
-        event: event,
+    let mesh = addSynapse(scene, syn, Color.orange, motif);
+    if (mesh) {
+      // show tooltip when mouse is over the synapse and change synapse color
+      mesh.addEventListener("mouseover", (event) => {
+        mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
+        mesh.material.needsUpdate = true;
+        document.body.style.cursor = "pointer";
+        setDisplayTooltip(true);
+        setTooltipInfo({
+          pre_soma_dist: syn.pre_soma_dist,
+          post_soma_dist: syn.post_soma_dist,
+          event: event,
+        });
       });
-    });
 
-    mesh.addEventListener("mouseout", (event) => {
-      setDisplayTooltip(false);
-      mesh.material = new THREE.MeshPhongMaterial({ color: Color.orange });
-      mesh.material.needsUpdate = true;
-      document.body.style.cursor = "default";
-    });
+      mesh.addEventListener("mouseout", (event) => {
+        setDisplayTooltip(false);
+        mesh.material = new THREE.MeshPhongMaterial({ color: Color.orange });
+        mesh.material.needsUpdate = true;
+        document.body.style.cursor = "default";
+      });
 
-    interactionManager.add(mesh);
+      interactionManager.add(mesh);
+    }
   });
 }
 
@@ -597,7 +628,14 @@ function Viewer() {
         // );
         let data = JSON.parse(event.data);
         if (data?.status === 200) {
-          setMotif({ ...data.payload, index: context.motifToAdd.index });
+          console.log("motif to add: ", context.motifToAdd);
+          let motif = {
+            name: context.motifToAdd.name,
+            index: context.motifToAdd.index,
+            ...data.payload,
+          };
+          setMotif(motif);
+          context.setSelectedMotifs([...context.selectedMotifs, motif]);
           context.setLoadingMessage(null);
         } else {
           context.setLoadingMessage(data?.message || "Error");
@@ -617,10 +655,7 @@ function Viewer() {
           console.log("[close] Connection died", new Date().getSeconds());
         }
       };
-      context.setSelectedMotifs([
-        ...context.selectedMotifs,
-        context.motifToAdd,
-      ]);
+
       context.setMotifToAdd(null);
     }
   }, [context.motifToAdd]);
@@ -713,28 +748,51 @@ function Viewer() {
     }
   }, [context.abstractionLevel]);
 
+  function deleteNeuron(scene, neuron) {
+    let mesh = scene.getObjectByName(neuron.id);
+    if (mesh) {
+      let match = mesh.motifs.find(
+        (m) => m.index === context.motifToDelete.index
+      );
+      if (match) {
+        let idx = mesh.motifs.indexOf(match);
+        mesh.motifs.splice(idx, 1);
+      }
+      if (mesh.motifs.length === 0) {
+        scene.remove(mesh);
+      }
+    }
+  }
+
+  function deleteSynapse(scene, synapse) {
+    let mesh = scene.getObjectByName(getSynapseName(synapse, false));
+    if (!mesh) {
+      mesh = scene.getObjectByName(getSynapseName(synapse, true));
+    }
+    if (mesh && context.motifToDelete) {
+      let match = mesh.motifs.find(
+        (m) => m.index === context.motifToDelete.index
+      );
+      if (match) {
+        let idx = mesh.motifs.indexOf(match);
+        mesh.motifs.splice(idx, 1);
+      }
+      if (mesh.motifs.length === 0) {
+        scene.remove(mesh);
+      }
+    }
+  }
+
   useEffect(() => {
     if (context.motifToDelete && sharkViewerInstance) {
       let scene = sharkViewerInstance.scene;
-
-      console.log("current scene: ", scene);
-      console.log("motif to delete: ", context.motifToDelete);
-
+      console.log("deleting motif", context.motifToDelete);
       context.motifToDelete.neurons.forEach((neuron) => {
-        let mesh = scene.getObjectByName(neuron.bodyId);
-        console.log("mesh: ", mesh);
-        if (mesh) {
-          let match = mesh.motifs.find(
-            (m) => m.index === context.motifToDelete.index
-          );
-          if (match) {
-            let idx = mesh.motifs.indexOf(match);
-            mesh.motifs.splice(idx, 1);
-          }
-          if (mesh.motifs.length === 0) {
-            scene.remove(mesh);
-          }
-        }
+        deleteNeuron(scene, neuron);
+      });
+      console.log(context.motifToDelete);
+      context.motifToDelete.synapses.forEach((synapse) => {
+        deleteSynapse(scene, synapse);
       });
       context.setMotifToDelete(null);
     }
@@ -770,7 +828,8 @@ function Viewer() {
         setDisplayTooltip,
         setTooltipInfo,
         scene,
-        interactionManager
+        interactionManager,
+        motif
       );
 
       let updateCamera = true;
