@@ -160,19 +160,25 @@ function addNeurons(motif, context, sharkViewerInstance, scene, updateCamera) {
   console.log(scene);
 }
 
+function getAbstractionCenterName(neuron) {
+  return "abstraction-center-" + neuron.id;
+}
+
 function addAbstractionCenters(motif, context, scene, interactionManager) {
   motif.neurons.forEach((neuron, i) => {
-    let geometry = new THREE.SphereGeometry(200, 16, 16);
-    let material = new THREE.MeshPhongMaterial({
-      color: context.neuronColors[i],
-    });
-    let mesh = new THREE.Mesh(geometry, material);
-    mesh.name = "abstraction-center-" + neuron.id;
-    mesh.position.x = neuron.abstraction_center[0];
-    mesh.position.y = neuron.abstraction_center[1];
-    mesh.position.z = neuron.abstraction_center[2];
+    if (!scene.getObjectByName(getAbstractionCenterName(neuron))) {
+      let geometry = new THREE.SphereGeometry(200, 16, 16);
+      let material = new THREE.MeshPhongMaterial({
+        color: context.neuronColors[i],
+      });
+      let mesh = new THREE.Mesh(geometry, material);
+      mesh.name = getAbstractionCenterName(neuron);
+      mesh.position.x = neuron.abstraction_center[0];
+      mesh.position.y = neuron.abstraction_center[1];
+      mesh.position.z = neuron.abstraction_center[2];
 
-    scene.add(mesh);
+      scene.add(mesh);
+    }
   });
 }
 
@@ -748,6 +754,13 @@ function Viewer() {
     }
   }, [context.abstractionLevel]);
 
+  function deleteAbstractionCenter(scene, neuron) {
+    let center = scene.getObjectByName(getAbstractionCenterName(neuron));
+    if (center) {
+      scene.remove(center);
+    }
+  }
+
   function deleteNeuron(scene, neuron) {
     let mesh = scene.getObjectByName(neuron.id);
     if (mesh) {
@@ -759,6 +772,7 @@ function Viewer() {
         mesh.motifs.splice(idx, 1);
       }
       if (mesh.motifs.length === 0) {
+        deleteAbstractionCenter(scene, neuron);
         scene.remove(mesh);
       }
     }
