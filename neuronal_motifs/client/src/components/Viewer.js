@@ -140,16 +140,24 @@ const getTranslationVectors = (count) => {
 
 function addNeurons(motif, context, sharkViewerInstance, scene, updateCamera) {
   motif.neurons.forEach((neuron, i) => {
-    let parsedSwc = swcParser(neuron.skeleton_swc);
-    let color = context.neuronColors[i];
-    let neuronObject = sharkViewerInstance.loadNeuron(
-      neuron.id,
-      color,
-      parsedSwc,
-      updateCamera
-    );
-    scene.add(neuronObject);
+    if (!scene.getObjectByName(neuron.id)) {
+      let parsedSwc = swcParser(neuron.skeleton_swc);
+      let color = context.neuronColors[i];
+      let neuronObject = sharkViewerInstance.loadNeuron(
+        neuron.id,
+        color,
+        parsedSwc,
+        updateCamera
+      );
+      neuronObject.motifs = [motif];
+      scene.add(neuronObject);
+    } else {
+      let neuronObject = scene.getObjectByName(neuron.id);
+      neuronObject.motifs.push(motif);
+    }
   });
+
+  console.log(scene);
 }
 
 function addAbstractionCenters(motif, context, scene, interactionManager) {
@@ -570,8 +578,9 @@ function Viewer() {
   // Fetches the data, only runs on init
   useEffect(async () => {
     if (context.selectedMotifs) {
+      console.log("selected motifs: ", context.selectedMotifs);
       let selectedMotif = context.selectedMotifs.at(-1); // get the latest motif
-      console.log(selectedMotif);
+      console.log("my selected motif: ", selectedMotif);
       let bodyIds = selectedMotif.neurons.map((n) => n.bodyId);
       bodyIds = JSON.stringify(bodyIds);
       let motifQuery = JSON.stringify(context.motifQuery);
@@ -589,7 +598,7 @@ function Viewer() {
         // );
         let data = JSON.parse(event.data);
         if (data?.status === 200) {
-          setMotif(data.payload);
+          setMotif({ ...data.payload, index: selectedMotif.index });
           context.setLoadingMessage(null);
         } else {
           context.setLoadingMessage(data?.message || "Error");
@@ -699,6 +708,33 @@ function Viewer() {
       setPrevSliderValue(level);
     }
   }, [context.abstractionLevel]);
+
+  useEffect(() => {
+    if (context.motifToDelete && sharkViewerInstance) {
+      let scene = sharkViewerInstance.scene;
+
+      console.log("current scene: ", scene);
+      console.log("motif to delete: ", context.motifToDelete);
+
+      context.motifToDelete.neurons.forEach((neuron) => {
+        let mesh = scene.getObjectByName(neuron.bodyId);
+        console.log("mesh: ", mesh);
+        if (mesh) {
+          let match = mesh.motifs.find(
+            (m) => m.index === context.motifToDelete.index
+          );
+          if (match) {
+            let idx = mesh.motifs.indexOf(match);
+            mesh.motifs.splice(idx, 1);
+          }
+          if (mesh.motifs.length === 0) {
+            scene.remove(mesh);
+          }
+        }
+      });
+    }
+    context.setMotifToDelete(null);
+  }, [context.motifToDelete]);
 
   useEffect(() => {
     if (motif && sharkViewerInstance) {

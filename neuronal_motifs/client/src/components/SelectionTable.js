@@ -2,11 +2,13 @@ import TableContainer from "@mui/material/TableContainer";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import { CollapsableTableRow } from "./CollapsableTableRow";
-import React from "react";
+import React, { useContext, useState } from "react";
 import { NodeFields } from "../config/NodeFields";
+import { AppContext } from "../contexts/GlobalContext";
 
 export default function SelectionTable(props) {
-  let selection = props.selection;
+  const [selection, setSelection] = useState(props.selection);
+  const context = useContext(AppContext);
 
   function getVisibleColumns() {
     let columns = {};
@@ -42,7 +44,14 @@ export default function SelectionTable(props) {
   }
 
   function handleDelete(row) {
-    console.log("Deleted selected motif");
+    let motifs = context.selectedMotifs;
+    const idx = motifs.indexOf(row);
+    if (idx > -1) {
+      context.setMotifToDelete(motifs.at(idx));
+      setSelection(selection.filter((r) => r !== row));
+    } else {
+      console.log("Motif Selection Delete. Row index not found.");
+    }
   }
 
   return (

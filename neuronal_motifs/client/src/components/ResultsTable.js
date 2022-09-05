@@ -44,7 +44,10 @@ export default function ResultsTable(props) {
   };
 
   const handleMotifSelection = (motif) => {
-    context.setSelectedMotifs([...context.selectedMotifs, motif]);
+    let selectedMotif = { ...motif, index: context.globalMotifIndex };
+    context.setGlobalMotifIndex(context.globalMotifIndex + 1);
+    console.log("selected motif: ", selectedMotif);
+    context.setSelectedMotifs([...context.selectedMotifs, selectedMotif]);
   };
 
   const getSortedColumns = () => {
