@@ -43,6 +43,7 @@ export const ContextWrapper = (props) => {
 
   // neighborhood query results
   const [neighborhoodQuery, setNeighborhoodQuery] = useState(null);
+  const [motifToAdd, setMotifToAdd] = useState(null);
   const [motifToDelete, setMotifToDelete] = useState(null);
   return (
     <AppContext.Provider
@@ -75,6 +76,8 @@ export const ContextWrapper = (props) => {
         setNeighborhoodQuery,
         highlightColor,
         setHighlightColor,
+        motifToAdd,
+        setMotifToAdd,
         motifToDelete,
         setMotifToDelete,
       }}

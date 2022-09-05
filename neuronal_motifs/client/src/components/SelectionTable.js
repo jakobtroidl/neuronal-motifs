@@ -44,11 +44,13 @@ export default function SelectionTable(props) {
   }
 
   function handleDelete(row) {
-    let motifs = context.selectedMotifs;
-    const idx = motifs.indexOf(row);
+    let selectedMotifs_copy = [...context.selectedMotifs];
+    const idx = selectedMotifs_copy.indexOf(row);
     if (idx > -1) {
-      context.setMotifToDelete(motifs.at(idx));
+      context.setMotifToDelete(selectedMotifs_copy.at(idx));
       setSelection(selection.filter((r) => r !== row));
+      selectedMotifs_copy.splice(idx, 1);
+      context.setSelectedMotifs(selectedMotifs_copy);
     } else {
       console.log("Motif Selection Delete. Row index not found.");
     }

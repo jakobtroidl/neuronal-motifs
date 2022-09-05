@@ -577,11 +577,10 @@ function Viewer() {
 
   // Fetches the data, only runs on init
   useEffect(async () => {
-    if (context.selectedMotifs) {
-      console.log("selected motifs: ", context.selectedMotifs);
-      let selectedMotif = context.selectedMotifs.at(-1); // get the latest motif
-      console.log("my selected motif: ", selectedMotif);
-      let bodyIds = selectedMotif.neurons.map((n) => n.bodyId);
+    if (context.motifToAdd) {
+      //let selectedMotif = context.selectedMotifs.at(-1); // get the latest motif
+      //console.log("my selected motif: ", selectedMotif);
+      let bodyIds = context.motifToAdd.neurons.map((n) => n.bodyId);
       bodyIds = JSON.stringify(bodyIds);
       let motifQuery = JSON.stringify(context.motifQuery);
       const ws = new WebSocket(`ws://localhost:5050/display_motif_ws/`);
@@ -598,7 +597,7 @@ function Viewer() {
         // );
         let data = JSON.parse(event.data);
         if (data?.status === 200) {
-          setMotif({ ...data.payload, index: selectedMotif.index });
+          setMotif({ ...data.payload, index: context.motifToAdd.index });
           context.setLoadingMessage(null);
         } else {
           context.setLoadingMessage(data?.message || "Error");
@@ -618,8 +617,13 @@ function Viewer() {
           console.log("[close] Connection died", new Date().getSeconds());
         }
       };
+      context.setSelectedMotifs([
+        ...context.selectedMotifs,
+        context.motifToAdd,
+      ]);
+      context.setMotifToAdd(null);
     }
-  }, [context.selectedMotifs]);
+  }, [context.motifToAdd]);
 
   function addEdgeGroupToScene(groups, scene) {
     let lines_identifier = "lines";
@@ -732,8 +736,8 @@ function Viewer() {
           }
         }
       });
+      context.setMotifToDelete(null);
     }
-    context.setMotifToDelete(null);
   }, [context.motifToDelete]);
 
   useEffect(() => {
