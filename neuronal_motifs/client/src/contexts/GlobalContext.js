@@ -5,7 +5,8 @@ export const AppContext = React.createContext(null);
 // Step 2: Create a ContextWrapper component that has to be the parent of every consumer.
 
 export const ContextWrapper = (props) => {
-  const [selectedMotif, setSelectedMotif] = useState();
+  const [globalMotifIndex, setGlobalMotifIndex] = useState(0);
+  const [selectedMotifs, setSelectedMotifs] = useState([]);
   const [motifQuery, setMotifQuery] = useState();
   const [abstractionLevel, setAbstractionLevel] = useState();
   const [neuronColors, setNeuronColors] = useState([
@@ -42,12 +43,15 @@ export const ContextWrapper = (props) => {
 
   // neighborhood query results
   const [neighborhoodQuery, setNeighborhoodQuery] = useState(null);
-
+  const [motifToAdd, setMotifToAdd] = useState(null);
+  const [motifToDelete, setMotifToDelete] = useState(null);
   return (
     <AppContext.Provider
       value={{
-        selectedMotif,
-        setSelectedMotif,
+        globalMotifIndex,
+        setGlobalMotifIndex,
+        selectedMotifs,
+        setSelectedMotifs,
         selectedSketchElement,
         setSelectedSketchElement,
         motifQuery,
@@ -72,6 +76,10 @@ export const ContextWrapper = (props) => {
         setNeighborhoodQuery,
         highlightColor,
         setHighlightColor,
+        motifToAdd,
+        setMotifToAdd,
+        motifToDelete,
+        setMotifToDelete,
       }}
     >
       {props.children}
