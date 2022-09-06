@@ -10,6 +10,7 @@ import { Color } from "../utils/rendering";
 import _ from "lodash";
 import BasicMenu from "./ContextMenu";
 import axios from "axios";
+import { getAuthToken } from "../utils/authentication";
 
 const setLineVisibility = (scene, visible) => {
   scene.children.forEach((child) => {
@@ -552,10 +553,12 @@ function Viewer() {
       let inputNeuronsJSON = JSON.stringify(inputNeurons);
       let outputNeuronsJSON = JSON.stringify(outputNeurons);
 
+      let token = getAuthToken();
+
       // filter for synapses to draw
       let synapses = (
         await axios.get(
-          `http://localhost:5050/synapses/neuron=${clickedNeuronId}&&inputNeurons=${inputNeuronsJSON}&&outputNeurons=${outputNeuronsJSON}`
+          `http://localhost:5050/synapses/neuron=${clickedNeuronId}&&inputNeurons=${inputNeuronsJSON}&&outputNeurons=${outputNeuronsJSON}&&token=${token}`
         )
       ).data;
 
@@ -620,11 +623,18 @@ function Viewer() {
       let bodyIds = context.motifToAdd.neurons.map((n) => n.bodyId);
       bodyIds = JSON.stringify(bodyIds);
       let motifQuery = JSON.stringify(context.motifQuery);
+      let token = JSON.stringify(getAuthToken());
       const ws = new WebSocket(`ws://localhost:5050/display_motif_ws/`);
       ws.onopen = function (e) {
         console.log("[open] Connection established", new Date().getSeconds());
         console.log("Sending to server", new Date().getSeconds());
-        ws.send(JSON.stringify({ bodyIDs: bodyIds, motif: motifQuery }));
+        ws.send(
+          JSON.stringify({
+            bodyIDs: bodyIds,
+            motif: motifQuery,
+            token: token,
+          })
+        );
       };
 
       ws.onmessage = function (event) {

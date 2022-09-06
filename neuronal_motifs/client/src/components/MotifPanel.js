@@ -18,6 +18,8 @@ import Tab from "@mui/material/Tab";
 import Typography from "@mui/material/Typography";
 import PropTypes from "prop-types";
 import SelectionTable from "./SelectionTable";
+import { Settings } from "@mui/icons-material";
+import SettingsPanel from "./SettingsPanel";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -176,7 +178,8 @@ function MotifPanel() {
             )}
           </TabPanel>
           <TabPanel value={selectedTab} index={2}>
-            <span className="hint">This is where the settings will go </span>
+            <SettingsPanel />
+            {/*<span className="hint">This is where the settings will go </span>*/}
           </TabPanel>
         </Box>
       </div>

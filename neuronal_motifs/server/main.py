@@ -9,7 +9,7 @@ from fastapi import WebSocket
 from starlette.middleware.cors import CORSMiddleware
 
 from models import nblast, count
-from services import data_service, motifabstraction, motif_search, data_access
+from services import motifabstraction, motif_search, data_access
 
 app = FastAPI()
 
@@ -39,9 +39,9 @@ def read_item(item_id: int, q: Optional[str] = None):
     return {"item_id": item_id, "q": q}
 
 
-@app.get("/get_test_motif")
-def get_test_motif():
-    return motifabstraction.get_example_motif()
+# @app.get("/get_test_motif")
+# def get_test_motif():
+#     return motifabstraction.get_example_motif()
 
 
 @app.post("/search")
@@ -49,46 +49,42 @@ async def search_motif(req: Request):
     req = await req.json()
     motif = req['motif']
     lim = req['lim']
-    return motif_search.search_hemibrain_motif(motif, lim)
+    token = req['token']
+    return motif_search.search_hemibrain_motif(motif, lim, token)
 
 
-@app.get("/get_sample_node")
-def get_sample_node():  # search one motif at a time
-    return motif_search.get_sample_node()
-
-
-@app.get("/display_motif/bodyIDs={ids}&motif={motif}")
-def get_motif_data(ids, motif):
+@app.get("/display_motif/bodyIDs={ids}&motif={motif}&token={token}")
+def get_motif_data(ids, motif, token):
     ids = json.loads(ids)
     motif = json.loads(motif)
-    return motifabstraction.get_motif(ids, motif)
+    token = json.loads(token)
+    return motifabstraction.get_motif(ids, motif, token)
 
 
-# http://localhost:5050/display_motif/bodyIDs=[1001453586,5813032887,5813091420]&motif=[[2],[0],[1,0]]
-@app.websocket("/ws_display_motif/bodyIDs={ids}&motif={motif}")
-async def ws_get_motif_data(websocket: WebSocket, ids: str, motif: str):
-    await websocket.accept()
-    ids = json.loads(ids)
-    motif = json.loads(motif)
-    get_motif_generator = motifabstraction.get_motif(ids, motif)
-    try:
-        for val in get_motif_generator:
-            payload = val
-            await websocket.send_json(payload)
-    except StopIteration:
-        print('Done Fetching Motif')
+# # http://localhost:5050/display_motif/bodyIDs=[1001453586,5813032887,5813091420]&motif=[[2],[0],[1,0]]
+# @app.websocket("/ws_display_motif/bodyIDs={ids}&motif={motif}&token={token}")
+# async def ws_get_motif_data(websocket: WebSocket, ids: str, motif: str, token: str):
+#     await websocket.accept()
+#     ids = json.loads(ids)
+#     motif = json.loads(motif)
+#     get_motif_generator = motifabstraction.get_motif(ids, motif, token)
+#     try:
+#         for val in get_motif_generator:
+#             payload = val
+#             await websocket.send_json(payload)
+#     except StopIteration:
+#         print('Done Fetching Motif')
 
 
-# http://localhost:5050/display_motif/bodyIDs=[1001453586,5813032887,5813091420]&motif=[[2],[0],[1,0]]
-# /bodyIDs={ids}&motif={motif}
+# downloads the data for the given body ids
 @app.websocket_route("/display_motif_ws/")
 async def ws_get_motif_data(websocket: WebSocket):
     await websocket.accept()
     data = await websocket.receive_json()
-    timer = time.time()
     ids = json.loads(data['bodyIDs'])
     motif = json.loads(data['motif'])
-    get_motif_generator = motifabstraction.get_motif(ids, motif)
+    token = json.loads(data['token'])
+    get_motif_generator = motifabstraction.get_motif(ids, motif, token)
     try:
         for val in get_motif_generator:
             payload = val
@@ -98,19 +94,13 @@ async def ws_get_motif_data(websocket: WebSocket):
         print('Done Fetching Motif')
 
 
-@app.get("/synapses/neuron={neuron_id}&&inputNeurons={input_neurons}&&outputNeurons={output_neurons}")
-def filter_synapses(neuron_id, input_neurons, output_neurons):
-    access = data_access.DataAccess()
+@app.get("/synapses/neuron={neuron_id}&&inputNeurons={input_neurons}&&outputNeurons={output_neurons}&&token={token}")
+def filter_synapses(neuron_id, input_neurons, output_neurons, token):
+    access = data_access.DataAccess(token)
     neuron_id = int(neuron_id)
     input_neurons = json.loads(input_neurons)
     output_neurons = json.loads(output_neurons)
     return access.filter_synapses_by_group(neuron_id, input_neurons, output_neurons)
-
-
-
-@app.get("/get_swc")
-def get_swc():
-    return {'swc': data_service.get_swc()}
 
 
 @app.get("/nblast/{node_id}")

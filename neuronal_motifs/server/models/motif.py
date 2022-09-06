@@ -11,8 +11,8 @@ from neuronal_motifs.server.utils import data_conversion as conversion
 
 
 class MyMotif:
-    def __init__(self, neuron_ids=None, graph=None, synapses=None, edges=None):
-        self.data_access = DataAccess()
+    def __init__(self, token, neuron_ids=None, graph=None, synapses=None, edges=None, ):
+        self.data_access = DataAccess(token)
         self.graph = graph  # networkx graph of the motif
         self.neurons = self.data_access.get_neurons(neuron_ids)
         self.synapses = synapses

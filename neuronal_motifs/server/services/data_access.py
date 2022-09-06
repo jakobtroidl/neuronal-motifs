@@ -34,8 +34,8 @@ def load_neuron_from_cache(neuron_id):
 
 
 class DataAccess:
-    def __init__(self):
-        neu.Client(get_data_server(), dataset=get_data_version(), token=get_access_token('neuprint'))
+    def __init__(self, token):
+        neu.Client(get_data_server(), dataset=get_data_version(), token=token)
 
     @staticmethod
     def dump_neurons_to_cache(neurons):
