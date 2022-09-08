@@ -10,10 +10,11 @@ dependencies:
   - pykdtree
   - zarr
   - pip
+  - fontconfig
   - pip:
-      - PyQt5==5.15.6
       - dotmotif==0.11.0
       - navis
       - neuprint-python==0.4.24
-      - uvicorn[standard]
+      - uvicorn
       - zarr
+      - networkit
