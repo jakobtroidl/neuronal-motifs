@@ -1,8 +1,10 @@
 import pickle as pkl
+from pathlib import Path
 
-from neuronal_motifs.server.models.motif import MyMotif
-from neuronal_motifs.server.utils.data_conversion import *
+import networkx as nx
 
+from models.motif import MyMotif
+from utils.data_conversion import get_cache_filename, apply_ids_to_motif_adjacency
 
 def test_generator():
     yield 's'

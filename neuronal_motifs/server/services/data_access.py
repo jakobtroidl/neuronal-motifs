@@ -1,12 +1,14 @@
 import pickle as pkl
+from pathlib import Path
 
 import navis
 import navis.interfaces.neuprint as neu
 import networkit as nk
 import numpy as np
 
-from neuronal_motifs.server.models.neuron import Neuron
-from neuronal_motifs.server.utils.authentication import *
+from models.neuron import Neuron
+from params import Params
+from utils.authentication import get_data_server, get_data_version
 
 
 def file_exists(file_path):

@@ -5,9 +5,9 @@ import pandas as pd
 from line_profiler_pycharm import profile
 from networkx.readwrite import json_graph
 
-from neuronal_motifs.server.models.edge import NodeLink3DEdge
-from neuronal_motifs.server.services.data_access import DataAccess
-from neuronal_motifs.server.utils import data_conversion as conversion
+from models.edge import NodeLink3DEdge
+from services.data_access import DataAccess
+from utils.data_conversion import synapse_array_to_object, edges_to_json
 
 
 class MyMotif:
@@ -29,8 +29,8 @@ class MyMotif:
         for neuron in self.neurons:
             neuron_json.append(neuron.as_json())
 
-        syn_export = conversion.synapse_array_to_object(self.synapses)
-        edges_export = conversion.edges_to_json(self.nodeLinkEdges)
+        syn_export = synapse_array_to_object(self.synapses)
+        edges_export = edges_to_json(self.nodeLinkEdges)
 
         motif = {
             'graph': json_graph.node_link_data(self.graph),

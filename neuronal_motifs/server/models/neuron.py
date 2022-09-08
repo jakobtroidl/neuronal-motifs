@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from line_profiler_pycharm import profile
 
-from neuronal_motifs.server.utils import data_conversion as conversion
+from utils.data_conversion import treeneuron_to_swc_string, synapse_array_to_object, get_closest_point
 
 
 def skeleton_2_nx_graph(skeleton, undirected=False):
@@ -144,7 +144,7 @@ class Neuron:
         Converts Neuron object into a json object
         @return: json object
         """
-        swc_object = conversion.treeneuron_to_swc_string(self.skeleton)
+        swc_object = treeneuron_to_swc_string(self.skeleton)
         neuron = {
             'id': self.id,
             'mesh': 'TODO',
@@ -202,7 +202,7 @@ class Neuron:
         if export == 'as_json':
             return synapses.to_json(orient='records')
         if export == 'object':
-            return conversion.synapse_array_to_object(synapses)
+            return synapse_array_to_object(synapses)
         return synapses
 
     def get_synapses_as_json(self):
@@ -244,7 +244,7 @@ class Neuron:
         y = int(motif_nodes['y'].mean())
         z = int(motif_nodes['z'].mean())
 
-        center_id = conversion.get_closest_point(motif_nodes, np.array((x, y, z)))
+        center_id = get_closest_point(motif_nodes, np.array((x, y, z)))
 
         center_node = nodes[nodes['node_id'] == center_id]
 

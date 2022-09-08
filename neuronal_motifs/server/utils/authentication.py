@@ -1,6 +1,8 @@
 import json
-from neuronal_motifs.server.params import Params
+# from neuronal_motifs.server.params import Params
 from pathlib import Path
+
+from params import Params
 
 
 def get_data_server():
