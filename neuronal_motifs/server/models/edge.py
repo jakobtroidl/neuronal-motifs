@@ -1,5 +1,5 @@
 import networkit as nk
-from line_profiler_pycharm import profile
+
 
 
 class NodeLink3DEdge:
@@ -28,7 +28,6 @@ class NodeLink3DEdge:
     def set_end_abstraction(self, abstraction):
         self.abstraction['end'] = abstraction
 
-    @profile
     def compute_line_abstractions(self, graph, nodes, start_node_id, conv_node_id):
         djk = nk.distance.Dijkstra(graph, start_node_id, True, True, conv_node_id)
         djk.run()
@@ -56,7 +55,6 @@ class NodeLink3DEdge:
         # end_positions = self.add_position(end_node_id, end_graph, end_nodes, 1, self.abstraction['end'])
         # self.abstraction['end'] = end_positions
 
-    # @profile
     # def add_position(self, node_id, graph, nodes, prev_label, positions):
     #     # add this node to the list
     #     node = nodes[nodes['node_id'] == node_id]

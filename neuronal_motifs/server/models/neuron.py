@@ -5,7 +5,6 @@ import networkit as nk
 import networkx as nx
 import numpy as np
 import pandas as pd
-from line_profiler_pycharm import profile
 
 from utils.data_conversion import treeneuron_to_swc_string, synapse_array_to_object, get_closest_point
 
@@ -285,7 +284,6 @@ class Neuron:
         """
         self.motif_synapses = synapses
 
-    @profile
     def compute_distance_to_motif_path_optimized(self, graph, motif_synapse_nodes, motif_nodes):
         motif_synapse_node_list = motif_synapse_nodes.tolist()
         distances = np.zeros([graph.numberOfNodes(), len(motif_synapse_node_list)])
@@ -298,7 +296,6 @@ class Neuron:
         distances[motif_nodes] = 0
         return distances.tolist()
 
-    @profile
     def compute_skeleton_labels(self, motif_synapse_nodes):
         """
         Computes a label for each node in the neurons skeleton.
@@ -320,7 +317,6 @@ class Neuron:
         labels = self.compute_labels_to_abstraction_center_optimized(self.skeleton_nk_graph, labels, motif_nodes)
         self.skeleton.nodes['abstraction_label'] = labels
 
-    @profile
     def compute_labels_to_abstraction_center_optimized(self, graph, labels, motif_nodes):
         abstraction_root = self.compute_abstraction_root(to="node")
         root_id = int(abstraction_root['node_id'].item())

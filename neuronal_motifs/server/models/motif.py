@@ -2,7 +2,6 @@ import time
 
 import navis
 import pandas as pd
-from line_profiler_pycharm import profile
 from networkx.readwrite import json_graph
 
 from models.edge import NodeLink3DEdge
@@ -41,7 +40,6 @@ class MyMotif:
 
         return motif
 
-    @profile
     def compute_synapse_trajectory(self):
         edges = []
         print('Compute synapse trajectories...')
@@ -80,7 +78,6 @@ class MyMotif:
         self.nodeLinkEdges = edges
         print("Done. Took {} sec".format(time.time() - t))
 
-    @profile
     def compute_motif_paths(self):
         """
         For each neuron in the motif, matches synapses with closest skeleton connector,
