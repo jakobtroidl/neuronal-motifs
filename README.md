@@ -14,3 +14,6 @@ This project requires `Node.js` and `conda` to run.
 - In another terminal, navigate to `neuronal_motifs/client/` and run `npm i`
 - Start the frontend server with `npm run start`
 - Access the tool at http://localhost:3000/
+
+## Development
+- In PyCharm make sure the client and source directory are set as the source root (right click directory > mark directory as > source root)
