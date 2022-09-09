@@ -3,7 +3,9 @@ WORKDIR /app
 COPY environment.yml .
 RUN apt update && apt install -y libgles2-mesa-dev
 RUN conda env create -f environment.yml
-SHELL ["conda", "run", "-n", "neuronal-motifs", "/bin/bash", "-c"]
+RUN echo "conda activate neuronal-motifs" >> ~/.bashrc
+SHELL ["/bin/bash", "--login", "-c"]
 COPY . /app
+RUN chmod +x run.sh
 EXPOSE 5050
-ENTRYPOINT ["conda", "run", "-n", "neuronal-motifs", "python", "main.py"]
+ENTRYPOINT ["./run.sh"]
