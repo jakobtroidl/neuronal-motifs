@@ -4,17 +4,17 @@ channels:
 dependencies:
   - python=3.9
   - fastapi
+  - fontconfig
   - h5py
+  - networkit
   - numba
   - pandas
   - pykdtree
+  - uvicorn
+  - websockets
   - zarr
   - pip
-  - fontconfig
   - pip:
       - dotmotif==0.11.0
       - navis
       - neuprint-python==0.4.24
-      - uvicorn
-      - zarr
-      - networkit

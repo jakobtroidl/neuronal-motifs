@@ -1,7 +1,6 @@
 import numpy as np
 import neuronal_motifs.server.services.data_access as data_access
-
-
+from pathlib import Path
 def ingest_hemibrain(neurons, id_position, token):
     """
     Ingests neurons from a file
@@ -34,7 +33,10 @@ def get_neuron_ids(neurons, id_position):
 
 
 if __name__ == '__main__':
-    path = '../cache/data/meta/traced-neurons.csv'
+
+    path = Path(__file__).parent / "cache" / "data" / "meta"
+    path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
+    filepath = path / "traced-neurons.csv"
     token = "<YOUR NEUPRINT TOKEN>"
     index = 0
-    ingest_hemibrain(path, index, token)
+    ingest_hemibrain(filepath, index, token)

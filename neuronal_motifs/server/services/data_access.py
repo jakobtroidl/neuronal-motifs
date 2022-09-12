@@ -25,7 +25,7 @@ def load_neuron_from_cache(neuron_id):
     @param neuron_id: int
     @return: Neuron skeleton (pd.DataFrame)
     """
-    path = Path(Params.root + "server/cache/data/neurons/" + str(neuron_id) + ".pkl")
+    path = Params.root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
     neuron = None
     if file_exists(path):
         # load neuron from filepath
@@ -45,9 +45,11 @@ class DataAccess:
         Dumps a list of neurons to cache
         @param neurons: [int] list of neuron ids
         """
-        path = Params.root + "server/cache/data/neurons/"
+        path = Params.root / "server" / "cache" / "data" / "neurons"
+        path.mkdir(parents=True, exist_ok=True) # create directory if it doesn't exist
+
         for neuron in neurons:
-            with open(path + str(neuron.id) + '.pkl', 'wb') as f:
+            with open(path / (str(neuron.id) + '.pkl'), 'wb') as f:
                 pkl.dump(neuron, f)
             f.close()
 
@@ -90,7 +92,7 @@ class DataAccess:
             batch_to_download = batch
         else:
             for id in batch:
-                path = Path(Params.root + "server/cache/data/neurons/" + str(id) + ".pkl")
+                path = Params.root / "server" / "cache" / "data" / "neurons" / (str(id) + ".pkl")
                 if file_exists(path):
                     print("Skipping neuron {}. Already in cache.".format(id))
                 else:

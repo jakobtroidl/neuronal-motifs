@@ -1,5 +1,5 @@
 import pickle as pkl
-
+from params import Params
 import networkx as nx
 
 from utils import nodes_and_edges_to_networkx
@@ -19,7 +19,8 @@ def get(motif):
         return 0
 
     # relative path to motif-size-003.pickle
-    path = "cache/motifcounts/withoutedgecolor/motif-size-00{}.pickle".format(num_nodes)
+    partial_path = "motif-size-00{}.pickle".format(num_nodes)
+    path = Params.root / "server" / "cache" / "motifcounts" / "withoutedgecolor" / partial_path
 
     # load motif counts from pickle
     with open(path, 'rb') as f:
