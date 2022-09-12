@@ -1,9 +1,0 @@
-version: '3'
-services:
-  motifserver:
-    image: motif_backend
-    ports:
-    - 5050:5050
-  motifclient:
-    image: motif_frontend
-
