@@ -1,0 +1,10 @@
+version: '3'
+services:
+  client:
+    build: ./neuronal_motifs/client
+    ports:
+      - "80:80"
+  server:
+    build: ./neuronal_motifs/server
+    ports:
+      - "5050:5050"

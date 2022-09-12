@@ -5,6 +5,8 @@ import networkx as nx
 
 from models.motif import MyMotif
 from utils.data_conversion import get_cache_filename, apply_ids_to_motif_adjacency
+from params import Params
+
 
 def test_generator():
     yield 's'
@@ -18,7 +20,10 @@ def get_motif(ids, motif, token):
     # ids = [1001453586, 1003474104, 5813091420]
     # motif = [[1], [2], [0]]
     filename = get_cache_filename(ids)
-    filepath = Path("cache/data/motifs/" + filename + ".pkl")
+    path = Params.root / "server" / "cache" / "data" / "motifs"
+    path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
+
+    filepath = path / (filename + ".pkl")
     if filepath.is_file() is False:
         # if True:
         yield {'status': 202, 'message': 'Downloading Motif'}
@@ -68,13 +73,15 @@ def compute_motif_data(body_ids, motif, token):
     motif.compute_synapse_soma_distances()
 
     filename = get_cache_filename(body_ids)
+    path = Params.root / "server" / "cache" / "data" / "motifs"
+    path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
-    path = "cache/data/motifs/" + filename + ".pkl"
-    with open(path, "wb") as f:
+    filepath = path / (filename + ".pkl")
+
+    with open(filepath, "wb") as f:
         print('Write Motif to cache ...')
         pkl.dump(motif, f)
     print('Done Write Motif to cache ...')
-
 
 # def example_motif_data():
 #     """
