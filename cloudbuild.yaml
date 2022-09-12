@@ -16,7 +16,7 @@ steps:
             '--zone', 'us-east1-b',
             '--address', 'motif-backend',
             '--machine-type', 'e2-medium',
-            '--tags', '[https-server, http-server]',
+            '--tags', 'https-server,http-server',
             '--boot-disk-size', '50GB',
             '--network-tier', 'STANDARD' ]
     env:
@@ -34,7 +34,7 @@ steps:
             '--container-image', 'gcr.io/jakob-troidl/motif-frontend:latest',
             '--zone', 'us-east1-b',
             '--address', 'motif-frontend',
-            '--tags', '[https-server, http-server]',
+            '--tags', 'https-server,http-server',
             '--machine-type', 'e2-small',
             '--network-tier', 'STANDARD' ]
     env:
