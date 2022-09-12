@@ -12,7 +12,7 @@ steps:
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [ 'compute', 'instances', 'create-with-container', 'motif-backend',
-            '--container-image', 'gcr.io/jakob-troidl/motif-frontend:latest',
+            '--container-image', 'gcr.io/jakob-troidl/motif-backend:latest',
             '--zone', 'us-east1-b',
             '--address', 'motif-backend',
             '--machine-type', 'e2-medium',
