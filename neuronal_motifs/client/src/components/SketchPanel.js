@@ -546,12 +546,14 @@ function SketchPanel() {
     intersectionsCircles.map((i) => i.remove());
 
     let labelText = "";
-    if (_.isNumber(e.properties.weight)) {
-      labelText = e.properties.weight;
-    } else if (e.properties.weight["$lt"]) {
-      labelText = "< " + e.properties.weight["$lt"];
-    } else if (e.properties.weight["$gt"]) {
-      labelText = "> " + e.properties.weight["$gt"];
+    if ("weight" in e.properties) {
+      if (_.isNumber(e.properties.weight)) {
+        labelText = e.properties.weight;
+      } else if (e.properties.weight["$lt"]) {
+        labelText = "< " + e.properties.weight["$lt"];
+      } else if (e.properties.weight["$gt"]) {
+        labelText = "> " + e.properties.weight["$gt"];
+      }
     }
 
     let propertyLabel = new paper.PointText({
