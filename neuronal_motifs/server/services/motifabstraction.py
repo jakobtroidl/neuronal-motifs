@@ -20,7 +20,7 @@ def get_motif(ids, motif, token):
     # ids = [1001453586, 1003474104, 5813091420]
     # motif = [[1], [2], [0]]
     filename = get_cache_filename(ids)
-    path = Params.root / "server" / "cache" / "data" / "motifs"
+    path = Params.root / "cache" / "data" / "motifs"
     path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
     filepath = path / (filename + ".pkl")
@@ -73,7 +73,7 @@ def compute_motif_data(body_ids, motif, token):
     motif.compute_synapse_soma_distances()
 
     filename = get_cache_filename(body_ids)
-    path = Params.root / "server" / "cache" / "data" / "motifs"
+    path = Params.root / "cache" / "data" / "motifs"
     path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
     filepath = path / (filename + ".pkl")
