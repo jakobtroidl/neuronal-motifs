@@ -778,7 +778,7 @@ function SketchPanel() {
   return (
     <div className="sketch-panel-style">
       <Grid container className="canvas-wrapper" spacing={0}>
-        <Grid item xs={10.8}>
+        <Grid item xs={10.8} style={{ height: "inherit" }}>
           <div
             className="sketch-canvas"
             style={{ cursor: cursor || "crosshair" }}
