@@ -7,7 +7,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import DragHandleIcon from "@mui/icons-material/DragHandle";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import Button from "@mui/material/Button";
-import { FormControl, TextField } from "@mui/material";
+import { Badge, FormControl, TextField } from "@mui/material";
 import _ from "lodash";
 import InfoButton from "./InfoButton";
 import { queryMotifs } from "../services/data";
@@ -20,6 +20,7 @@ import PropTypes from "prop-types";
 import SelectionTable from "./SelectionTable";
 import { Settings } from "@mui/icons-material";
 import SettingsPanel from "./SettingsPanel";
+import { getAuthToken } from "../utils/authentication";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -59,6 +60,10 @@ function MotifPanel() {
 
   const motifPanelId = "motif-panel-div";
   const context = useContext(AppContext);
+
+  function showBadge() {
+    return getAuthToken() === "";
+  }
 
   const handleSubmit = () => {
     console.log("handle submit clicked");
@@ -160,7 +165,15 @@ function MotifPanel() {
             >
               <Tab label="Results" {...a11yProps(0)} />
               <Tab label="Selection" {...a11yProps(1)} />
-              <Tab label="Settings" {...a11yProps(2)} />
+              <Tab
+                label={
+                  <Badge color="primary" variant="dot" invisible={!showBadge()}>
+                    {" "}
+                    Settings{" "}
+                  </Badge>
+                }
+                {...a11yProps(2)}
+              />
             </Tabs>
           </Box>
           <TabPanel value={selectedTab} index={0}>
