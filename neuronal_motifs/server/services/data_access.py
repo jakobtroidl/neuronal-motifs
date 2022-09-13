@@ -46,7 +46,7 @@ class DataAccess:
         @param neurons: [int] list of neuron ids
         """
         path = Params.root / "server" / "cache" / "data" / "neurons"
-        path.mkdir(parents=True, exist_ok=True) # create directory if it doesn't exist
+        path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
         for neuron in neurons:
             with open(path / (str(neuron.id) + '.pkl'), 'wb') as f:
@@ -127,11 +127,14 @@ class DataAccess:
         neurons_to_download = []  # list of neuron ids that have yet to be downloaded
         for id in body_ids:
             neuron = load_neuron_from_cache(id)
-            if neuron is None or not isinstance(neuron, Neuron):
+            if neuron is None:
                 neurons_to_download.append(id)
             else:
-                # download neuron
-                cached_neurons.append(neuron)
+                try:
+                    if neuron.is_neuron():
+                        cached_neurons.append(neuron)
+                except:
+                    neurons_to_download.append(id)
 
         print("{} neurons loaded from cache".format(len(cached_neurons)))
         print("{} neuron(s) to download".format(len(neurons_to_download)))
@@ -141,7 +144,12 @@ class DataAccess:
             downloaded_neurons = self.precompute_neurons(neurons_to_download)
             self.dump_neurons_to_cache(downloaded_neurons)
         print("Download. Done.")
-        return downloaded_neurons + cached_neurons
+
+        output = downloaded_neurons + cached_neurons
+
+        assert len(output) == len(body_ids)
+
+        return output
 
     @staticmethod
     def get_synapses(from_neurons, to_neighbors):
