@@ -138,6 +138,9 @@ class Neuron:
         self.incoming_synapses = incoming_synapses
         self.outgoing_synapses = outgoing_synapses
 
+    def is_neuron(self):
+        return True
+
     def as_json(self):
         """
         Converts Neuron object into a json object
