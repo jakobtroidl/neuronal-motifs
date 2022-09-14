@@ -25,6 +25,7 @@ def load_neuron_from_cache(neuron_id):
     @param neuron_id: int
     @return: Neuron skeleton (pd.DataFrame)
     """
+    print(f"Root: {Params.root}")
     path = Params.root / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
     neuron = None
     if file_exists(path):
