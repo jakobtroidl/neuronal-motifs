@@ -21,7 +21,7 @@ def get(motif):
     # relative path to motif-size-003.pickle
     partial_path = "motif-size-00{}.pickle".format(num_nodes)
     print(Params.root)
-    path = Params.root / "cache" / "motifcounts" / "withoutedgecolor" / partial_path
+    path = Params.root / "server" / "cache" / "motifcounts" / "withoutedgecolor" / partial_path
     print(path)
 
     # load motif counts from pickle
