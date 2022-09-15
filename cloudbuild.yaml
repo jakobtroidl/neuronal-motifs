@@ -47,4 +47,4 @@ steps:
 images:
   - gcr.io/jakob-troidl/motif-backend:latest
   - gcr.io/jakob-troidl/motif-frontend:latest
-timeout: 1800s
+timeout: 7200s
