@@ -142,7 +142,7 @@ class DataAccess:
 
         downloaded_neurons = []
         if len(neurons_to_download) > 0:
-            downloaded_neurons = self.precompute_neurons(neurons_to_download)
+            downloaded_neurons = self.precompute_neurons(neurons_to_download, overwrite=True)
             self.dump_neurons_to_cache(downloaded_neurons)
         print("Download. Done.")
 
