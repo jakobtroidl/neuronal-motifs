@@ -45,6 +45,7 @@ export const ContextWrapper = (props) => {
   const [neighborhoodQuery, setNeighborhoodQuery] = useState(null);
   const [motifToAdd, setMotifToAdd] = useState(null);
   const [motifToDelete, setMotifToDelete] = useState(null);
+  const [focusedMotif, setFocusedMotif] = useState(null);
   return (
     <AppContext.Provider
       value={{
@@ -80,6 +81,8 @@ export const ContextWrapper = (props) => {
         setMotifToAdd,
         motifToDelete,
         setMotifToDelete,
+        focusedMotif,
+        setFocusedMotif,
       }}
     >
       {props.children}

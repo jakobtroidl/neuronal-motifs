@@ -39,8 +39,14 @@ export default function SelectionTable(props) {
 
   let columns = getSortedColumns(getVisibleColumns());
 
-  function handleClick() {
+  function handleClick(row) {
     console.log("Clicked on selected motif");
+    let selectedMotifs_copy = [...context.selectedMotifs];
+    const idx = selectedMotifs_copy.indexOf(row);
+    if (idx > -1) {
+      let motif = selectedMotifs_copy.at(idx);
+      context.setFocusedMotif(motif);
+    }
   }
 
   function handleDelete(row) {
