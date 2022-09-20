@@ -666,10 +666,6 @@ function Viewer() {
       };
 
       ws.onmessage = function (event) {
-        // console.log(
-        //   `[message] Data received from server: ${event.data}`,
-        //   new Date().getSeconds()
-        // );
         let data = JSON.parse(event.data);
         if (data?.status === 200) {
           console.log("motif to add: ", context.motifToAdd);
