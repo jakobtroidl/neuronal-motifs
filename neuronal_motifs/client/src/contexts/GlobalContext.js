@@ -7,6 +7,7 @@ export const AppContext = React.createContext(null);
 export const ContextWrapper = (props) => {
   const [globalMotifIndex, setGlobalMotifIndex] = useState(0);
   const [selectedMotifs, setSelectedMotifs] = useState([]);
+  const [focusedMotif, setFocusedMotif] = useState(null);
   const [motifQuery, setMotifQuery] = useState();
   const [abstractionLevel, setAbstractionLevel] = useState();
   const [neuronColors, setNeuronColors] = useState([
@@ -45,7 +46,7 @@ export const ContextWrapper = (props) => {
   const [neighborhoodQuery, setNeighborhoodQuery] = useState(null);
   const [motifToAdd, setMotifToAdd] = useState(null);
   const [motifToDelete, setMotifToDelete] = useState(null);
-  const [focusedMotif, setFocusedMotif] = useState(null);
+
   return (
     <AppContext.Provider
       value={{

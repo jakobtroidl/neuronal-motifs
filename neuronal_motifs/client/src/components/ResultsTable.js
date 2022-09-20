@@ -43,11 +43,15 @@ export default function ResultsTable(props) {
     });
   };
 
-  const handleMotifSelection = (motif) => {
-    let selectedMotif = { ...motif, index: context.globalMotifIndex };
-    context.setGlobalMotifIndex(context.globalMotifIndex + 1);
-    context.setMotifToAdd(selectedMotif);
-  };
+  function handleDelete(row) {
+    // empty function
+    console.log("Empty function called");
+  }
+  // const handleMotifSelection = (motif) => {
+  //   let selectedMotif = { ...motif, index: context.globalMotifIndex };
+  //   context.setGlobalMotifIndex(context.globalMotifIndex + 1);
+  //   context.setMotifToAdd(selectedMotif);
+  // };
 
   const getSortedColumns = () => {
     let sortedColumns = Object.entries(visibleColumns).sort((a, b) => {
@@ -137,7 +141,8 @@ export default function ResultsTable(props) {
                 key={row.name}
                 row={row}
                 columns={getSortedColumns()}
-                handleClick={handleMotifSelection}
+                //handleClick={handleMotifSelection}
+                handdleDelete={handleDelete}
               />
             ))}
           </TableBody>
