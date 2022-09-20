@@ -669,11 +669,19 @@ function Viewer() {
         let data = JSON.parse(event.data);
         if (data?.status === 200) {
           console.log("motif to add: ", context.motifToAdd);
-          let motif = {
+          let loaded_motif = {
             name: context.motifToAdd.name,
             index: context.motifToAdd.index,
             ...data.payload,
           };
+
+          let motif = { ...loaded_motif };
+
+          loaded_motif.neurons.forEach((neuron, i) => {
+            motif.neurons[i] = { ...neuron, ...context.motifToAdd.neurons[i] };
+          });
+
+          console.log("motif: ", motif);
           setMotif(motif);
           context.setSelectedMotifs([...context.selectedMotifs, motif]);
           context.setLoadingMessage(null);

@@ -115,20 +115,3 @@ export function CollapsableTableRow(props) {
     </React.Fragment>
   );
 }
-
-CollapsableTableRow.propTypes = {
-  row: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    neurons: PropTypes.arrayOf(
-      PropTypes.shape({
-        nodeKey: PropTypes.string.isRequired,
-        bodyId: PropTypes.number.isRequired,
-        instance: PropTypes.string,
-        type: PropTypes.string,
-        status: PropTypes.string.isRequired,
-      })
-    ).isRequired,
-  }).isRequired,
-  handleClick: PropTypes.func,
-  handleDelete: PropTypes.func,
-};
