@@ -7,8 +7,8 @@ function GraphSummary() {
   const id = "graph-summary-div";
 
   const elements = [
-    { data: { id: "one", label: "Node 1" }, position: { x: 0, y: 0 } },
-    { data: { id: "two", label: "Node 2" }, position: { x: 100, y: 0 } },
+    { data: { id: "one", label: "Node 1" } },
+    { data: { id: "two", label: "Node 2" } },
     {
       data: { source: "one", target: "two", label: "Edge from Node1 to Node2" },
     },
@@ -27,6 +27,7 @@ function GraphSummary() {
           <CytoscapeComponent
             elements={elements}
             style={{ width: "100%", height: "100%" }}
+            layout={{ name: "grid" }}
           />
         </div>
       </div>
