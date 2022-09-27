@@ -85,56 +85,56 @@ export default function ResultsTable(props) {
     <div className="results">
       <TableContainer>
         <Table aria-label="collapsible table" style={{ tableLayout: "fixed" }}>
-          <TableHead>
-            <TableRow style={{ borderBottom: "1px solid lightgrey" }}>
-              <TableCell width={20} style={{ borderBottom: "unset" }} />
-              <TableCell style={{ borderBottom: "unset" }}>Name</TableCell>
-              <TableCell style={{ borderBottom: "unset" }}>
-                <Tooltip title="Filter Columns" placement="top">
-                  <IconButton onClick={handleColumnFilterClick}>
-                    <ViewColumnIcon />
-                  </IconButton>
-                </Tooltip>
-                <Popper open={columnFilterOpen} anchorEl={columnFilterAnchorEl}>
-                  <Box>
-                    <FormControl
-                      component="fieldset"
-                      variant="standard"
-                      style={{
-                        maxHeight: 250,
-                        overflowY: "scroll",
-                      }}
-                    >
-                      <FormLabel component="legend">Visible Columns</FormLabel>
-                      <FormGroup style={{ paddingLeft: 8 }}>
-                        {getSortedColumns().map((col) => {
-                          return (
-                            <FormControlLabel
-                              control={
-                                <Switch
-                                  checked={col[1]}
-                                  style={{ transitionDuration: 0 }}
-                                  size="small"
-                                  onChange={handleVisibleColumnChange}
-                                  name={col[0]}
-                                />
-                              }
-                              label={
-                                <Typography sx={{ fontSize: 12 }}>
-                                  {col[0]}
-                                </Typography>
-                              }
-                              key={col[0]}
-                            />
-                          );
-                        })}
-                      </FormGroup>
-                    </FormControl>
-                  </Box>
-                </Popper>
-              </TableCell>
-            </TableRow>
-          </TableHead>
+          {/*<TableHead>*/}
+          {/*  <TableRow style={{ borderBottom: "1px solid lightgrey" }}>*/}
+          {/*    <TableCell width={20} style={{ borderBottom: "unset" }} />*/}
+          {/*    <TableCell style={{ borderBottom: "unset" }}>Name</TableCell>*/}
+          {/*    <TableCell style={{ borderBottom: "unset" }}>*/}
+          {/*      <Tooltip title="Filter Columns" placement="top">*/}
+          {/*        <IconButton onClick={handleColumnFilterClick}>*/}
+          {/*          <ViewColumnIcon />*/}
+          {/*        </IconButton>*/}
+          {/*      </Tooltip>*/}
+          {/*      <Popper open={columnFilterOpen} anchorEl={columnFilterAnchorEl}>*/}
+          {/*        <Box>*/}
+          {/*          <FormControl*/}
+          {/*            component="fieldset"*/}
+          {/*            variant="standard"*/}
+          {/*            style={{*/}
+          {/*              maxHeight: 250,*/}
+          {/*              overflowY: "scroll",*/}
+          {/*            }}*/}
+          {/*          >*/}
+          {/*            <FormLabel component="legend">Visible Columns</FormLabel>*/}
+          {/*            <FormGroup style={{ paddingLeft: 8 }}>*/}
+          {/*              {getSortedColumns().map((col) => {*/}
+          {/*                return (*/}
+          {/*                  <FormControlLabel*/}
+          {/*                    control={*/}
+          {/*                      <Switch*/}
+          {/*                        checked={col[1]}*/}
+          {/*                        style={{ transitionDuration: 0 }}*/}
+          {/*                        size="small"*/}
+          {/*                        onChange={handleVisibleColumnChange}*/}
+          {/*                        name={col[0]}*/}
+          {/*                      />*/}
+          {/*                    }*/}
+          {/*                    label={*/}
+          {/*                      <Typography sx={{ fontSize: 12 }}>*/}
+          {/*                        {col[0]}*/}
+          {/*                      </Typography>*/}
+          {/*                    }*/}
+          {/*                    key={col[0]}*/}
+          {/*                  />*/}
+          {/*                );*/}
+          {/*              })}*/}
+          {/*            </FormGroup>*/}
+          {/*          </FormControl>*/}
+          {/*        </Box>*/}
+          {/*      </Popper>*/}
+          {/*    </TableCell>*/}
+          {/*  </TableRow>*/}
+          {/*</TableHead>*/}
           <TableBody>
             {results.map((row) => (
               <CollapsableTableRow
@@ -142,7 +142,7 @@ export default function ResultsTable(props) {
                 row={row}
                 columns={getSortedColumns()}
                 //handleClick={handleMotifSelection}
-                handdleDelete={handleDelete}
+                //handdleDelete={handleDelete}
               />
             ))}
           </TableBody>
