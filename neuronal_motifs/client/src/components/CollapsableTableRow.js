@@ -48,7 +48,6 @@ export function CollapsableTableRow(props) {
   const handleClick = (row) => {
     console.log("Clicked on motif");
     let selectedMotifs_copy = [...context.selectedMotifs];
-    console.log("selectedMotifs_copy", selectedMotifs_copy);
     const idx = selectedMotifs_copy.indexOf(row);
     if (idx > -1) {
       // motif is already selected
@@ -78,7 +77,6 @@ export function CollapsableTableRow(props) {
   };
 
   const isFocused = () => {
-    console.log("isFocused", context.focusedMotif);
     if (context.focusedMotif) {
       return context.focusedMotif.name === row.name;
     }
