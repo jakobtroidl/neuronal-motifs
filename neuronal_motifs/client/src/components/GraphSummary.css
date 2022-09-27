@@ -18,18 +18,3 @@
     align-items: center;
     margin: 5px 30px 0 30px;
 }
-
-.handle {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-}
-
-.title-wrapper {
-    margin-bottom: 35px;
-}
-
-.item {
-    width: 100%;
-    text-align: center;
-}
