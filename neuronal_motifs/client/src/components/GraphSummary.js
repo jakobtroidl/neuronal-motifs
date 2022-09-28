@@ -65,6 +65,16 @@ function GraphSummary() {
             }}
             elements={getGraphElements()}
             style={{ width: "100%", height: "100%" }}
+            stylesheet={[
+              { selector: "node", style: { content: "data(label)" } },
+              {
+                selector: "edge",
+                style: {
+                  "curve-style": "bezier",
+                  "target-arrow-shape": "triangle",
+                },
+              },
+            ]}
             layout={{ name: layoutName }}
           />
         </div>
