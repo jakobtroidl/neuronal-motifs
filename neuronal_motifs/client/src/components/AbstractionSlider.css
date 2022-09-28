@@ -12,7 +12,6 @@
 
 .handle {
     position: absolute;
-    top: 5px;
     left: 5px;
 }
 
@@ -24,7 +23,7 @@
 }
 
 .title-wrapper {
-    margin-bottom: 35px;
+    margin-bottom: 10px;
 }
 
 .item {
