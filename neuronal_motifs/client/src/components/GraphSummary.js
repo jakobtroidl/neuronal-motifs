@@ -13,8 +13,17 @@ function GraphSummary() {
   let context = useContext(AppContext);
   Cytoscape.use(COSEBilkent);
 
+  // checks if neuron is in focused motif
+  function isFocused(neuronId) {
+    if (context.focusedMotif) {
+      return context.focusedMotif.neurons.some((n) => n.bodyId === neuronId);
+    }
+    return false;
+  }
+
   function getGraphElements() {
     let selectedMotifs = context.selectedMotifs;
+    let neuronColors = context.neuronColors;
 
     let nodes = [];
     let edges = [];
@@ -26,6 +35,7 @@ function GraphSummary() {
           data: {
             id: node.id.toString(),
             label: String.fromCharCode(65 + idx),
+            color: isFocused(node.id) ? neuronColors[idx] : "#ccc",
           },
         });
       });
@@ -66,7 +76,13 @@ function GraphSummary() {
             elements={getGraphElements()}
             style={{ width: "100%", height: "100%" }}
             stylesheet={[
-              { selector: "node", style: { content: "data(label)" } },
+              {
+                selector: "node",
+                style: {
+                  content: "data(label)",
+                  "background-color": "data(color)",
+                },
+              },
               {
                 selector: "edge",
                 style: {
