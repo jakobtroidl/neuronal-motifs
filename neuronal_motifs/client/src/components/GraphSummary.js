@@ -41,13 +41,21 @@ function GraphSummary() {
       });
       // add edges
       motif.graph.links.forEach((edge) => {
-        edges.push({
-          data: {
-            source: edge.source.toString(),
-            target: edge.target.toString(),
-            label: "",
-          },
-        });
+        if (
+          // make sure no edges are added twice
+          edges.filter(
+            (e) =>
+              e.data.target === edge.target && e.data.source === edge.source
+          ).length === 0
+        ) {
+          edges.push({
+            data: {
+              source: edge.source,
+              target: edge.target,
+              label: "",
+            },
+          });
+        }
       });
     });
     let elements = { nodes: nodes, edges: edges };
