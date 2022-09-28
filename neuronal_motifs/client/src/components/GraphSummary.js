@@ -79,7 +79,7 @@ function GraphSummary() {
           <CytoscapeComponent
             cy={(cy) => {
               cy.on("tap", "node", handleClick);
-              cy.layout({ name: layoutName }).run();
+              cy.layout({ name: layoutName, randomize: false }).run();
             }}
             elements={getGraphElements()}
             style={{ width: "100%", height: "100%" }}
