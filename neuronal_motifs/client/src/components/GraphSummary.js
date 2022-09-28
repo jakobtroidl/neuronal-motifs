@@ -6,12 +6,23 @@ import Cytoscape from "cytoscape";
 import COSEBilkent from "cytoscape-cose-bilkent";
 import { AppContext } from "../contexts/GlobalContext";
 
+let initialized = false;
+
 function GraphSummary() {
   const id = "graph-summary-div";
   let layoutName = "cose-bilkent";
 
   let context = useContext(AppContext);
   Cytoscape.use(COSEBilkent);
+
+  if (context.globalMotifIndex > 1) {
+    initialized = true;
+  }
+
+  let layout = {
+    name: layoutName,
+    randomize: !initialized,
+  };
 
   // checks if neuron is in focused motif
   function isFocused(neuronId) {
@@ -79,7 +90,7 @@ function GraphSummary() {
           <CytoscapeComponent
             cy={(cy) => {
               cy.on("tap", "node", handleClick);
-              cy.layout({ name: layoutName, randomize: false }).run();
+              cy.layout(layout).run();
             }}
             elements={getGraphElements()}
             style={{ width: "100%", height: "100%" }}
@@ -99,7 +110,7 @@ function GraphSummary() {
                 },
               },
             ]}
-            layout={{ name: layoutName }}
+            layout={layout}
           />
         </div>
       </div>
