@@ -34,7 +34,7 @@ function GraphSummary() {
         nodes.push({
           data: {
             id: node.id.toString(),
-            label: String.fromCharCode(65 + idx),
+            label: isFocused(node.id) ? String.fromCharCode(65 + idx) : "",
             color: isFocused(node.id) ? neuronColors[idx] : "#ccc",
           },
         });
