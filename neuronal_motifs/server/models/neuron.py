@@ -308,13 +308,7 @@ class Neuron:
         @param motif_synapse_nodes: skeleton node ids that matching relevant synapses
         """
         motif_synapse_nodes = np.asarray(motif_synapse_nodes)
-        # graph = nk.nxadapter.nx2nk(navis.neuron2nx(self.skeleton)) # curr most expensive line
-        # graph = nk.graphtools.toUndirected(graph)
-        # graph.indexEdges()
-
         motif_nodes = multiple_shortest_paths(self.skeleton_nk_graph, motif_synapse_nodes[0], motif_synapse_nodes[1:])
-        # compute the shortest path between all synapse nodes which is equivalent to the motif path
-        # labels2 = compute_distance_to_motif_path()
         labels = self.compute_distance_to_motif_path_optimized(self.skeleton_nk_graph, motif_synapse_nodes, motif_nodes)
         self.skeleton.nodes['abstraction_label'] = labels
         labels = self.compute_labels_to_abstraction_center_optimized(self.skeleton_nk_graph, labels, motif_nodes)
