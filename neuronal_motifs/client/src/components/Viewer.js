@@ -20,10 +20,9 @@ const setLineVisibility = (scene, visible) => {
   });
 };
 
-const getEdgeGroups = (motif, boundary) => {
+const getEdgeGroups = (motif, boundary, number_of_neurons) => {
   let groups = {};
 
-  let number_of_neurons = motif.neurons.length;
   let directions = getTranslationVectors(number_of_neurons);
   let factor = 20000;
 
@@ -739,13 +738,19 @@ function Viewer() {
         sharkViewerInstance.getAbstractionBoundary(level);
 
       let scene = sharkViewerInstance.scene;
-      let number_of_neurons = motif.neurons.length;
-      let directions = getTranslationVectors(number_of_neurons);
+
+      console.log("scene: ", scene);
+
+      let neurons = scene.children.filter((child) => {
+        return child.isNeuron;
+      });
+
+      let directions = getTranslationVectors(neurons.length);
       let factor = 20000;
       let offset = 0.001;
 
       if (edgesEnabled) {
-        let groups = getEdgeGroups(motif, abstraction_boundary);
+        let groups = getEdgeGroups(motif, abstraction_boundary, neurons.length);
         setEdgeGroups(groups);
         addEdgeGroupToScene(groups, scene);
       }
@@ -754,13 +759,14 @@ function Viewer() {
         level > motif_path_threshold + offset &&
         prevSliderValue <= motif_path_threshold + offset
       ) {
-        motif.neurons.forEach((neuron, i) => {
-          let mesh = scene.getObjectByName(neuron.id);
-          mesh.translateX(factor * directions[i][0]);
-          mesh.translateY(factor * directions[i][1]);
-          mesh.translateZ(factor * directions[i][2]);
+        neurons.forEach((neuron, i) => {
+          neuron.translateX(factor * directions[i][0]);
+          neuron.translateY(factor * directions[i][1]);
+          neuron.translateZ(factor * directions[i][2]);
 
-          let center = scene.getObjectByName("abstraction-center-" + neuron.id);
+          let center = scene.getObjectByName(
+            "abstraction-center-" + neuron.name
+          );
           center.translateX(factor * directions[i][0]);
           center.translateY(factor * directions[i][1]);
           center.translateZ(factor * directions[i][2]);
@@ -775,13 +781,15 @@ function Viewer() {
         level <= motif_path_threshold + offset &&
         prevSliderValue > motif_path_threshold + offset
       ) {
-        motif.neurons.forEach((neuron, i) => {
-          let mesh = scene.getObjectByName(neuron.id);
-          mesh.translateX(factor * -directions[i][0]);
-          mesh.translateY(factor * -directions[i][1]);
-          mesh.translateZ(factor * -directions[i][2]);
+        neurons.forEach((neuron, i) => {
+          //let mesh = scene.getObjectByName(neuron.id);
+          neuron.translateX(factor * -directions[i][0]);
+          neuron.translateY(factor * -directions[i][1]);
+          neuron.translateZ(factor * -directions[i][2]);
 
-          let center = scene.getObjectByName("abstraction-center-" + neuron.id);
+          let center = scene.getObjectByName(
+            "abstraction-center-" + neuron.name
+          );
           center.translateX(factor * -directions[i][0]);
           center.translateY(factor * -directions[i][1]);
           center.translateZ(factor * -directions[i][2]);
@@ -868,10 +876,16 @@ function Viewer() {
       let scene = sharkViewerInstance.scene;
       //scene.remove.apply(scene, scene.children); // remove all previous loaded objects
 
+      let neurons = scene.children.filter((child) => {
+        return child.isNeuron;
+      });
+
+      let number_of_neurons = neurons.length + motif.neurons.length;
+
       let interactionManager = sharkViewerInstance.scene.interactionManager;
       context.setResetUICounter(context.resetUICounter + 1); // reset slider
 
-      let groups = getEdgeGroups(motif, 1.0);
+      let groups = getEdgeGroups(motif, 1.0, number_of_neurons);
       setEdgeGroups(groups);
       addEdgeGroupToScene(groups, scene);
 
