@@ -42,7 +42,12 @@ export function bundle(group, strength, color) {
     let spline = new THREE.Line(geometry, material);
     spline.visible = true;
     spline.name =
-      "line-" + start_point[0] + "-" + start_point[1] + "-" + start_point[2];
+      "line-" +
+      start_point.getComponent(0) +
+      "-" +
+      start_point.getComponent(1) +
+      "-" +
+      start_point.getComponent(2);
 
     splines.push(spline);
   });
