@@ -333,6 +333,7 @@ function Viewer() {
     pre_id: null,
     post_id: null,
   });
+  const [neurons, setNeurons] = useState([]);
 
   const [displayContextMenu, setDisplayContextMenu] = useState({
     display: false,
@@ -740,9 +741,9 @@ function Viewer() {
         sharkViewerInstance.getAbstractionBoundary(level);
       let scene = sharkViewerInstance.scene;
 
-      let neurons = scene.children.filter((child) => {
-        return child.isNeuron;
-      });
+      // let neurons = scene.children.filter((child) => {
+      //   return child.isNeuron;
+      // });
 
       let directions = getTranslationVectors(neurons.length);
       let factor = 20000;
@@ -879,21 +880,8 @@ function Viewer() {
       let scene = sharkViewerInstance.scene;
       //scene.remove.apply(scene, scene.children); // remove all previous loaded objects
 
-      let neurons = scene.children.filter((child) => {
-        return child.isNeuron;
-      });
-
-      let number_of_neurons = neurons.length + motif.neurons.length;
-
       let interactionManager = sharkViewerInstance.scene.interactionManager;
       context.setResetUICounter(context.resetUICounter + 1); // reset slider
-
-      // console.log("motif: ", motif);
-      // console.log("selected Motifs: ", context.selectedMotifs);
-      //
-      // let groups = getEdgeGroups(motif, 1.0, number_of_neurons);
-      // setEdgeGroups(groups);
-      // addEdgeGroupToScene(groups, scene);
 
       addLights(scene);
 
@@ -914,6 +902,12 @@ function Viewer() {
       }
 
       addNeurons(motif, context, sharkViewerInstance, scene, updateCamera);
+
+      setNeurons(
+        scene.children.filter((child) => {
+          return child.isNeuron;
+        })
+      );
     }
   }, [motif, sharkViewerInstance]);
 
