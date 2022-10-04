@@ -900,6 +900,14 @@ function Viewer() {
     }
   }, [context.motifToDelete]);
 
+  function updateNeurons(scene) {
+    setNeurons(
+      scene.children.filter((child) => {
+        return child.isNeuron;
+      })
+    );
+  }
+
   useEffect(() => {
     if (motif && sharkViewerInstance) {
       if (!sharkViewerInstance.scene.interactionManager) {
@@ -937,11 +945,7 @@ function Viewer() {
 
       addNeurons(motif, context, sharkViewerInstance, scene, updateCamera);
 
-      setNeurons(
-        scene.children.filter((child) => {
-          return child.isNeuron;
-        })
-      );
+      updateNeurons(scene);
     }
   }, [motif, sharkViewerInstance]);
 
