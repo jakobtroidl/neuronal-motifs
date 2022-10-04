@@ -6,23 +6,28 @@ import Cytoscape from "cytoscape";
 import COSEBilkent from "cytoscape-cose-bilkent";
 import { AppContext } from "../contexts/GlobalContext";
 
-let initialized = false;
-
 function GraphSummary() {
+  const [randomize, setRandomize] = React.useState(true);
   const id = "graph-summary-div";
   let layoutName = "cose-bilkent";
 
   let context = useContext(AppContext);
   Cytoscape.use(COSEBilkent);
 
-  if (context.globalMotifIndex > 1) {
-    initialized = true;
-  }
-
   let layout = {
     name: layoutName,
-    randomize: !initialized,
+    randomize: randomize,
   };
+
+  let elements = getGraphElements();
+
+  if (
+    // hack but don't know how to do it better
+    randomize &&
+    (context.abstractionLevel > 0.0 || context.globalMotifIndex > 1)
+  ) {
+    setRandomize(false);
+  }
 
   // checks if neuron is in focused motif
   function isFocused(neuronId) {
@@ -92,7 +97,7 @@ function GraphSummary() {
               cy.on("tap", "node", handleClick);
               cy.layout(layout).run();
             }}
-            elements={getGraphElements()}
+            elements={elements}
             style={{ width: "100%", height: "100%" }}
             stylesheet={[
               {
