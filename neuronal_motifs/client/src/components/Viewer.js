@@ -40,6 +40,7 @@ const getEdgeGroups = (motifs, boundary, neurons) => {
       );
 
       if (
+        // make sure no lines are added twice
         motif.graph.links.some(
           (e) =>
             e.source === edge.start_neuron_id && e.target === edge.end_neuron_id
@@ -183,6 +184,10 @@ function addAbstractionCenters(motif, context, scene, interactionManager) {
       scene.add(mesh);
     }
   });
+}
+
+function getLineName(synapse) {
+  return "line-" + synapse.pre + "-" + synapse.post;
 }
 
 function getSynapseName(synapse, flipped = false) {
@@ -771,9 +776,11 @@ function Viewer() {
           let center = scene.getObjectByName(
             "abstraction-center-" + neuron.name
           );
-          center.translateX(factor * directions[i][0]);
-          center.translateY(factor * directions[i][1]);
-          center.translateZ(factor * directions[i][2]);
+          if (center) {
+            center.translateX(factor * directions[i][0]);
+            center.translateY(factor * directions[i][1]);
+            center.translateZ(factor * directions[i][2]);
+          }
 
           setSynapseVisibility(scene, false);
           setLineVisibility(scene, true);
@@ -794,9 +801,11 @@ function Viewer() {
           let center = scene.getObjectByName(
             "abstraction-center-" + neuron.name
           );
-          center.translateX(factor * -directions[i][0]);
-          center.translateY(factor * -directions[i][1]);
-          center.translateZ(factor * -directions[i][2]);
+          if (center) {
+            center.translateX(factor * -directions[i][0]);
+            center.translateY(factor * -directions[i][1]);
+            center.translateZ(factor * -directions[i][2]);
+          }
 
           setSynapseVisibility(scene, true);
           setLineVisibility(scene, false);
@@ -822,6 +831,7 @@ function Viewer() {
         (m) => m.index === context.motifToDelete.index
       );
       if (match) {
+        // make sure neuron is not deleted if part of other motif
         let idx = mesh.motifs.indexOf(match);
         mesh.motifs.splice(idx, 1);
       }
@@ -847,6 +857,14 @@ function Viewer() {
       }
       if (mesh.motifs.length === 0) {
         scene.remove(mesh);
+        let lines = scene.getObjectByName("lines");
+        if (lines) {
+          lines.children.forEach((line, i) => {
+            if (line.name === getLineName(synapse)) {
+              lines.remove(line);
+            }
+          });
+        }
       }
     }
   }
@@ -858,7 +876,6 @@ function Viewer() {
       context.motifToDelete.neurons.forEach((neuron) => {
         deleteNeuron(scene, neuron);
       });
-      console.log(context.motifToDelete);
       context.motifToDelete.synapses.forEach((synapse) => {
         deleteSynapse(scene, synapse);
       });
