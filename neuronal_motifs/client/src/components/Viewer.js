@@ -330,7 +330,6 @@ function Viewer() {
   const [sharkViewerInstance, setSharkViewerInstance] = useState();
   const [prevSliderValue, setPrevSliderValue] = useState();
   const [edgesEnabled, setEdgesEnabled] = useState(false);
-  const [edgeGroups, setEdgeGroups] = useState();
   const [displayTooltip, setDisplayTooltip] = useState(false); // for synapse selecting & highlighting
   const [tooltipInfo, setTooltipInfo] = useState({});
   const [highlightSynapse, setHighlightedSynapse] = useState({
@@ -735,33 +734,39 @@ function Viewer() {
     scene.add(lines);
   }
 
+  function refreshEdges(scene, abstraction_boundary) {
+    let groups = getEdgeGroups(
+      context.selectedMotifs,
+      abstraction_boundary,
+      neurons
+    );
+    addEdgeGroupToScene(groups, scene);
+  }
+
+  function getAbstractionLevel() {
+    return stretch(context.abstractionLevel);
+  }
+
+  function getAbstractionBoundary(sharkViewerInstance) {
+    let level = getAbstractionLevel();
+    sharkViewerInstance.setAbstractionThreshold(level);
+    return sharkViewerInstance.getAbstractionBoundary(level);
+  }
+
   // Updates the motifs, runs when data, viewer, or abstraction state change
   useEffect(() => {
     if (motif && sharkViewerInstance) {
-      let level = stretch(context.abstractionLevel);
-      sharkViewerInstance.setAbstractionThreshold(level);
-
-      let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
-      let abstraction_boundary =
-        sharkViewerInstance.getAbstractionBoundary(level);
       let scene = sharkViewerInstance.scene;
-
-      // let neurons = scene.children.filter((child) => {
-      //   return child.isNeuron;
-      // });
+      let level = getAbstractionLevel();
+      let abstraction_boundary = getAbstractionBoundary(sharkViewerInstance);
+      let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
 
       let directions = getTranslationVectors(neurons.length);
       let factor = 20000;
       let offset = 0.001;
 
       if (edgesEnabled) {
-        let groups = getEdgeGroups(
-          context.selectedMotifs,
-          abstraction_boundary,
-          neurons
-        );
-        setEdgeGroups(groups);
-        addEdgeGroupToScene(groups, scene);
+        refreshEdges(scene, abstraction_boundary);
       }
 
       if (
@@ -857,14 +862,16 @@ function Viewer() {
       }
       if (mesh.motifs.length === 0) {
         scene.remove(mesh);
-        let lines = scene.getObjectByName("lines");
-        if (lines) {
-          lines.children.forEach((line, i) => {
-            if (line.name === getLineName(synapse)) {
-              lines.remove(line);
-            }
-          });
-        }
+      }
+    }
+  }
+
+  function deleteLine(scene, start_id, end_id) {
+    let lines = scene.getObjectByName("lines");
+    if (lines) {
+      let line = lines.getObjectByName(getLineName(start_id, end_id));
+      if (line) {
+        lines.remove(line);
       }
     }
   }
@@ -879,6 +886,16 @@ function Viewer() {
       context.motifToDelete.synapses.forEach((synapse) => {
         deleteSynapse(scene, synapse);
       });
+
+      context.motifToDelete.graph.links.forEach((link) => {
+        deleteLine(scene, link.source, link.target);
+      });
+
+      if (edgesEnabled) {
+        let abstraction_boundary = getAbstractionBoundary(sharkViewerInstance);
+        refreshEdges(scene, abstraction_boundary);
+      }
+
       context.setMotifToDelete(null);
     }
   }, [context.motifToDelete]);
