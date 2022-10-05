@@ -20,11 +20,18 @@ const setLineVisibility = (scene, visible) => {
   });
 };
 
-const getEdgeGroups = (motifs, boundary, neurons) => {
+const groupFocused = (group, focusedMotif) => {
+  let containsStart =
+    focusedMotif.neurons.filter((n) => n.bodyId === group.start_id).length > 0;
+  let containsEnd =
+    focusedMotif.neurons.filter((n) => n.bodyId === group.end_id).length > 0;
+  return containsStart && containsEnd;
+};
+
+const getEdgeGroups = (motifs, boundary, neurons, factor) => {
   let groups = {};
 
   let directions = getTranslationVectors(neurons.length);
-  let factor = 20000;
 
   boundary = Math.round(boundary);
 
@@ -49,8 +56,8 @@ const getEdgeGroups = (motifs, boundary, neurons) => {
         let pre_loc = new THREE.Vector3();
         if (boundary in edge.abstraction.start) {
           pre_loc.fromArray(edge.abstraction.start[boundary]);
-        } else if (boundary < pre_neuron.min_skel_label) {
-          pre_loc.fromArray(pre_neuron.abstraction_center);
+        } else if (boundary <= pre_neuron.meta.min_skel_label) {
+          pre_loc.fromArray(pre_neuron.meta.abstraction_center);
         } else {
           pre_loc.fromArray(edge.default_start_position);
         }
@@ -65,8 +72,8 @@ const getEdgeGroups = (motifs, boundary, neurons) => {
         let post_loc = new THREE.Vector3();
         if (boundary in edge.abstraction.end) {
           post_loc.fromArray(edge.abstraction.end[boundary]);
-        } else if (boundary < post_neuron.min_skel_label) {
-          post_loc.fromArray(post_neuron.abstraction_center);
+        } else if (boundary <= post_neuron.meta.min_skel_label) {
+          post_loc.fromArray(post_neuron.meta.abstraction_center);
         } else {
           post_loc.fromArray(edge.default_end_position);
         }
@@ -141,7 +148,14 @@ const getTranslationVectors = (count) => {
   return directions;
 };
 
-function addNeurons(motif, context, sharkViewerInstance, scene, updateCamera) {
+function addNeurons(
+  motif,
+  context,
+  sharkViewerInstance,
+  scene,
+  updateCamera,
+  translate
+) {
   motif.neurons.forEach((neuron, i) => {
     if (!scene.getObjectByName(neuron.id)) {
       let parsedSwc = swcParser(neuron.skeleton_swc);
@@ -153,6 +167,11 @@ function addNeurons(motif, context, sharkViewerInstance, scene, updateCamera) {
         updateCamera
       );
       neuronObject.motifs = [motif];
+      neuronObject.meta = { ...neuron };
+      neuronObject.translateX(translate.x);
+      neuronObject.translateY(translate.y);
+      neuronObject.translateZ(translate.z);
+
       scene.add(neuronObject);
     } else {
       let neuronObject = scene.getObjectByName(neuron.id);
@@ -326,6 +345,9 @@ function Viewer() {
 
   const context = useContext(AppContext);
 
+  let factor = 20000;
+  let offset = 0.001;
+
   const [motif, setMotif] = React.useState();
   const [sharkViewerInstance, setSharkViewerInstance] = useState();
   const [prevSliderValue, setPrevSliderValue] = useState();
@@ -417,6 +439,8 @@ function Viewer() {
         context.focusedMotif,
         context.neuronColors
       );
+      let scene = sharkViewerInstance.scene;
+      refreshEdges(scene, context.abstractionLevel);
       console.log("recolored focused motif");
     }
   }, [context.focusedMotif]);
@@ -724,7 +748,10 @@ function Viewer() {
     lines.name = lines_identifier;
     lines.visible = edgesEnabled;
     for (const [id, group] of Object.entries(groups)) {
-      let line_group = bundle(group, 0.3, context.synapseColors[i]);
+      let groupColor = groupFocused(group, context.focusedMotif)
+        ? "#6b6b6b"
+        : "#d3d3d3";
+      let line_group = bundle(group, 0.3, groupColor);
       line_group.forEach((line, i) => {
         lines.children.push(line);
       });
@@ -738,7 +765,8 @@ function Viewer() {
     let groups = getEdgeGroups(
       context.selectedMotifs,
       abstraction_boundary,
-      neurons
+      neurons,
+      factor
     );
     addEdgeGroupToScene(groups, scene);
   }
@@ -762,8 +790,6 @@ function Viewer() {
       let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
 
       let directions = getTranslationVectors(neurons.length);
-      let factor = 20000;
-      let offset = 0.001;
 
       if (edgesEnabled) {
         refreshEdges(scene, abstraction_boundary);
@@ -923,7 +949,7 @@ function Viewer() {
       //scene.remove.apply(scene, scene.children); // remove all previous loaded objects
 
       let interactionManager = sharkViewerInstance.scene.interactionManager;
-      context.setResetUICounter(context.resetUICounter + 1); // reset slider
+      //context.setResetUICounter(context.resetUICounter + 1); // reset slider
 
       addLights(scene);
 
@@ -938,12 +964,66 @@ function Viewer() {
         motif
       );
 
+      let level = getAbstractionLevel();
+      let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
+
+      let neuron_translate = new THREE.Vector3(0, 0, 0);
+      if (level > motif_path_threshold) {
+        let old_directions = getTranslationVectors(neurons.length);
+        let new_directions = getTranslationVectors(neurons.length + 1);
+
+        neurons.forEach((neuron, i) => {
+          console.log("translate neuron", neuron);
+          neuron.translateX(factor * -old_directions[i][0]);
+          neuron.translateY(factor * -old_directions[i][1]);
+          neuron.translateZ(factor * -old_directions[i][2]);
+
+          neuron.translateX(factor * new_directions[i][0]);
+          neuron.translateY(factor * new_directions[i][1]);
+          neuron.translateZ(factor * new_directions[i][2]);
+
+          let center = scene.getObjectByName(
+            "abstraction-center-" + neuron.name
+          );
+          if (center) {
+            center.translateX(factor * -old_directions[i][0]);
+            center.translateY(factor * -old_directions[i][1]);
+            center.translateZ(factor * -old_directions[i][2]);
+
+            center.translateX(factor * new_directions[i][0]);
+            center.translateY(factor * new_directions[i][1]);
+            center.translateZ(factor * new_directions[i][2]);
+          }
+
+          // setSynapseVisibility(scene, false);
+          // setLineVisibility(scene, true);
+          //
+          // setEdgesEnabled(true);
+        });
+        neuron_translate = new THREE.Vector3(
+          factor * new_directions[neurons.length][0],
+          factor * new_directions[neurons.length][1],
+          factor * new_directions[neurons.length][2]
+        );
+      }
+
       let updateCamera = true;
       if (context.resetUICounter > 0) {
         updateCamera = false;
       }
 
-      addNeurons(motif, context, sharkViewerInstance, scene, updateCamera);
+      console.log("motif: ", motif);
+
+      addNeurons(
+        motif,
+        context,
+        sharkViewerInstance,
+        scene,
+        updateCamera,
+        neuron_translate
+      );
+
+      // todo set abstraction threshold
 
       updateNeurons(scene);
     }
