@@ -440,7 +440,8 @@ function Viewer() {
         context.neuronColors
       );
       let scene = sharkViewerInstance.scene;
-      refreshEdges(scene, context.abstractionLevel);
+      let abstractionBoundary = getAbstractionBoundary(sharkViewerInstance);
+      refreshEdges(scene, abstractionBoundary);
       console.log("recolored focused motif");
     }
   }, [context.focusedMotif]);
