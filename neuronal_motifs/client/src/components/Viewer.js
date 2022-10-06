@@ -290,10 +290,18 @@ function addSynapses(
 }
 
 function addLights(scene) {
-  const ambientLight = new THREE.AmbientLight(Color.white, 1.0);
-  scene.add(ambientLight);
-  const directionalLight = new THREE.DirectionalLight(Color.white, 0.7);
-  scene.add(directionalLight);
+  let ambientName = "ambient-light";
+  if (!scene.getObjectByName(ambientName)) {
+    const ambientLight = new THREE.AmbientLight(Color.white, 1.0);
+    ambientLight.name = ambientName;
+    scene.add(ambientLight);
+  }
+  let directionalName = "directional-light";
+  if (!scene.getObjectByName(directionalName)) {
+    const directionalLight = new THREE.DirectionalLight(Color.white, 0.7);
+    directionalLight.name = directionalName;
+    scene.add(directionalLight);
+  }
 }
 
 function greyOutObjects(sharkViewerInstance, exclude = []) {
