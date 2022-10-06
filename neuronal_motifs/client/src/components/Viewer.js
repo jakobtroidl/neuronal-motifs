@@ -757,7 +757,7 @@ function Viewer() {
     lines.visible = edgesEnabled;
     for (const [id, group] of Object.entries(groups)) {
       let groupColor = groupFocused(group, context.focusedMotif)
-        ? "#6b6b6b"
+        ? "#696969"
         : "#d3d3d3";
       let line_group = bundle(group, 0.3, groupColor);
       line_group.forEach((line, i) => {
