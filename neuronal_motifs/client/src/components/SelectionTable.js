@@ -58,7 +58,8 @@ export default function SelectionTable(props) {
       selectedMotifs_copy.splice(idx, 1);
       context.setSelectedMotifs(selectedMotifs_copy);
       if (selectedMotifs_copy.length > 0) {
-        context.setFocusedMotif(selectedMotifs_copy.at(-1));
+        let focusedMotif = selectedMotifs_copy.at(-1);
+        context.setFocusedMotif(focusedMotif);
       }
     } else {
       console.log("Motif Selection Delete. Row index not found.");
