@@ -5,16 +5,18 @@ import navis
 import navis.interfaces.neuprint as neu
 import networkit as nk
 import numpy as np
-
 from models.neuron import Neuron
 from params import Params
-from utils.authentication import get_data_server, get_data_version
+from utils.authentication import get_data_server, get_data_version, get_gcloud_storage_bucket
 
 
 def file_exists(file_path):
     """
     @param file_path: path to file
     @return: boolean
+
+    Jinhan
+    modify to check cloud bucket
     """
     return Path(file_path).is_file()
 
@@ -26,13 +28,23 @@ def load_neuron_from_cache(neuron_id):
     @return: Neuron skeleton (pd.DataFrame)
     """
     print(f"Root: {Params.root}")
-    path = Params.root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
+    # path = Params.root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
     neuron = None
-    if file_exists(path):
-        # load neuron from filepath
-        with open(path, 'rb') as f:
-            neuron = pkl.load(f)
-            f.close()
+
+    bucket = get_gcloud_storage_bucket()
+    storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
+    print("path-----", storage_path)
+    blob = bucket.blob(str(storage_path))
+    print(blob.exists())
+    if blob.exists():
+        pkl_in = blob.download_as_string()
+        neuron = pkl.loads(pkl_in)
+
+    # if file_exists(path):
+    #     # load neuron from filepath
+    #     with open(path, 'rb') as f:
+    #         neuron = pkl.load(f)
+    #         f.close()
     return neuron
 
 
@@ -46,6 +58,8 @@ class DataAccess:
         Dumps a list of neurons to cache
         @param neurons: [int] list of neuron ids
         """
+        # bucket = client.get_bucket(Params.bucket_name)
+
         path = Params.root / "server" / "cache" / "data" / "neurons"
         path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
@@ -118,7 +132,10 @@ class DataAccess:
                                 incoming_synapses=incoming)
                 downloaded_neurons.append(neuron)
         return downloaded_neurons
-
+    # make public bucket only read / auth for writing - serviceAccount
+    # load from the bucket ,
+    # if not, download from the public database and upload to the bucket
+    #
     def get_neurons(self, body_ids):
         """
         @param body_ids: array of neuron body ids
