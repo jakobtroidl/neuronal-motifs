@@ -399,17 +399,17 @@ function Viewer() {
 
   function onLineClick(event, line) {
     console.log("line click");
-    if (!line.oldColor) {
-      line.oldColor = line.material.clone();
-      line.material = new THREE.LineBasicMaterial({
-        color: Color.blue,
-      });
-    } else {
-      line.material = line.oldColor;
-      line.oldColor = null;
-    }
-
-    line.material.needsUpdate = true;
+    // if (!line.oldColor) {
+    //   line.oldColor = line.material.clone();
+    //   line.material = new THREE.LineBasicMaterial({
+    //     color: Color.blue,
+    //   });
+    // } else {
+    //   line.material = line.oldColor;
+    //   line.oldColor = null;
+    // }
+    //
+    // line.material.needsUpdate = true;
   }
 
   function onNeuronClick(event, neuron) {
