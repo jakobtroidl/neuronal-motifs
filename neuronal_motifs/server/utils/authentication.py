@@ -1,6 +1,7 @@
 from params import Params
 from google.cloud import storage
-
+from pathlib import Path
+from google.oauth2 import service_account
 
 def get_data_server():
     """
@@ -15,10 +16,23 @@ def get_data_version():
     """
     return Params.data_version
 
-def get_gcloud_storage_bucket():
+def get_gcloud_storage_bucket_anonymously():
     """
     @return: Google Cloud Storage Bucket
     """
     storage_client = storage.Client.create_anonymous_client()
     bucket = storage_client.bucket(Params.bucket_name)
     return bucket
+
+def get_gcloud_storage_bucket():
+    """
+    @return: Google CLoud Storage Bucket with Credential
+    Only who have a credential can upload files to the Cloud Storage
+    """
+    path = "../secrets/access_token.json"
+    if Path(path).is_file():
+        storage_client = storage.Client.from_service_account_json(path)
+        bucket = storage_client.bucket(Params.bucket_name)
+        return bucket
+    else:
+        return None

@@ -7,16 +7,13 @@ import networkit as nk
 import numpy as np
 from models.neuron import Neuron
 from params import Params
-from utils.authentication import get_data_server, get_data_version, get_gcloud_storage_bucket
+from utils.authentication import get_data_server, get_data_version, get_gcloud_storage_bucket_anonymously
 
 
 def file_exists(file_path):
     """
     @param file_path: path to file
     @return: boolean
-
-    Jinhan
-    modify to check cloud bucket
     """
     return Path(file_path).is_file()
 
@@ -31,14 +28,14 @@ def load_neuron_from_cache(neuron_id):
     # path = Params.root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
     neuron = None
 
-    bucket = get_gcloud_storage_bucket()
+    bucket = get_gcloud_storage_bucket_anonymously()
     storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
-    print("path-----", storage_path)
     blob = bucket.blob(str(storage_path))
-    print(blob.exists())
     if blob.exists():
         pkl_in = blob.download_as_string()
         neuron = pkl.loads(pkl_in)
+        # print(type(neuron))
+        # print(neuron.is_neuron())
 
     # if file_exists(path):
     #     # load neuron from filepath
@@ -58,7 +55,10 @@ class DataAccess:
         Dumps a list of neurons to cache
         @param neurons: [int] list of neuron ids
         """
-        # bucket = client.get_bucket(Params.bucket_name)
+        # bucket = get_gcloud_storage_bucket()
+        # blob = bucket.blob(destination_blob_name)
+        #
+        # blob.upload_from_string(contents)
 
         path = Params.root / "server" / "cache" / "data" / "neurons"
         path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist

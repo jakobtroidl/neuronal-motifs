@@ -18,3 +18,4 @@ dependencies:
       - dotmotif==0.11.0
       - navis
       - neuprint-python==0.4.24
+      - google-cloud-storage
