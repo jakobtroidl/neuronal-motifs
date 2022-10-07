@@ -97,10 +97,15 @@ class MyMotif:
         """
 
         all_synapses = []
-        adjacency = self.get_adjacency(undirected=True)
+        adjacency = self.get_adjacency(undirected=False)
         for neuron in self.neurons:  # download relevant synapses
             outgoing_synapses = neuron.outgoing_synapses.loc[neuron.outgoing_synapses['bodyId_post'].isin(adjacency[neuron.id])]
-            incoming_synapses = neuron.incoming_synapses.loc[neuron.incoming_synapses['bodyId_pre'].isin(adjacency[neuron.id])]
+
+            incoming_ids = []  # for each neuron get ids of neurons that input to it
+            for id, adj in adjacency.items():  # iterate over all adjacency of other neurons
+                if neuron.id in adj:
+                    incoming_ids.append(id)
+            incoming_synapses = neuron.incoming_synapses.loc[neuron.incoming_synapses['bodyId_pre'].isin(incoming_ids)]
             synapses = pd.concat([outgoing_synapses, incoming_synapses], ignore_index=True, sort=False)
             all_synapses.append(synapses)
             neuron.set_motif_synapses(synapses)
