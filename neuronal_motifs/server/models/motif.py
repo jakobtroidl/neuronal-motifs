@@ -10,11 +10,12 @@ from utils.data_conversion import synapse_array_to_object, edges_to_json
 
 
 class MyMotif:
-    def __init__(self, token, neuron_ids=None, graph=None, synapses=None, edges=None):
+    def __init__(self, token, neuron_ids=None, graph=None, additionalConnections=None, synapses=None, edges=None):
         self.data_access = DataAccess(token)
         self.graph = graph  # networkx graph of the motif
         self.neurons = self.data_access.get_neurons(neuron_ids)
         self.synapses = synapses
+        self.additionalConnections = additionalConnections
         self.nodeLinkEdges = edges
         self.compute_motif_synapses()
 
@@ -39,6 +40,15 @@ class MyMotif:
         }
 
         return motif
+
+    def add_neuron_labels(self, labels):
+        """
+        Add labels to the neurons in the motif
+        @param labels: dictionary of labels
+        """
+        for neuron in self.neurons:
+            if str(neuron.id) in labels:
+                neuron.labels = labels[str(neuron.id)]
 
     def compute_synapse_trajectory(self):
         edges = []
@@ -78,7 +88,7 @@ class MyMotif:
         self.nodeLinkEdges = edges
         print("Done. Took {} sec".format(time.time() - t))
 
-    def compute_motif_paths(self):
+    def compute_motif_paths(self, labels):
         """
         For each neuron in the motif, matches synapses with closest skeleton connector,
         finds the motif path and labels all neuron skeletons based on distance to motif path
@@ -88,7 +98,10 @@ class MyMotif:
             synapse_nodes = neuron.get_nodes_of_motif_synapses()
             print("Compute compute node labels for skeleton {} ...".format(neuron.id))
             t = time.time()
-            neuron.compute_skeleton_labels(synapse_nodes)
+            my_labels = None
+            if str(neuron.id) in labels:
+                my_labels = labels[str(neuron.id)]
+            neuron.compute_skeleton_labels(synapse_nodes, my_labels)
             print("Done. Took {} sec".format(time.time() - t))
 
     def compute_motif_synapses(self):
@@ -98,14 +111,22 @@ class MyMotif:
 
         all_synapses = []
         adjacency = self.get_adjacency(undirected=False)
+        #external_adjacency = {1: }
         for neuron in self.neurons:  # download relevant synapses
+
+            # find outgoing synapses of neuron
             outgoing_synapses = neuron.outgoing_synapses.loc[neuron.outgoing_synapses['bodyId_post'].isin(adjacency[neuron.id])]
 
+            # find incoming synapses of neuron
             incoming_ids = []  # for each neuron get ids of neurons that input to it
             for id, adj in adjacency.items():  # iterate over all adjacency of other neurons
                 if neuron.id in adj:
                     incoming_ids.append(id)
             incoming_synapses = neuron.incoming_synapses.loc[neuron.incoming_synapses['bodyId_pre'].isin(incoming_ids)]
+
+            # find additional synapses from other motifs that connect to this neuron
+            # TODO
+
             synapses = pd.concat([outgoing_synapses, incoming_synapses], ignore_index=True, sort=False)
             all_synapses.append(synapses)
             neuron.set_motif_synapses(synapses)
@@ -132,10 +153,13 @@ class MyMotif:
         return adjacency
 
     def get_neuron(self, id):
+        out = None
         for neuron in self.neurons:
             if neuron.id == id:
-                return neuron
-        return None
+                out = neuron
+        if out is None:
+          out = self.data_access.get_neurons([id])[0]
+        return out
 
     def syn_soma_distance(self, neuron_id, syn_pos):
         neuron = self.get_neuron(neuron_id)

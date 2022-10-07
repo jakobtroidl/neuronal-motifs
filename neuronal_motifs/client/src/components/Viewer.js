@@ -11,6 +11,7 @@ import _ from "lodash";
 import BasicMenu from "./ContextMenu";
 import axios from "axios";
 import { getAuthToken } from "../utils/authentication";
+import { getAdditionalConnections } from "../services/data";
 
 const setLineVisibility = (scene, visible) => {
   scene.children.forEach((child) => {
@@ -157,27 +158,33 @@ function addNeurons(
   translate
 ) {
   motif.neurons.forEach((neuron, i) => {
-    if (!scene.getObjectByName(neuron.id)) {
-      let parsedSwc = swcParser(neuron.skeleton_swc);
-      let color = context.neuronColors[i];
-      let neuronObject = sharkViewerInstance.loadNeuron(
-        neuron.id,
-        color,
-        parsedSwc,
-        updateCamera
-      );
-      neuronObject.motifs = [motif];
-      neuronObject.meta = { ...neuron };
-      neuronObject.translateX(translate.x);
-      neuronObject.translateY(translate.y);
-      neuronObject.translateZ(translate.z);
+    console.log("adding neuron", neuron);
+    console.log("to", scene);
+    console.log("----------------------------");
+    let oldNeuron = scene.getObjectByName(neuron.id);
+    let parsedSwc = swcParser(neuron.skeleton_swc);
+    let color = context.neuronColors[i];
+    let neuronObject = sharkViewerInstance.loadNeuron(
+      neuron.id,
+      color,
+      parsedSwc,
+      updateCamera
+    );
 
-      scene.add(neuronObject);
-    } else {
-      let neuronObject = scene.getObjectByName(neuron.id);
-      sharkViewerInstance.setColor(neuronObject, context.neuronColors[i]);
-      neuronObject.motifs.push(motif);
+    neuronObject.motifs = [motif];
+    if (oldNeuron) {
+      neuronObject.motifs = neuronObject.motifs.concat(oldNeuron.motifs);
+      scene.remove(oldNeuron);
     }
+    neuronObject.meta = { ...neuron };
+    neuronObject.translateX(translate.x);
+    neuronObject.translateY(translate.y);
+    neuronObject.translateZ(translate.z);
+
+    scene.add(neuronObject);
+
+    // sharkViewerInstance.setColor(neuronObject, context.neuronColors[i]);
+    // neuronObject.motifs.push(motif);
   });
 
   console.log(scene);
@@ -324,10 +331,20 @@ function greyOutObjects(sharkViewerInstance, exclude = []) {
 
 function colorMotif(sharkViewerInstance, motif, colors) {
   let scene = sharkViewerInstance.scene;
+  // color neurons
   motif.neurons.forEach((neuron, i) => {
     let neuronObject = scene.getObjectByName(neuron.id);
     if (neuronObject) {
       sharkViewerInstance.setColor(neuronObject, colors[i]);
+    }
+    // update abstraction center color
+    let abstractionCenterName = getAbstractionCenterName(neuron);
+    let abstractionCenter = scene.getObjectByName(abstractionCenterName);
+    if (abstractionCenter) {
+      abstractionCenter.material = new THREE.MeshPhongMaterial({
+        color: colors[i],
+      });
+      abstractionCenter.material.needsUpdate = true;
     }
   });
 }
@@ -686,9 +703,15 @@ function Viewer() {
       //let selectedMotif = context.selectedMotifs.at(-1); // get the latest motif
       //console.log("my selected motif: ", selectedMotif);
       let bodyIds = context.motifToAdd.neurons.map((n) => n.bodyId);
-      bodyIds = JSON.stringify(bodyIds);
+      let bodyIdsJSON = JSON.stringify(bodyIds);
       let motifQuery = JSON.stringify(context.motifQuery);
+      let labelsJSON = JSON.stringify(context.currentNeuronLabels);
+      console.log("motifQuery: ", motifQuery);
       let token = JSON.stringify(getAuthToken());
+      let additionalConnections = JSON.stringify(
+        getAdditionalConnections(context.selectedMotifs, context.motifToAdd)
+      );
+
       const ws = new WebSocket(
         `ws://${process.env.REACT_APP_API_URL}/display_motif_ws/`
       );
@@ -697,9 +720,10 @@ function Viewer() {
         console.log("Sending to server", new Date().getSeconds());
         ws.send(
           JSON.stringify({
-            bodyIDs: bodyIds,
+            bodyIDs: bodyIdsJSON,
             motif: motifQuery,
             token: token,
+            labels: labelsJSON,
           })
         );
       };
@@ -716,6 +740,10 @@ function Viewer() {
 
           loaded_motif.neurons.forEach((neuron, i) => {
             motif.neurons[i] = { ...neuron, ...context.motifToAdd.neurons[i] };
+
+            let tmp_labels = { ...context.currentNeuronLabels };
+            tmp_labels[neuron.id] = neuron.labels;
+            context.setCurrentNeuronLabels(tmp_labels);
           });
 
           console.log("motif: ", motif);

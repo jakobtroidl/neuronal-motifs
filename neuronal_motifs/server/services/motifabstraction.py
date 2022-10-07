@@ -16,7 +16,7 @@ def test_generator():
     yield 'n'
 
 
-def get_motif(ids, motif, token):
+def get_motif(ids, motif, token, additionalConnections):
     # ids = [1001453586, 1003474104, 5813091420]
     # motif = [[1], [2], [0]]
     filename = get_cache_filename(ids)
@@ -24,11 +24,11 @@ def get_motif(ids, motif, token):
     path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
     filepath = path / (filename + ".pkl")
-    if filepath.is_file() is False:
-        # if True:
+    # if filepath.is_file() is False:
+    if True:
         yield {'status': 202, 'message': 'Downloading Motif'}
         try:
-            motif_data_generator = compute_motif_data(ids, motif, token)
+            motif_data_generator = compute_motif_data(ids, motif, token, additionalConnections)
             for val in motif_data_generator:
                 yield {'status': 202, 'message': val}
         except StopIteration:
@@ -55,16 +55,16 @@ def get_motif(ids, motif, token):
 #         f.close()
 #         return motif.as_json()
 
-
-def compute_motif_data(body_ids, motif, token):
+def compute_motif_data(body_ids, motif, token, additionalConnections):
     yield 'Beginning Computation'
-    adjacency = apply_ids_to_motif_adjacency(body_ids, motif)
+    adjacency = apply_ids_to_motif_adjacency(body_ids, motif, additionalConnections)
     yield 'Creating Motif Graph'
     motif_graph = nx.DiGraph(adjacency)
     yield 'Downloading Neurons and Synapses'
     motif = MyMotif(token, body_ids, motif_graph)
+    # motif.add_neuron_labels(additionalConnections)
     yield 'Computing Motif Path'
-    motif.compute_motif_paths()
+    motif.compute_motif_paths(additionalConnections)
     yield 'Compute Synapse Trajectory'
     motif.compute_synapse_trajectory()
     # yield 'Computing Motif Abstraction'
@@ -101,3 +101,6 @@ def compute_motif_data(body_ids, motif, token):
 #         print('Write Motif to cache ...')
 #         pkl.dump(motif, f)
 #     print('Done Write Motif to cache ...')
+def update_neurons(neurons, synapses, token):
+
+    return None

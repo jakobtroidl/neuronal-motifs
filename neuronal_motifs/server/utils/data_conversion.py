@@ -16,7 +16,7 @@ def get_cache_filename(ids):
     return "_".join(map(str, ids))
 
 
-def apply_ids_to_motif_adjacency(body_ids, motif):
+def apply_ids_to_motif_adjacency(body_ids, motif, additionalConnections):
     """
     TODO
     @param body_ids:
@@ -24,10 +24,22 @@ def apply_ids_to_motif_adjacency(body_ids, motif):
     @return:
     """
 
+    # print additional connections
     adj = [[] for i in range(len(motif['nodes']))]  # map motif adjacency to node ids
     for edge in motif['edges']:
         adj[edge['indices'][0]].append(body_ids[edge['indices'][1]])
-    return dict(zip(body_ids, adj))
+
+    # body_ids = body_ids + additionalConnections.keys()
+    # adj = adj + additionalConnections.values()
+    merged = dict(zip(body_ids, adj))
+
+    # for key, value in additionalConnections.items():
+    #     key = int(key)
+    #     if key in merged:
+    #         merged[key] = merged[key] + value
+    #     else:
+    #         merged[key] = value
+    return merged
 
 
 def get_closest_point(nodes, position):

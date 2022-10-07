@@ -52,12 +52,21 @@ async def search_motif(req: Request):
     return motif_search.search_hemibrain_motif(motif, lim, token)
 
 
-@app.get("/display_motif/bodyIDs={ids}&motif={motif}&token={token}")
-def get_motif_data(ids, motif, token):
+@app.get("/display_motif/bodyIDs={ids}&motif={motif}&token={token}&labels={labels}")
+def get_motif_data(ids, motif, token, labels):
     ids = json.loads(ids)
     motif = json.loads(motif)
     token = json.loads(token)
-    return motifabstraction.get_motif(ids, motif, token)
+    additionalConnections = json.loads(labels)
+    return motifabstraction.get_motif(ids, motif, token, additionalConnections)
+
+
+@app.get("/update/bodyIDs={ids}&synapses={synapses}&token={token}")
+def update_neurons(ids, synapses, token):
+    neurons = json.loads(ids)
+    synapses = json.loads(synapses)
+    token = json.loads(token)
+    return motifabstraction.update_neurons(neurons, synapses, token)
 
 
 # # http://localhost:5050/display_motif/bodyIDs=[1001453586,5813032887,5813091420]&motif=[[2],[0],[1,0]]
@@ -83,7 +92,8 @@ async def ws_get_motif_data(websocket: WebSocket):
     ids = json.loads(data['bodyIDs'])
     motif = json.loads(data['motif'])
     token = json.loads(data['token'])
-    get_motif_generator = motifabstraction.get_motif(ids, motif, token)
+    additionalConnections = json.loads(data['labels'])
+    get_motif_generator = motifabstraction.get_motif(ids, motif, token, additionalConnections)
     try:
         for val in get_motif_generator:
             payload = val

@@ -137,6 +137,10 @@ class Neuron:
         self.motif_synapses = None
         self.incoming_synapses = incoming_synapses
         self.outgoing_synapses = outgoing_synapses
+        self.labels = None
+
+    def set_labels(self, labels):
+        self.labels = labels
 
     def is_neuron(self):
         return True
@@ -153,7 +157,8 @@ class Neuron:
             'skeleton_swc': swc_object['swc'],
             'abstraction_center': self.compute_abstraction_root(),
             'min_skel_label': self.get_min_skeleton_label(),
-            'max_skel_label': self.get_max_skeleton_label()
+            'max_skel_label': self.get_max_skeleton_label(),
+            'labels': self.labels
         }
 
         return neuron
@@ -299,7 +304,7 @@ class Neuron:
         distances[motif_nodes] = 0
         return distances.tolist()
 
-    def compute_skeleton_labels(self, motif_synapse_nodes):
+    def compute_skeleton_labels(self, motif_synapse_nodes, myLabels):
         """
         Computes a label for each node in the neurons skeleton.
         Label 0: node is on the motif path
@@ -312,7 +317,14 @@ class Neuron:
         labels = self.compute_distance_to_motif_path_optimized(self.skeleton_nk_graph, motif_synapse_nodes, motif_nodes)
         self.skeleton.nodes['abstraction_label'] = labels
         labels = self.compute_labels_to_abstraction_center_optimized(self.skeleton_nk_graph, labels, motif_nodes)
-        self.skeleton.nodes['abstraction_label'] = labels
+        if myLabels is not None:
+            minimum = np.minimum(myLabels, labels)
+            self.skeleton.nodes['abstraction_label'] = minimum
+            self.labels = minimum.tolist()
+        else:
+            self.skeleton.nodes['abstraction_label'] = labels
+            self.labels = labels.tolist()
+
 
     def compute_labels_to_abstraction_center_optimized(self, graph, labels, motif_nodes):
         abstraction_root = self.compute_abstraction_root(to="node")
