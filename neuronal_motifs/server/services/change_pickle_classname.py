@@ -1,5 +1,5 @@
 import pickle
-from pathlib import Path
+from glob import glob
 from utils.authentication import get_gcloud_storage_bucket
 from params import Params
 from tqdm import tqdm
@@ -20,9 +20,8 @@ def renamed_load(file_obj):
 if __name__ == '__main__':
     bucket = get_gcloud_storage_bucket()
     if bucket:
-        base_path = "/Users/jinhan/Downloads/cache/cache/data/neurons1/"
-        local_paths = Path(base_path).glob("*.pkl")
-        for local_path in tqdm(local_paths, desc="Upload cache to GCloud"):
+        base_path = "/Users/jinhan/Downloads/cache/cache/data/neurons/"
+        for local_path in tqdm(glob(base_path + "*.pkl"), desc="Upload cache to GCloud"):
             fname = str(local_path).split('/')[-1]
 
             storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / fname
