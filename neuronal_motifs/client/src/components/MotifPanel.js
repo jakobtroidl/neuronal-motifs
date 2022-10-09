@@ -180,7 +180,7 @@ function MotifPanel() {
             {resultRows.length > 0 ? (
               <ResultsTable results={resultRows} />
             ) : (
-              <span className="hint">Please search for motifs first </span>
+              <span className="hint">Please search first </span>
             )}
           </TabPanel>
           <TabPanel value={selectedTab} index={1}>
