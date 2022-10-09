@@ -2,11 +2,11 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'build',
             '-t', 'gcr.io/jakob-troidl/motif-backend:latest',
-            './neuronal_motifs/server', '--source=.' ]
+            './neuronal_motifs/server' ]
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'build',
             '-t', 'gcr.io/jakob-troidl/motif-frontend:latest',
-            './neuronal_motifs/client', '--source=.' ]
+            './neuronal_motifs/client' ]
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [ 'compute', 'instances', 'delete', 'motif-backend' ]
