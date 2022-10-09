@@ -6,11 +6,11 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'push', 'gcr.io/jakob-troidl/motif-frontend' ]
   - name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
+    entrypoint: 'sh'
     args:
       - '-c'
       - |
-        gcloud compute instances delete motif-frontend --zone=us-east1-b ||  exit 0
+        gcloud compute instances delete motif-frontend --zone=us-east1-b ||  true
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [ 'compute', 'instances', 'delete', 'motif-frontend' ]
@@ -36,11 +36,11 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'push', 'gcr.io/jakob-troidl/motif-backend' ]
   - name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
+    entrypoint: 'sh'
     args:
       - '-c'
       - |
-        gcloud compute instances delete motif-backend --zone=us-east1-b ||  exit 0
+        gcloud compute instances delete motif-backend --zone=us-east1-b ||  true
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [ 'compute', 'instances', 'create-with-container', 'motif-backend',
