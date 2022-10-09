@@ -3,6 +3,8 @@ steps:
     args: [ 'build',
             '-t', 'gcr.io/jakob-troidl/motif-frontend:latest',
             './neuronal_motifs/client' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/jakob-troidl/motif-frontend']
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [ 'compute', 'instances', 'delete', 'motif-frontend' ]
@@ -17,7 +19,7 @@ steps:
             '--address', 'motif-frontend',
             '--tags', 'https-server,http-server',
             '--machine-type', 'e2-small',
-            '--network-tier', 'STANDARD' , '--source=.' ]
+            '--network-tier', 'STANDARD' ]
     env:
       - 'CLOUDSDK_COMPUTE_REGION=us-east1'
       - 'CLOUDSDK_COMPUTE_ZONE=us-east1-b'
@@ -25,6 +27,8 @@ steps:
     args: [ 'build',
             '-t', 'gcr.io/jakob-troidl/motif-backend:latest',
             './neuronal_motifs/server' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/jakob-troidl/motif-backend']
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [ 'compute', 'instances', 'delete', 'motif-backend' ]
@@ -40,7 +44,7 @@ steps:
             '--machine-type', 'e2-medium',
             '--tags', 'https-server,http-server',
             '--boot-disk-size', '50GB',
-            '--network-tier', 'STANDARD' , '--source=.' ]
+            '--network-tier', 'STANDARD' ]
     env:
       - 'CLOUDSDK_COMPUTE_REGION=us-east1'
       - 'CLOUDSDK_COMPUTE_ZONE=us-east1-b'
