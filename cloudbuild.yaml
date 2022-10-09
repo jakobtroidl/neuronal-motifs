@@ -10,7 +10,7 @@ steps:
     args:
       - '-c'
       - |
-        gcloud compute instances delete motif-frontend --zone=us-east1-b
+        gcloud compute instances delete motif-frontend --zone=us-east1-b ||  exit 0
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [ 'compute', 'instances', 'delete', 'motif-frontend' ]
@@ -35,12 +35,12 @@ steps:
             './neuronal_motifs/server' ]
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'push', 'gcr.io/jakob-troidl/motif-backend' ]
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'gcloud'
-    args: [ 'compute', 'instances', 'delete', 'motif-backend' ]
-    env:
-      - 'CLOUDSDK_COMPUTE_REGION=us-east1'
-      - 'CLOUDSDK_COMPUTE_ZONE=us-east1-b'
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud compute instances delete motif-backend --zone=us-east1-b ||  exit 0
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [ 'compute', 'instances', 'create-with-container', 'motif-backend',
