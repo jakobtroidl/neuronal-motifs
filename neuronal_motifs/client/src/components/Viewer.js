@@ -59,7 +59,11 @@ const getEdgeGroups = (motifs, boundary, neurons, factor) => {
         } else if (boundary <= pre_neuron.meta.min_skel_label) {
           pre_loc.fromArray(pre_neuron.meta.abstraction_center);
         } else {
-          pre_loc.fromArray(edge.default_start_position);
+          let keys = Object.keys(edge.abstraction.start);
+          const closest = keys.reduce((a, b) => {
+            return Math.abs(b - boundary) < Math.abs(a - boundary) ? b : a;
+          });
+          pre_loc.fromArray(edge.abstraction.start[closest]);
         }
 
         let translate = new THREE.Vector3(
@@ -75,7 +79,11 @@ const getEdgeGroups = (motifs, boundary, neurons, factor) => {
         } else if (boundary <= post_neuron.meta.min_skel_label) {
           post_loc.fromArray(post_neuron.meta.abstraction_center);
         } else {
-          post_loc.fromArray(edge.default_end_position);
+          let keys = Object.keys(edge.abstraction.end);
+          const closest = keys.reduce((a, b) => {
+            return Math.abs(b - boundary) < Math.abs(a - boundary) ? b : a;
+          });
+          post_loc.fromArray(edge.abstraction.end[closest]);
         }
 
         translate = new THREE.Vector3(
