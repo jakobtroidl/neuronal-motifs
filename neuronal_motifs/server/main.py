@@ -12,13 +12,6 @@ from services import motifabstraction, motif_search, data_access
 
 app = FastAPI()
 
-origins = [
-    "http://localhost",
-    "http://localhost:8080",
-    "http://localhost:3000",
-    "http://localhost:3001",
-]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -38,11 +31,6 @@ def read_item(item_id: int, q: Optional[str] = None):
     return {"item_id": item_id, "q": q}
 
 
-# @app.get("/get_test_motif")
-# def get_test_motif():
-#     return motifabstraction.get_example_motif()
-
-
 @app.post("/search")
 async def search_motif(req: Request):
     req = await req.json()
@@ -50,29 +38,6 @@ async def search_motif(req: Request):
     lim = req['lim']
     token = req['token']
     return motif_search.search_hemibrain_motif(motif, lim, token)
-
-
-@app.get("/display_motif/bodyIDs={ids}&motif={motif}&token={token}")
-def get_motif_data(ids, motif, token):
-    ids = json.loads(ids)
-    motif = json.loads(motif)
-    token = json.loads(token)
-    return motifabstraction.get_motif(ids, motif, token)
-
-
-# # http://localhost:5050/display_motif/bodyIDs=[1001453586,5813032887,5813091420]&motif=[[2],[0],[1,0]]
-# @app.websocket("/ws_display_motif/bodyIDs={ids}&motif={motif}&token={token}")
-# async def ws_get_motif_data(websocket: WebSocket, ids: str, motif: str, token: str):
-#     await websocket.accept()
-#     ids = json.loads(ids)
-#     motif = json.loads(motif)
-#     get_motif_generator = motifabstraction.get_motif(ids, motif, token)
-#     try:
-#         for val in get_motif_generator:
-#             payload = val
-#             await websocket.send_json(payload)
-#     except StopIteration:
-#         print('Done Fetching Motif')
 
 
 # downloads the data for the given body ids
@@ -83,7 +48,8 @@ async def ws_get_motif_data(websocket: WebSocket):
     ids = json.loads(data['bodyIDs'])
     motif = json.loads(data['motif'])
     token = json.loads(data['token'])
-    get_motif_generator = motifabstraction.get_motif(ids, motif, token)
+    prev_labels = json.loads(data['labels'])
+    get_motif_generator = motifabstraction.get_motif(ids, motif, token, prev_labels)
     try:
         for val in get_motif_generator:
             payload = val
