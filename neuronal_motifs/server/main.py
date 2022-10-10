@@ -12,13 +12,6 @@ from services import motifabstraction, motif_search, data_access
 
 app = FastAPI()
 
-# origins = [
-#     "http://localhost",
-#     "http://localhost:8080",
-#     "http://localhost:3000",
-#     "http://localhost:3001",
-# ]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -38,11 +31,6 @@ def read_item(item_id: int, q: Optional[str] = None):
     return {"item_id": item_id, "q": q}
 
 
-# @app.get("/get_test_motif")
-# def get_test_motif():
-#     return motifabstraction.get_example_motif()
-
-
 @app.post("/search")
 async def search_motif(req: Request):
     req = await req.json()
@@ -50,6 +38,7 @@ async def search_motif(req: Request):
     lim = req['lim']
     token = req['token']
     return motif_search.search_hemibrain_motif(motif, lim, token)
+
 
 # downloads the data for the given body ids
 @app.websocket_route("/display_motif_ws/")
