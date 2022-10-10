@@ -210,8 +210,6 @@ function getLineName(synapse) {
 }
 
 function getSynapseName(synapse, flipped = false) {
-  // let pre = synapse.pre_id;
-  // let post = synapse.post_id;
   let pre_loc = synapse.pre.x + "-" + synapse.pre.y + "-" + synapse.pre.z;
   let post_loc = synapse.post.x + "-" + synapse.post.y + "-" + synapse.post.z;
 
@@ -764,7 +762,6 @@ function Viewer() {
     let prevLines = scene.getObjectByName(lines_identifier);
     scene.remove(prevLines);
 
-    let i = 0;
     let lines = new THREE.Object3D();
     lines.name = lines_identifier;
     lines.visible = edgesEnabled;
@@ -776,9 +773,7 @@ function Viewer() {
       line_group.forEach((line, i) => {
         lines.children.push(line);
       });
-      i++;
     }
-
     scene.add(lines);
   }
 
@@ -1032,8 +1027,6 @@ function Viewer() {
       if (context.resetUICounter > 0) {
         updateCamera = false;
       }
-
-      console.log("motif: ", motif);
 
       addNeurons(
         motif,
