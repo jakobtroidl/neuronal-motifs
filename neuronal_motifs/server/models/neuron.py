@@ -50,81 +50,12 @@ def multiple_shortest_paths(graph, start_node, end_node_list):
     return uniques.astype(int)  # return node ids as int array
 
 
-def compute_distance_to_motif_path(labels, edges, motif_nodes, unlabeled_node_id):
-    """
-    TODO
-    @param labels:
-    @param edges:
-    @param motif_nodes:
-    @param unlabeled_node_id:
-    @param positive_labels:
-    @return:
-    """
-
-    labels[motif_nodes - 1] = 0  # label all motif nodes in the skeleton with 0
-    num_unlabeled_nodes = np.count_nonzero(labels == unlabeled_node_id)
-    label = 1  # specifies node labels, start with distance to motif path is 1
-    while num_unlabeled_nodes > 0:  # repeat until all nodes are labeled
-        labels_copy = np.copy(labels)
-        for edge in edges:  # look at all edges of the neuron skeleton
-            x = edge[0] - 1  # first node index of an edge
-            y = edge[1] - 1  # second node index of an edge
-            if labels[x] >= 0 and labels[y] < 0:  # if x is labeled yet and y isn't, then add current
-                # label to node
-                labels_copy[y] = label
-            elif labels[y] >= 0 and labels[x] < 0:  # if y is labeled yet and x isn't, then add current
-                # label to node
-                labels_copy[x] = label
-        labels = labels_copy
-        num_unlabeled_nodes = np.count_nonzero(labels == unlabeled_node_id)
-        label = label + 1  # increase node label by one
-    return labels
-
-
-def compute_labels_to_abstraction_center(labels, edges, center_id, unlabeled_node_id):
-    """
-    TODO
-    @param labels:
-    @param edges:
-    @param center_id:
-    @param unlabeled_node_id:
-    @return:
-    """
-    labels = np.asarray(labels)
-    labels[center_id - 1] = -1  # label all motif nodes in the skeleton with 0
-    num_unlabeled_nodes = np.count_nonzero(labels == unlabeled_node_id)
-    label = -2  # specifies node labels, start with distance to motif path is 1
-    while num_unlabeled_nodes > 0:  # repeat until all nodes are labeled
-        labels_copy = np.copy(labels)
-        for edge in edges:  # look at all edges of the neuron skeleton
-            x = edge[0] - 1  # first node index of an edge
-            y = edge[1] - 1  # second node index of an edge
-            if labels[x] < 0 and labels[y] == 0:  # if x is labeled yet and y isn't, then add current
-                # label to node
-                labels_copy[y] = label
-            elif labels[y] < 0 and labels[x] == 0:  # if y is labeled yet and x isn't, then add current
-                # label to node
-                labels_copy[x] = label
-        labels = labels_copy
-        num_unlabeled_nodes = np.count_nonzero(labels == unlabeled_node_id)
-        label = label - 1  # increase node label by one
-
-    min_value = np.amin(labels)
-    delta = np.absolute(min_value) + np.absolute(-1)
-    idx = np.where(labels < 0)
-    labels[idx] = labels[idx] + delta
-    labels[idx] = labels[idx] * -1
-
-    return labels
-
-
 class Neuron:
     def __init__(self, id, skeleton=None, skel_graph=None, mesh=None, incoming_synapses=None, outgoing_synapses=None):
         """
         @param id: body id of the neuron. Acts as a unique identifier
         @param skeleton: stick figure skeleton of the neuron
         @param mesh: surface mesh of a neuron
-        @param distances: geodesic distance matrix of nodes coming out of neuron
         """
         self.id = id
         self.skeleton = skeleton
@@ -321,7 +252,6 @@ class Neuron:
             self.skeleton.nodes['abstraction_label'] = labels
             self.labels = labels.tolist()
 
-
     def compute_labels_to_abstraction_center_optimized(self, graph, labels, motif_nodes):
         abstraction_root = self.compute_abstraction_root(to="node")
         root_id = int(abstraction_root['node_id'].item())
@@ -359,21 +289,6 @@ class Neuron:
         computes the nodes of the skeleton that are closest to the synapses that participate in a motif
         @return: list of node indices
         """
-        # JAKOB Debug visualization
-        # x = self.synapses['x_post'].to_numpy()
-        # y = self.synapses['y_post'].to_numpy()
-        # z = self.synapses['z_post'].to_numpy()
-        #
-        # print(x, ", ", y, ", ", z, "\n")
-        #
-        # d = {'x': x, 'y': y, 'z': z}
-        # df = pd.DataFrame(data=d)
-        #
-        # fig = self.skeleton.plot3d(backend='plotly', connectors=True)
-        # fig.add_trace(px.scatter_3d(df, x='x', y='y', z='z').data[0])
-        # # fig.add_trace(px.scatter_3d(shortest_path, x='x', y='y', z='z').data[0])
-        # fig.show()
-
         nodes = []  # node ids close to synapses
         for id, synapse in self.motif_synapses.iterrows():  # iterate over all synapses that this neuron has with
             # neurons
