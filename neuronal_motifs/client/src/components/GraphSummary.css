@@ -1,8 +1,8 @@
-#abstraction-slider-div {
+#graph-summary-div {
     position: absolute;
-    bottom: 1vh;
-    left: 45vw;
-    width: 50vw;
+    top: -99vh;
+    right: -99vw;
+    width: 20vw;
     padding: 5px;
     background-color: rgba(255, 255, 255, 0.75);
     margin: 20px;
@@ -10,23 +10,15 @@
     box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
 
-.handle {
-    position: absolute;
-    left: 5px;
-}
-
-#abstraction-slider-wrapper {
+#graph-summary-wrapper {
     display: flex;
     flex-direction: column;
+    height: 20vh;
     align-items: center;
-    margin: 5px 30px 0 30px;
+    margin: 5px 5px 0 5px;
 }
 
-.title-wrapper {
-    margin-bottom: 10px;
-}
-
-.item {
+#graph {
     width: 100%;
-    text-align: center;
+    height: 100%;
 }

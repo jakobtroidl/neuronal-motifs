@@ -5,12 +5,12 @@ data/
 neuronal_motifs/client/node_modules/
 neuronal_motifs/server/secrets/access_token.json
 
-neuronal_motifs/client/node_modules/
-
 .DS_Store
 
 *.pyc
 
 *.pclprof
 
-neuronal_motifs/server/secrets/access_token.json
+node_modules/
+
+neuronal_motifs/server/cache.zip

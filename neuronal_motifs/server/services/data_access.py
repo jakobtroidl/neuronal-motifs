@@ -25,6 +25,7 @@ def load_neuron_from_cache(neuron_id):
     @param neuron_id: int
     @return: Neuron skeleton (pd.DataFrame)
     """
+    print(f"Root: {Params.root}")
     path = Params.root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
     neuron = None
     if file_exists(path):
@@ -141,7 +142,7 @@ class DataAccess:
 
         downloaded_neurons = []
         if len(neurons_to_download) > 0:
-            downloaded_neurons = self.precompute_neurons(neurons_to_download)
+            downloaded_neurons = self.precompute_neurons(neurons_to_download, overwrite=True)
             self.dump_neurons_to_cache(downloaded_neurons)
         print("Download. Done.")
 
