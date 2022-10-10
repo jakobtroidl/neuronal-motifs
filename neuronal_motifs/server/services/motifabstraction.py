@@ -37,20 +37,6 @@ def get_motif(ids, motif, token, prev_labels):
     yield {'status': 200, 'payload': motif.as_json()}
 
 
-# def get_example_motif():
-#     filepath = "cache/test/test_motif.pkl"
-#     try:  # try to load from cache
-#         f = open(filepath)
-#         f.close()
-#     except FileNotFoundError:
-#         example_motif_data()  # download data if not available
-#         f = open(filepath)
-#     finally:
-#         f = open(filepath, "rb")
-#         motif = pkl.load(f)
-#         f.close()
-#         return motif.as_json()
-
 def compute_motif_data(body_ids, motif, token, prev_labels):
     yield 'Beginning Computation'
     adjacency = apply_ids_to_motif_adjacency(body_ids, motif)
