@@ -9,37 +9,25 @@ from scipy.spatial import KDTree
 
 def get_cache_filename(ids):
     """
-    TODO
-    @param ids:
-    @return:
+    Returns filename of cached motif
+    @param ids: ids of neurons in that motif
+    @return: filename as string
     """
     return "_".join(map(str, ids))
 
 
-def apply_ids_to_motif_adjacency(body_ids, motif, additionalConnections):
+def apply_ids_to_motif_adjacency(body_ids, motif):
     """
-    TODO
-    @param body_ids:
-    @param motif:
-    @return:
+    @param body_ids: ids of neurons forming the motif
+    @param motif: motif adjacency matrix
+    @return: dict of motif adjacency. Keys are body ids, values are adjacency
     """
 
     # print additional connections
     adj = [[] for i in range(len(motif['nodes']))]  # map motif adjacency to node ids
     for edge in motif['edges']:
         adj[edge['indices'][0]].append(body_ids[edge['indices'][1]])
-
-    # body_ids = body_ids + additionalConnections.keys()
-    # adj = adj + additionalConnections.values()
-    merged = dict(zip(body_ids, adj))
-
-    # for key, value in additionalConnections.items():
-    #     key = int(key)
-    #     if key in merged:
-    #         merged[key] = merged[key] + value
-    #     else:
-    #         merged[key] = value
-    return merged
+    return dict(zip(body_ids, adj))
 
 
 def get_closest_point(nodes, position):

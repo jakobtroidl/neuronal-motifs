@@ -50,7 +50,6 @@ def multiple_shortest_paths(graph, start_node, end_node_list):
     return uniques.astype(int)  # return node ids as int array
 
 
-# @jit(nopython=True, parallel=True)
 def compute_distance_to_motif_path(labels, edges, motif_nodes, unlabeled_node_id):
     """
     TODO
@@ -82,7 +81,6 @@ def compute_distance_to_motif_path(labels, edges, motif_nodes, unlabeled_node_id
     return labels
 
 
-# #@jit(nopython=True, parallel=True)
 def compute_labels_to_abstraction_center(labels, edges, center_id, unlabeled_node_id):
     """
     TODO
@@ -138,9 +136,6 @@ class Neuron:
         self.incoming_synapses = incoming_synapses
         self.outgoing_synapses = outgoing_synapses
         self.labels = None
-
-    def set_labels(self, labels):
-        self.labels = labels
 
     def is_neuron(self):
         return True
@@ -304,12 +299,13 @@ class Neuron:
         distances[motif_nodes] = 0
         return distances.tolist()
 
-    def compute_skeleton_labels(self, motif_synapse_nodes, myLabels):
+    def compute_skeleton_labels(self, motif_synapse_nodes, prev_labels):
         """
-        Computes a label for each node in the neurons skeleton.
+        Computes a label for each node in the neurons' skeleton.
         Label 0: node is on the motif path
         Label > 0: distance of the node to the motif path
         Stores the labels in self.skeleton_label np array
+        @param prev_labels: previous skeleton abstraction labels of this neuron
         @param motif_synapse_nodes: skeleton node ids that matching relevant synapses
         """
         motif_synapse_nodes = np.asarray(motif_synapse_nodes)
@@ -317,8 +313,8 @@ class Neuron:
         labels = self.compute_distance_to_motif_path_optimized(self.skeleton_nk_graph, motif_synapse_nodes, motif_nodes)
         self.skeleton.nodes['abstraction_label'] = labels
         labels = self.compute_labels_to_abstraction_center_optimized(self.skeleton_nk_graph, labels, motif_nodes)
-        if myLabels is not None:
-            minimum = np.minimum(myLabels, labels)
+        if prev_labels is not None:
+            minimum = np.minimum(prev_labels, labels)
             self.skeleton.nodes['abstraction_label'] = minimum
             self.labels = minimum.tolist()
         else:

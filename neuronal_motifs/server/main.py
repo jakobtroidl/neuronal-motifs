@@ -12,12 +12,12 @@ from services import motifabstraction, motif_search, data_access
 
 app = FastAPI()
 
-origins = [
-    "http://localhost",
-    "http://localhost:8080",
-    "http://localhost:3000",
-    "http://localhost:3001",
-]
+# origins = [
+#     "http://localhost",
+#     "http://localhost:8080",
+#     "http://localhost:3000",
+#     "http://localhost:3001",
+# ]
 
 app.add_middleware(
     CORSMiddleware,
@@ -51,39 +51,6 @@ async def search_motif(req: Request):
     token = req['token']
     return motif_search.search_hemibrain_motif(motif, lim, token)
 
-
-@app.get("/display_motif/bodyIDs={ids}&motif={motif}&token={token}&labels={labels}")
-def get_motif_data(ids, motif, token, labels):
-    ids = json.loads(ids)
-    motif = json.loads(motif)
-    token = json.loads(token)
-    additionalConnections = json.loads(labels)
-    return motifabstraction.get_motif(ids, motif, token, additionalConnections)
-
-
-@app.get("/update/bodyIDs={ids}&synapses={synapses}&token={token}")
-def update_neurons(ids, synapses, token):
-    neurons = json.loads(ids)
-    synapses = json.loads(synapses)
-    token = json.loads(token)
-    return motifabstraction.update_neurons(neurons, synapses, token)
-
-
-# # http://localhost:5050/display_motif/bodyIDs=[1001453586,5813032887,5813091420]&motif=[[2],[0],[1,0]]
-# @app.websocket("/ws_display_motif/bodyIDs={ids}&motif={motif}&token={token}")
-# async def ws_get_motif_data(websocket: WebSocket, ids: str, motif: str, token: str):
-#     await websocket.accept()
-#     ids = json.loads(ids)
-#     motif = json.loads(motif)
-#     get_motif_generator = motifabstraction.get_motif(ids, motif, token)
-#     try:
-#         for val in get_motif_generator:
-#             payload = val
-#             await websocket.send_json(payload)
-#     except StopIteration:
-#         print('Done Fetching Motif')
-
-
 # downloads the data for the given body ids
 @app.websocket_route("/display_motif_ws/")
 async def ws_get_motif_data(websocket: WebSocket):
@@ -92,8 +59,8 @@ async def ws_get_motif_data(websocket: WebSocket):
     ids = json.loads(data['bodyIDs'])
     motif = json.loads(data['motif'])
     token = json.loads(data['token'])
-    additionalConnections = json.loads(data['labels'])
-    get_motif_generator = motifabstraction.get_motif(ids, motif, token, additionalConnections)
+    prev_labels = json.loads(data['labels'])
+    get_motif_generator = motifabstraction.get_motif(ids, motif, token, prev_labels)
     try:
         for val in get_motif_generator:
             payload = val

@@ -11,7 +11,6 @@ import _ from "lodash";
 import BasicMenu from "./ContextMenu";
 import axios from "axios";
 import { getAuthToken } from "../utils/authentication";
-import { getAdditionalConnections } from "../services/data";
 
 const setLineVisibility = (scene, visible) => {
   scene.children.forEach((child) => {
@@ -158,9 +157,6 @@ function addNeurons(
   translate
 ) {
   motif.neurons.forEach((neuron, i) => {
-    console.log("adding neuron", neuron);
-    console.log("to", scene);
-    console.log("----------------------------");
     let oldNeuron = scene.getObjectByName(neuron.id);
     let parsedSwc = swcParser(neuron.skeleton_swc);
     let color = context.neuronColors[i];
@@ -182,9 +178,6 @@ function addNeurons(
     neuronObject.translateZ(translate.z);
 
     scene.add(neuronObject);
-
-    // sharkViewerInstance.setColor(neuronObject, context.neuronColors[i]);
-    // neuronObject.motifs.push(motif);
   });
 
   console.log(scene);
@@ -700,17 +693,11 @@ function Viewer() {
   // Fetches the data, only runs on init
   useEffect(async () => {
     if (context.motifToAdd) {
-      //let selectedMotif = context.selectedMotifs.at(-1); // get the latest motif
-      //console.log("my selected motif: ", selectedMotif);
       let bodyIds = context.motifToAdd.neurons.map((n) => n.bodyId);
       let bodyIdsJSON = JSON.stringify(bodyIds);
       let motifQuery = JSON.stringify(context.motifQuery);
       let labelsJSON = JSON.stringify(context.currentNeuronLabels);
-      console.log("motifQuery: ", motifQuery);
       let token = JSON.stringify(getAuthToken());
-      let additionalConnections = JSON.stringify(
-        getAdditionalConnections(context.selectedMotifs, context.motifToAdd)
-      );
 
       const ws = new WebSocket(
         `ws://${process.env.REACT_APP_API_URL}/display_motif_ws/`
@@ -745,8 +732,6 @@ function Viewer() {
             tmp_labels[neuron.id] = neuron.labels;
             context.setCurrentNeuronLabels(tmp_labels);
           });
-
-          console.log("motif: ", motif);
           context.setFocusedMotif(motif);
           setMotif(motif);
           context.setSelectedMotifs([...context.selectedMotifs, motif]);

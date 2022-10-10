@@ -13,20 +13,3 @@ export async function queryMotifs(motif, number) {
   );
   return res.data;
 }
-
-export function getAdditionalConnections(selectedMotifs, motifToAdd) {
-  let edges = {};
-  selectedMotifs.forEach((motif) => {
-    motif.graph.links.forEach((edge) => {
-      edges[edge.source]
-        ? edges[parseInt(edge.source)].push(edge.target)
-        : (edges[edge.source] = []);
-    });
-  });
-  // motifToAdd.graph.links.forEach((edge) => {
-  //   edges[edge.source]
-  //     ? edges[edge.source].push(edge.target)
-  //     : (edges[edge.source] = []);
-  // });
-  return edges;
-}
