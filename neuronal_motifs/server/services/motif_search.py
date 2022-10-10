@@ -9,6 +9,6 @@ def search_hemibrain_motif(motif_specs, lim, token):
                          token=token)
 
     motif_source = nodes_and_edges_to_motif_string(motif_specs)
-    motif = Motif(motif_source)
-    results = E.find(motif, limit=lim)
+    motif = Motif().from_motif(motif_source)
+    results = E.find(motif=motif, limit=lim)
     return results.to_dict('records')

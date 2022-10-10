@@ -89,7 +89,7 @@ def nodes_and_edges_to_motif_string(motif):
                     edge_str += ', '
                 array = []
                 if prop[0] in rois:
-                    array = ["\"" + prop[0] + '.pre"', "\"" + prop[0] + '.post"']
+                    array = ["\"" + prop[0] + '.pre"']
                 else:
                     array = [prop[0]]
                 for i, el in enumerate(array):
