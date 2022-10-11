@@ -67,6 +67,7 @@ class DataAccess:
         storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
         blob = self.bucket.get_blob(str(storage_path))
         if blob.exists():
+            print("Blob exists")
             pkl_in = blob.download_as_string()
             neuron = pkl.loads(pkl_in)
         else:
@@ -172,8 +173,7 @@ class DataAccess:
                 neurons_to_download.append(id)
             else:
                 try:
-                    if neuron.is_neuron():
-                        cached_neurons.append(neuron)
+                    cached_neurons.append(neuron)
                 except:
                     neurons_to_download.append(id)
 
