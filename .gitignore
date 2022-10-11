@@ -12,3 +12,5 @@ neuronal_motifs/server/secrets/access_token.json
 *.pclprof
 
 node_modules/
+
+neuronal_motifs/server/cache.zip

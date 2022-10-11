@@ -9,7 +9,7 @@ from models.neuron import Neuron
 from params import Params
 from utils.authentication import get_data_server, get_data_version, get_gcloud_storage_bucket
 
-import time
+
 def file_exists(file_path):
     """
     @param file_path: path to file
@@ -79,7 +79,7 @@ class DataAccess:
         Dumps a list of neurons to cache
         @param neurons: [int] list of neuron ids
         """
-        path = Params.root / "server" / "cache" / "data" / "neurons"
+        path = Params.root / "cache" / "data" / "neurons"
         path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
         for neuron in neurons:
@@ -87,7 +87,8 @@ class DataAccess:
             with open(local_path, 'wb') as f:
                 pkl.dump(neuron, f)
                 try:
-                    storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(neuron.id) + '.pkl')
+                    storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (
+                                str(neuron.id) + '.pkl')
                     blob = self.bucket.blob(str(storage_path))
                     blob.upload_from_filename(local_path)
                 except ValueError:
@@ -133,11 +134,9 @@ class DataAccess:
             batch_to_download = batch
         else:
             for id in batch:
-                # path = Params.root / "server" / "cache" / "data" / "neurons" / (str(id) + ".pkl")
                 storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(id) + ".pkl")
                 blob = self.bucket.blob(str(storage_path))
                 if blob.exists():
-                # if file_exists(path):
                     print("Skipping neuron {}. Already in cache.".format(id))
                 else:
                     batch_to_download.append(id)
@@ -161,10 +160,7 @@ class DataAccess:
                                 incoming_synapses=incoming)
                 downloaded_neurons.append(neuron)
         return downloaded_neurons
-    # make public bucket only read / auth for writing - serviceAccount
-    # load from the bucket ,
-    # if not, download from the public database and upload to the bucket
-    #
+
     def get_neurons(self, body_ids):
         """
         @param body_ids: array of neuron body ids

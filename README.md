@@ -1,19 +1,37 @@
 # Neuronal Motifs
 
-A visualization tool for investigating __network motifs__ in connectomics data.
+An interactive tool for querying and visual analysis of network motifs in large connectomics data.
 
-## Required Software
+## Demo 
+A demo is available under [my-motifs.me](http://my-motifs.me/). Before you get started, please add your personal neuprint authentication token under `Settings > Auth Token`. You can find your authentikation token [here](https://neuprint.janelia.org/account). 
 
-This project requires `Node.js` and `conda` to run.
 
-## Getting Started
+## Installation
 
-- Once you've cloned the repository, navigate to `neuronal_motifs/server/` and run `conda env create -f environment.yml`
-- Activate the environment with `conda activate neuronal-motifs`
-- Start the backend server with `python main.py`
-- In another terminal, navigate to `neuronal_motifs/client/` and run `npm i`
-- Start the frontend server with `npm run start`
-- Access the tool at http://localhost:3000/
+Requirements: 
+* [`Node.js`](https://nodejs.org/en/)
+* [`conda`](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
+
+Clone the repository:
+```bash
+git clone https://github.com/jakobtroidl/neuronal-motifs.git && cd neuronal-motifs
+```
+
+Install/activate the conda environmeny and start the backend:
+```bash
+cd neuronal_motifs/server/
+conda env create -f environment.yml && conda activate neuronal-motifs
+python main.py
+```
+
+From the root directory of the repository, install frontend dependencies and start the frontend:
+```bash
+cd neuronal_motifs/client/
+npm install
+npm run start
+```
+
+The application is accessible under http://localhost:3000/
 
 ## Development
 - In PyCharm make sure the client and source directory are set as the source root (right click directory > mark directory as > source root)
