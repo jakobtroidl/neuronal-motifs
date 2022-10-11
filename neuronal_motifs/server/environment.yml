@@ -14,6 +14,7 @@ dependencies:
   - websockets
   - zarr
   - pip
+  - git
   - pip:
       - git+https://github.com/aplbrain/dotmotif
       - navis
