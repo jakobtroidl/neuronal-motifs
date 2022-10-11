@@ -10,6 +10,8 @@ from params import Params
 from utils.authentication import get_data_server, get_data_version, get_gcloud_storage_bucket
 
 import time
+
+
 def file_exists(file_path):
     """
     @param file_path: path to file
@@ -71,7 +73,6 @@ class DataAccess:
             neuron = pkl.loads(pkl_in)
         return neuron
 
-    @staticmethod
     def dump_neurons_to_cache(self, neurons):
         """
         Dumps a list of neurons to cache
@@ -84,7 +85,8 @@ class DataAccess:
             with open(path / (str(neuron.id) + '.pkl'), 'wb') as f:
                 pkl.dump(neuron, f)
                 try:
-                    storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(neuron.id) + '.pkl')
+                    storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (
+                                str(neuron.id) + '.pkl')
                     blob = self.bucket.blob(str(storage_path))
                     blob.upload_from_filename(path)
                 except ValueError:
@@ -134,7 +136,7 @@ class DataAccess:
                 storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(id) + ".pkl")
                 blob = self.bucket.blob(str(storage_path))
                 if blob.exists():
-                # if file_exists(path):
+                    # if file_exists(path):
                     print("Skipping neuron {}. Already in cache.".format(id))
                 else:
                     batch_to_download.append(id)
@@ -158,10 +160,7 @@ class DataAccess:
                                 incoming_synapses=incoming)
                 downloaded_neurons.append(neuron)
         return downloaded_neurons
-    # make public bucket only read / auth for writing - serviceAccount
-    # load from the bucket ,
-    # if not, download from the public database and upload to the bucket
-    #
+
     def get_neurons(self, body_ids):
         """
         @param body_ids: array of neuron body ids
