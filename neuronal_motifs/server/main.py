@@ -3,8 +3,10 @@ from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi import HTTPException
 from fastapi import Request
 from fastapi import WebSocket
+from requests.exceptions import HTTPError
 from starlette.middleware.cors import CORSMiddleware
 
 from models import nblast, count
@@ -37,7 +39,12 @@ async def search_motif(req: Request):
     motif = req['motif']
     lim = req['lim']
     token = req['token']
-    return motif_search.search_hemibrain_motif(motif, lim, token)
+    try:
+        return motif_search.search_hemibrain_motif(motif, lim, token)
+    except HTTPError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=json.loads(e.response.text))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={'error': str(e)})
 
 
 # downloads the data for the given body ids
