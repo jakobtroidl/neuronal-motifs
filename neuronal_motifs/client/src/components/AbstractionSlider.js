@@ -6,14 +6,32 @@ import Slider from "@mui/material/Slider";
 import "./AbstractionSlider.css";
 
 function AbstractionSlider() {
+  // Global context holds abstraction state
+  const context = useContext(AppContext);
   const abstractionSliderId = "abstraction-slider-div";
 
   function valueLabelFormat(value) {
     return `Level ${value}`;
   }
 
-  // Global context holds abstraction state
-  const context = useContext(AppContext);
+  function getMarks() {
+    const marks = [
+      {
+        value: 0.02,
+        label: "Full Motif",
+      },
+      {
+        value: context.motifPathPosition,
+        label: "Motif Path",
+      },
+      {
+        value: 0.98,
+        label: "Node-Link",
+      },
+    ];
+    return marks;
+  }
+
   // Updates the state when it changes
   const handleChange = (event, val) => {
     if (val !== context.abstractionLevel) {
@@ -43,7 +61,7 @@ function AbstractionSlider() {
             valueLabelFormat={valueLabelFormat}
             valueLabelDisplay="auto"
             step={0.005}
-            marks
+            marks={getMarks()}
             min={0}
             max={1}
             onChange={handleChange}

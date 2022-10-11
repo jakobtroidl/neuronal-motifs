@@ -47,6 +47,7 @@ export const ContextWrapper = (props) => {
   const [motifToAdd, setMotifToAdd] = useState(null);
   const [motifToDelete, setMotifToDelete] = useState(null);
   const [currentNeuronLabels, setCurrentNeuronLabels] = useState({});
+  const [motifPathPosition, setMotifPathPosition] = useState(0.5);
 
   return (
     <AppContext.Provider
@@ -87,6 +88,8 @@ export const ContextWrapper = (props) => {
         setFocusedMotif,
         currentNeuronLabels,
         setCurrentNeuronLabels,
+        motifPathPosition,
+        setMotifPathPosition,
       }}
     >
       {props.children}
