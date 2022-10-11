@@ -174,8 +174,7 @@ class DataAccess:
                 neurons_to_download.append(id)
             else:
                 try:
-                    if neuron.is_neuron():
-                        cached_neurons.append(neuron)
+                    cached_neurons.append(neuron)
                 except:
                     neurons_to_download.append(id)
 
