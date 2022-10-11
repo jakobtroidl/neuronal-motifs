@@ -15,8 +15,9 @@ dependencies:
   - zarr
   - pip
   - pip:
+      - py2neo
+      - tamarind
+      - dotmotif
+      - google-cloud-storage
       - navis
       - neuprint-python==0.4.24
-      - google-cloud-storage
-      - dotmotif
-
