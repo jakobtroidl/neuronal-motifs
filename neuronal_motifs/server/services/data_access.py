@@ -69,6 +69,8 @@ class DataAccess:
         if blob.exists():
             pkl_in = blob.download_as_string()
             neuron = pkl.loads(pkl_in)
+        else:
+            print("Blob does not exist: {}".format(str(storage_path)))
         return neuron
 
     def dump_neurons_to_cache(self, neurons):
