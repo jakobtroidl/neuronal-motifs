@@ -5,7 +5,6 @@ import pandas as pd
 from networkx.readwrite import json_graph
 
 from models.edge import NodeLink3DEdge
-from services.data_access import DataAccess
 from utils.data_conversion import synapse_array_to_object, edges_to_json
 
 

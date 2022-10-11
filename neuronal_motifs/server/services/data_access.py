@@ -9,8 +9,6 @@ from models.neuron import Neuron
 from params import Params
 from utils.authentication import get_data_server, get_data_version, get_gcloud_storage_bucket
 
-import time
-
 
 def file_exists(file_path):
     """
@@ -132,11 +130,9 @@ class DataAccess:
             batch_to_download = batch
         else:
             for id in batch:
-                # path = Params.root / "server" / "cache" / "data" / "neurons" / (str(id) + ".pkl")
                 storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(id) + ".pkl")
                 blob = self.bucket.blob(str(storage_path))
                 if blob.exists():
-                    # if file_exists(path):
                     print("Skipping neuron {}. Already in cache.".format(id))
                 else:
                     batch_to_download.append(id)
