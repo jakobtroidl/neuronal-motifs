@@ -65,13 +65,15 @@ class DataAccess:
         """
         neuron = None
         storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
-        blob = self.bucket.get_blob(str(storage_path))
+        blob = self.bucket.blob(str(storage_path))
         if blob.exists():
-            pkl_in = blob.download_as_string()
-            neuron = pkl.loads(pkl_in)
+            pkl_in = blob.download_as_bytes()
+            try:
+                neuron = pkl.loads(pkl_in)
+            except EOFError:
+                neuron = None
         return neuron
 
-    @staticmethod
     def dump_neurons_to_cache(self, neurons):
         """
         Dumps a list of neurons to cache
@@ -81,14 +83,15 @@ class DataAccess:
         path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
         for neuron in neurons:
-            with open(path / (str(neuron.id) + '.pkl'), 'wb') as f:
+            local_path = path / (str(neuron.id) + '.pkl')
+            with open(local_path, 'wb') as f:
                 pkl.dump(neuron, f)
                 try:
                     storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(neuron.id) + '.pkl')
                     blob = self.bucket.blob(str(storage_path))
-                    blob.upload_from_filename(path)
+                    blob.upload_from_filename(local_path)
                 except ValueError:
-                    # "Anonymous credentials cannot be refreshed."
+                    print("Anonymous credentials cannot be refreshed.")
                     pass
                 f.close()
 
@@ -124,7 +127,6 @@ class DataAccess:
                 self.dump_neurons_to_cache(downloaded_neurons)
             counter += 1
 
-    @staticmethod
     def precompute_neurons(self, batch, overwrite=False):
         batch_to_download = []
         if overwrite:

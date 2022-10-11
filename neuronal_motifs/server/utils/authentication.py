@@ -18,7 +18,7 @@ def get_data_version():
 
 def get_gcloud_storage_bucket():
     """
-    @return: Google CLoud Storage Bucket
+    @return: Google Cloud Storage Bucket
     """
     path = "../secrets/access_token.json"
     if Path(path).is_file():
