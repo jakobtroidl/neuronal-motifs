@@ -133,7 +133,7 @@ class DataAccess:
         @return: dict of Neuron objects
         """
 
-        print("NEW VERSION OF GET NEURONS")
+        print("NEW VERSION OF GET NEURONS.")
 
         cached_neurons = []  # list of neuron objects already in cache
         neurons_to_download = []  # list of neuron ids that have yet to be downloaded
