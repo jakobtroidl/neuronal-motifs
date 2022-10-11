@@ -16,7 +16,7 @@ def test_generator():
 
 def get_motif(ids, motif, token, prev_labels):
     filename = get_cache_filename(ids)
-    path = Params.root / "server" / "cache" / "data" / "motifs"
+    path = Params.root / "cache" / "data" / "motifs"
     path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
     filepath = path / (filename + ".pkl")
@@ -52,7 +52,7 @@ def compute_motif_data(body_ids, motif, token, prev_labels):
     motif.compute_synapse_soma_distances()
 
     filename = get_cache_filename(body_ids)
-    path = Params.root / "server" / "cache" / "data" / "motifs"
+    path = Params.root / "cache" / "data" / "motifs"
     path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
     filepath = path / (filename + ".pkl")
