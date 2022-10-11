@@ -124,7 +124,6 @@ class DataAccess:
                 self.dump_neurons_to_cache(downloaded_neurons)
             counter += 1
 
-    @staticmethod
     def precompute_neurons(self, batch, overwrite=False):
         batch_to_download = []
         if overwrite:
