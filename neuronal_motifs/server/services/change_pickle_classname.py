@@ -26,14 +26,15 @@ if __name__ == '__main__':
 
             storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / fname
 
-            with open(local_path, 'rb') as f:
-                data = renamed_load(f)
-                f.close()
+            blob = bucket.blob(str(storage_path))
+            if not blob.exists():
+                with open(local_path, 'rb') as f:
+                    data = renamed_load(f)
+                    f.close()
 
-            with open(local_path,'wb') as f:
-                pickle.dump(data, f)
-                blob = bucket.blob(str(storage_path))
-                blob.upload_from_filename(local_path)
+                with open(local_path,'wb') as f:
+                    pickle.dump(data, f)
+                    blob.upload_from_filename(local_path)
 
 
 

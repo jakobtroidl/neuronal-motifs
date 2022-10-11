@@ -16,18 +16,9 @@ def get_data_version():
     """
     return Params.data_version
 
-def get_gcloud_storage_bucket_anonymously():
-    """
-    @return: Google Cloud Storage Bucket
-    """
-    storage_client = storage.Client.create_anonymous_client()
-    bucket = storage_client.bucket(Params.bucket_name)
-    return bucket
-
 def get_gcloud_storage_bucket():
     """
-    @return: Google CLoud Storage Bucket with Credential
-    Only who have a credential can upload files to the Cloud Storage
+    @return: Google CLoud Storage Bucket
     """
     path = "../secrets/access_token.json"
     if Path(path).is_file():
@@ -35,4 +26,6 @@ def get_gcloud_storage_bucket():
         bucket = storage_client.bucket(Params.bucket_name)
         return bucket
     else:
-        return None
+        storage_client = storage.Client.create_anonymous_client()
+        bucket = storage_client.bucket(Params.bucket_name)
+        return bucket
