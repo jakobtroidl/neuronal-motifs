@@ -19,7 +19,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'push', 'gcr.io/jakob-troidl/motif-backend:latest' ]
   - name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'sh'
+    entrypoint: 'bash'
     args:
       - '-c'
       - |
