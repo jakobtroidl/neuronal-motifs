@@ -1,4 +1,7 @@
 import pickle as pkl
+from pathlib import Path
+from services.data_access import DataAccess
+
 import networkx as nx
 
 from models.motif import MyMotif
@@ -43,7 +46,9 @@ def compute_motif_data(body_ids, motif, token, prev_labels):
     yield 'Creating Motif Graph'
     motif_graph = nx.DiGraph(adjacency)
     yield 'Downloading Neurons and Synapses'
-    motif = MyMotif(token, body_ids, motif_graph)
+    data_access = DataAccess(token)
+    neurons = data_access.get_neurons(body_ids)
+    motif = MyMotif(neurons, motif_graph)
     yield 'Computing Motif Path'
     motif.compute_motif_paths(prev_labels)
     yield 'Compute Synapse Trajectory'

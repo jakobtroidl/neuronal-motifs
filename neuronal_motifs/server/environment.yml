@@ -20,5 +20,6 @@ dependencies:
       - tamarind
       - navis
       - neuprint-python==0.4.24
+      - google-cloud-storage
       - git+https://github.com/aplbrain/dotmotif
 
