@@ -77,9 +77,9 @@ class MyMotif:
         self.nodeLinkEdges = edges
         print("Done. Took {} sec".format(time.time() - t))
 
-    def compute_motif_paths(self):
+    def compute_motif_paths(self, prev_labels):
         """
-        For each neuron in the motif, matches synapses with closest skeleton connector,
+        For each neuron in the motif, matches synapses with the closest skeleton connector,
         finds the motif path and labels all neuron skeletons based on distance to motif path
         @return:
         """
@@ -87,19 +87,28 @@ class MyMotif:
             synapse_nodes = neuron.get_nodes_of_motif_synapses()
             print("Compute compute node labels for skeleton {} ...".format(neuron.id))
             t = time.time()
-            neuron.compute_skeleton_labels(synapse_nodes)
+            my_labels = None
+            if str(neuron.id) in prev_labels:
+                my_labels = prev_labels[str(neuron.id)]
+            neuron.compute_skeleton_labels(synapse_nodes, my_labels)
             print("Done. Took {} sec".format(time.time() - t))
 
     def compute_motif_synapses(self):
         """
         Relevant synapses for the neurons in that given motif and safes them in each neuron object
         """
-
         all_synapses = []
-        adjacency = self.get_adjacency(undirected=True)
+        adjacency = self.get_adjacency(undirected=False)
         for neuron in self.neurons:  # download relevant synapses
-            outgoing_synapses = neuron.outgoing_synapses.loc[neuron.outgoing_synapses['bodyId_post'].isin(adjacency[neuron.id])]
-            incoming_synapses = neuron.incoming_synapses.loc[neuron.incoming_synapses['bodyId_pre'].isin(adjacency[neuron.id])]
+            # find outgoing synapses of neuron
+            outgoing_synapses = neuron.outgoing_synapses.loc[
+                neuron.outgoing_synapses['bodyId_post'].isin(adjacency[neuron.id])]
+            # find incoming synapses of neuron
+            incoming_ids = []  # for each neuron get ids of neurons that input to it
+            for id, adj in adjacency.items():  # iterate over all adjacency of other neurons
+                if neuron.id in adj:
+                    incoming_ids.append(id)
+            incoming_synapses = neuron.incoming_synapses.loc[neuron.incoming_synapses['bodyId_pre'].isin(incoming_ids)]
             synapses = pd.concat([outgoing_synapses, incoming_synapses], ignore_index=True, sort=False)
             all_synapses.append(synapses)
             neuron.set_motif_synapses(synapses)
@@ -126,12 +135,26 @@ class MyMotif:
         return adjacency
 
     def get_neuron(self, id):
+        """
+        Returns the neuron object with the given id
+        @param id: int
+        @return: neuron object
+        """
+        out = None
         for neuron in self.neurons:
             if neuron.id == id:
-                return neuron
-        return None
+                out = neuron
+        if out is None:
+            out = self.data_access.get_neurons([id])[0]
+        return out
 
     def syn_soma_distance(self, neuron_id, syn_pos):
+        """
+        Computes the geodesic distance between a synapse and the soma of a neuron
+        @param neuron_id: int
+        @param syn_pos: 3D position of synapse
+        @return: geodesic distance between synapse and soma
+        """
         neuron = self.get_neuron(neuron_id)
         syn_node, snap_distance = neuron.skeleton.snap(syn_pos)
         soma = neuron.get_soma()

@@ -78,7 +78,7 @@ class DataAccess:
         Dumps a list of neurons to cache
         @param neurons: [int] list of neuron ids
         """
-        path = Params.root / "server" / "cache" / "data" / "neurons"
+        path = Params.root / "cache" / "data" / "neurons"
         path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
         for neuron in neurons:

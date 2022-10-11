@@ -58,7 +58,6 @@ export function CollapsableTableRow(props) {
       let selectedMotif = { ...row, index: context.globalMotifIndex };
       context.setGlobalMotifIndex(context.globalMotifIndex + 1);
       context.setMotifToAdd(selectedMotif);
-      context.setFocusedMotif(selectedMotif);
     }
   };
 
