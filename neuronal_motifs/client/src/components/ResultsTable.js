@@ -3,7 +3,7 @@ import Table from "@mui/material/Table";
 import "./ResultsTable.css";
 import TableBody from "@mui/material/TableBody";
 import { CollapsableTableRow } from "./CollapsableTableRow";
-import React, { useContext, useEffect } from "react";
+import React, { useEffect } from "react";
 import { NodeFields } from "../config/NodeFields";
 
 export default function ResultsTable(props) {
