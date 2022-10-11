@@ -88,7 +88,7 @@ class DataAccess:
                 pkl.dump(neuron, f)
                 try:
                     storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (
-                                str(neuron.id) + '.pkl')
+                            str(neuron.id) + '.pkl')
                     blob = self.bucket.blob(str(storage_path))
                     blob.upload_from_filename(local_path)
                 except ValueError:
@@ -173,10 +173,7 @@ class DataAccess:
             if neuron is None:
                 neurons_to_download.append(id)
             else:
-                try:
-                    cached_neurons.append(neuron)
-                except:
-                    neurons_to_download.append(id)
+                cached_neurons.append(neuron)
 
         print("{} neurons loaded from cache".format(len(cached_neurons)))
         print("{} neuron(s) to download".format(len(neurons_to_download)))
