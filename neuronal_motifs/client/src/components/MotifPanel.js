@@ -91,7 +91,7 @@ function MotifPanel() {
         motifs.sort((a, b) => {
           return a.nodeKey.localeCompare(b.nodeKey);
         });
-        return { name: "Motif" + j, neurons: motifs };
+        return { name: "Motif Instance" + j, neurons: motifs };
       });
       setResultRows(rows);
     }
