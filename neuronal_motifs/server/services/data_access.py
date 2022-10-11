@@ -18,40 +18,6 @@ def file_exists(file_path):
     return Path(file_path).is_file()
 
 
-# def load_neuron_from_cache(neuron_id):
-#     """
-#     Loads neuron from cache, if exists. Returns None otherwise
-#     @param neuron_id: int
-#     @return: Neuron skeleton (pd.DataFrame)
-#     """
-#     print(f"Root: {Params.root}")
-#     # path = Params.root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
-#     neuron = None
-#
-#     bucket = get_gcloud_storage_bucket_anonymously()
-#     storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
-#     blob = bucket.blob(str(storage_path))
-#     if blob.exists():
-#         pkl_in = blob.download_as_string()
-#         # try:
-#         print(neuron_id)
-#         neuron = pkl.loads(pkl_in)
-#
-#         # except EOFError:
-#         #     print(neuron_id)
-#             # print(pkl_in)
-#
-#         # print(type(neuron))
-#         # print(neuron.is_neuron())
-#
-#     # if file_exists(path):
-#     #     # load neuron from filepath
-#     #     with open(path, 'rb') as f:
-#     #         neuron = pkl.load(f)
-#     #         f.close()
-#     return neuron
-
-
 class DataAccess:
     def __init__(self, token):
         neu.Client(get_data_server(), dataset=get_data_version(), token=token)
@@ -166,6 +132,9 @@ class DataAccess:
         @param body_ids: array of neuron body ids
         @return: dict of Neuron objects
         """
+
+        print("NEW VERSION OF GET NEURONS")
+
         cached_neurons = []  # list of neuron objects already in cache
         neurons_to_download = []  # list of neuron ids that have yet to be downloaded
         for id in body_ids:
