@@ -16,6 +16,8 @@ dependencies:
   - pip
   - git
   - pip:
-      - git+https://github.com/aplbrain/dotmotif
+      - py2neo
       - navis
       - neuprint-python==0.4.24
+      - git+https://github.com/aplbrain/dotmotif
+
