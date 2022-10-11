@@ -72,15 +72,26 @@ class DataAccess:
         print(blob.exists())
         if blob.exists():
             pkl_in = blob.download_as_string()
-            with open(path, 'wb') as f:
-                pkl.dump(pkl_in, f)
-            # try:
-            print(pkl_in)
-            print(len(pkl_in), type(pkl_in), blob.size)
-            print(neuron_id)
-            time.sleep(1)
-
+            # pkl_in = blob.download_as_text()
             neuron = pkl.loads(pkl_in)
+            print(neuron.is_neuron())
+            # with open(path, 'wb') as f:
+            #     pkl.dump(pkl_in, f)
+            #     f.close()
+            #
+            # if file_exists(path):
+            #     # load neuron from filepath
+            #     with open(path, 'rb') as f:
+            #         neuron = pkl.load(f)
+            #         print(neuron.is_neuron())
+            #         f.close()
+            # try:
+            # print(pkl_in)
+            # print(len(pkl_in), type(pkl_in), blob.size)
+            # print(neuron_id)
+            # time.sleep(1)
+            #
+            # neuron = pkl.loads(pkl_in)
 
 
             # except EOFError:
