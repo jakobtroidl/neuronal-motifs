@@ -63,49 +63,12 @@ class DataAccess:
         @param neuron_id: int
         @return: Neuron skeleton (pd.DataFrame)
         """
-        print(f"Root: {Params.root}")
-        path = Params.root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
         neuron = None
-
         storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
         blob = self.bucket.get_blob(str(storage_path))
-        print(blob.exists())
         if blob.exists():
             pkl_in = blob.download_as_string()
-            # pkl_in = blob.download_as_text()
             neuron = pkl.loads(pkl_in)
-            print(neuron.is_neuron())
-            # with open(path, 'wb') as f:
-            #     pkl.dump(pkl_in, f)
-            #     f.close()
-            #
-            # if file_exists(path):
-            #     # load neuron from filepath
-            #     with open(path, 'rb') as f:
-            #         neuron = pkl.load(f)
-            #         print(neuron.is_neuron())
-            #         f.close()
-            # try:
-            # print(pkl_in)
-            # print(len(pkl_in), type(pkl_in), blob.size)
-            # print(neuron_id)
-            # time.sleep(1)
-            #
-            # neuron = pkl.loads(pkl_in)
-
-
-            # except EOFError:
-            #     print(neuron_id)
-            # print(pkl_in)
-
-            # print(type(neuron))
-            # print(neuron.is_neuron())
-
-        # if file_exists(path):
-        #     # load neuron from filepath
-        #     with open(path, 'rb') as f:
-        #         neuron = pkl.load(f)
-        #         f.close()
         return neuron
 
     @staticmethod

@@ -1,5 +1,6 @@
 import pickle as pkl
 from pathlib import Path
+from services.data_access import DataAccess
 
 import networkx as nx
 
@@ -24,8 +25,8 @@ def get_motif(ids, motif, token):
     path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
     filepath = path / (filename + ".pkl")
-    if filepath.is_file() is False:
-        # if True:
+    # if filepath.is_file() is False:
+    if True:
         yield {'status': 202, 'message': 'Downloading Motif'}
         try:
             motif_data_generator = compute_motif_data(ids, motif, token)
@@ -62,7 +63,9 @@ def compute_motif_data(body_ids, motif, token):
     yield 'Creating Motif Graph'
     motif_graph = nx.DiGraph(adjacency)
     yield 'Downloading Neurons and Synapses'
-    motif = MyMotif(token, body_ids, motif_graph)
+    data_access = DataAccess(token)
+    neurons = data_access.get_neurons(body_ids)
+    motif = MyMotif(neurons, motif_graph)
     yield 'Computing Motif Path'
     motif.compute_motif_paths()
     yield 'Compute Synapse Trajectory'
