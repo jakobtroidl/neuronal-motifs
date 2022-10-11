@@ -1,5 +1,5 @@
 import Viewer from "./components/Viewer";
-import Loading from "./components/Loading";
+import Banner from "./components/Banner";
 import DraggableView from "./views/DraggableView";
 import { ContextWrapper } from "./contexts/GlobalContext";
 import "./App.css";
@@ -9,7 +9,7 @@ function App() {
   return (
     <ContextWrapper>
       <div>
-        <Loading></Loading>
+        <Banner></Banner>
         <Viewer />
         <DraggableView />
       </div>
