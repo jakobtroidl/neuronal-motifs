@@ -1,11 +1,12 @@
 steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    args: [ 'build',
-            '-t', 'gcr.io/jakob-troidl/motif-frontend:latest',
-            '--cache-from', 'gcr.io/jakob-troidl/motif-frontend:latest',
-            './neuronal_motifs/client' ]
-  - name: 'gcr.io/cloud-builders/docker'
-    args: [ 'push', 'gcr.io/jakob-troidl/motif-frontend:latest' ]
+  - name: 'gcr.io/kaniko-project/executor:latest'
+    args:
+      [
+        "--dockerfile=./neuronal_motifs/client/Dockerfile",
+        "--context=dir://./neuronal_motifs/client",
+        "--cache=true",
+        "--destination=gcr.io/jakob-troidl/motif-frontend:latest",
+      ]
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [ 'compute', 'instances', 'delete', 'motif-frontend' ]
@@ -24,13 +25,14 @@ steps:
     env:
       - 'CLOUDSDK_COMPUTE_REGION=us-east1'
       - 'CLOUDSDK_COMPUTE_ZONE=us-east1-b'
-  - name: 'gcr.io/cloud-builders/docker'
-    args: [ 'build',
-            '-t', 'gcr.io/jakob-troidl/motif-backend:latest',
-            '--cache-from', 'gcr.io/jakob-troidl/motif-backend:latest',
-            './neuronal_motifs/server' ]
-  - name: 'gcr.io/cloud-builders/docker'
-    args: [ 'push', 'gcr.io/jakob-troidl/motif-backend:latest' ]
+  - name: 'gcr.io/kaniko-project/executor:latest'
+    args:
+      [
+        "--dockerfile=./neuronal_motifs/server/Dockerfile",
+        "--context=dir://./neuronal_motifs/server",
+        "--cache=true",
+        "--destination=gcr.io/jakob-troidl/motif-backend:latest",
+      ]
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [ 'compute', 'instances', 'delete', 'motif-backend' ]
