@@ -119,6 +119,8 @@ def nodes_and_edges_to_motif_string(motif):
                     node_str += str(node['label']) + "['" + str(prop[0]) + "'] < " + str(prop[1]['$lt']) + '\n'
                 elif '$gt' in prop[1]:
                     node_str += str(node['label']) + "['" + str(prop[0]) + "'] > " + str(prop[1]['$gt']) + '\n'
+                elif '$ne' in prop[1]:
+                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] != " + '"' + str(prop[1]['$ne']) + '"' + '\n'
         output += node_str
     return output
 
