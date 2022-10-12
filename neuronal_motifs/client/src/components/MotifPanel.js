@@ -88,20 +88,20 @@ function MotifPanel() {
         }
     };
 
-    useEffect(() => {
-        if (searchedMotifs && searchedMotifs?.length > 0) {
-            let rows = searchedMotifs.map((motif, j) => {
-                let motifs = Object.entries(motif).map(([k, v], i) => {
-                    return {...v, nodeKey: k};
-                });
-                motifs.sort((a, b) => {
-                    return a.nodeKey.localeCompare(b.nodeKey);
-                });
-                return {name: "Motif" + j, neurons: motifs};
-            });
-            setResultRows(rows);
-        }
-    }, [searchedMotifs]);
+  useEffect(() => {
+    if (searchedMotifs && searchedMotifs?.length > 0) {
+      let rows = searchedMotifs.map((motif, j) => {
+        let motifs = Object.entries(motif).map(([k, v], i) => {
+          return { ...v, nodeKey: k };
+        });
+        motifs.sort((a, b) => {
+          return a.nodeKey.localeCompare(b.nodeKey);
+        });
+        return { name: "Motif Instance " + j, neurons: motifs };
+      });
+      setResultRows(rows);
+    }
+  }, [searchedMotifs]);
 
     // catch change in context absmotifcount
     useEffect(() => {

@@ -625,6 +625,7 @@ export default class SharkViewer {
     const neuron = new THREE.Object3D();
     let geometry;
     let material;
+    let normalized_motif_path_position = 0.5;
 
     neuron.color = color;
     // particle mode uses vertex info to place texture image, very fast
@@ -685,6 +686,8 @@ export default class SharkViewer {
         if (label > this.maxLabel) {
           this.maxLabel = label;
         }
+
+        normalized_motif_path_position = this.getMotifPathThreshold();
 
         if (this.min_radius && radius < this.min_radius) {
           radius = this.min_radius;
@@ -949,7 +952,7 @@ export default class SharkViewer {
         neuron.add(coneMesh);
       }
     }
-    return neuron;
+    return [neuron, normalized_motif_path_position];
   }
 
   // copied from example at http://jsfiddle.net/b97zd1a3/16/
@@ -1070,7 +1073,7 @@ export default class SharkViewer {
     }
 
     if (this.swc) {
-      const neuron = this.createNeuron(this.swc);
+      const [neuron, motif_path] = this.createNeuron(this.swc);
       const boundingBox = calculateBoundingBox(this.swc);
       const boundingSphere = calculateBoundingSphere(this.swc, boundingBox);
       // store neuron status and bounding sphere for later use
@@ -1270,7 +1273,7 @@ export default class SharkViewer {
     onTopable = false,
     frontToBack = false
   ) {
-    const neuron = this.createNeuron(filename, nodes, color);
+    const [neuron, motif_path] = this.createNeuron(filename, nodes, color);
     const boundingBox = calculateBoundingBox(nodes);
     const boundingSphere = calculateBoundingSphere(nodes, boundingBox);
     const target = boundingSphere.center;
@@ -1293,7 +1296,7 @@ export default class SharkViewer {
     neuron.isNeuron = true;
     neuron.boundingSphere = boundingSphere;
     const scene = onTopable ? this.sceneOnTopable : this.scene;
-    return neuron;
+    return [neuron, motif_path];
   }
 
   // use onTopable=true to correspond to loadNeuron(..., onTopable=true)

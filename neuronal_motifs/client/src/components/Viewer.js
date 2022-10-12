@@ -170,12 +170,14 @@ function addNeurons(
     let oldNeuron = scene.getObjectByName(neuron.id);
     let parsedSwc = swcParser(neuron.skeleton_swc);
     let color = context.neuronColors[i];
-    let neuronObject = sharkViewerInstance.loadNeuron(
+    let [neuronObject, motif_path] = sharkViewerInstance.loadNeuron(
       neuron.id,
       color,
       parsedSwc,
       updateCamera
     );
+
+    context.setMotifPathPosition(motif_path);
 
     neuronObject.motifs = [motif];
     if (oldNeuron) {
@@ -798,7 +800,8 @@ function Viewer() {
   }
 
   function getAbstractionLevel() {
-    return stretch(context.abstractionLevel);
+    // return stretch(context.abstractionLevel);
+    return context.abstractionLevel;
   }
 
   function getAbstractionBoundary(sharkViewerInstance) {

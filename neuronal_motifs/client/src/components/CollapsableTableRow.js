@@ -99,11 +99,11 @@ export function CollapsableTableRow(props) {
         <TableCell
           component="th"
           scope="row"
-          style={{ ...style_default, width: "20%" }}
+          style={{ ...style_default, width: "40%" }}
         >
           {row.name}
         </TableCell>
-        <TableCell style={{ ...style_default, width: "60%" }} align={"right"}>
+        <TableCell style={{ ...style_default, width: "40%" }} align={"right"}>
           {" "}
           {deletable ? (
             <IconButton
