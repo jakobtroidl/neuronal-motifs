@@ -7,5 +7,5 @@ RUN conda env create -f environment.yml
 RUN echo "conda activate neuronal-motifs" >> ~/.bashrc
 SHELL ["/bin/bash", "--login", "-c"]
 COPY . /app
-ENTRYPOINT ["conda", "run","--no-capture-output", "-n", "neuronal-motifs", "uvicorn", "main:app", "--host", "0.0.0.0","--port", "5050", "--log-level", "info"]
-EXPOSE 5050
+ENTRYPOINT ["conda", "run","--no-capture-output", "-n", "neuronal-motifs", "uvicorn", "main:app", "--host", "0.0.0.0","--port", "80", "--log-level", "info"]
+EXPOSE 80
