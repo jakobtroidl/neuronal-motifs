@@ -5,15 +5,13 @@ import pandas as pd
 from networkx.readwrite import json_graph
 
 from models.edge import NodeLink3DEdge
-from services.data_access import DataAccess
 from utils.data_conversion import synapse_array_to_object, edges_to_json
 
 
 class MyMotif:
-    def __init__(self, token, neuron_ids=None, graph=None, synapses=None, edges=None):
-        self.data_access = DataAccess(token)
+    def __init__(self, neurons=None, graph=None, synapses=None, edges=None):
         self.graph = graph  # networkx graph of the motif
-        self.neurons = self.data_access.get_neurons(neuron_ids)
+        self.neurons = neurons
         self.synapses = synapses
         self.nodeLinkEdges = edges
         self.compute_motif_synapses()

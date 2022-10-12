@@ -5,10 +5,9 @@ import navis
 import navis.interfaces.neuprint as neu
 import networkit as nk
 import numpy as np
-
 from models.neuron import Neuron
 from params import Params
-from utils.authentication import get_data_server, get_data_version
+from utils.authentication import get_data_server, get_data_version, get_gcloud_storage_bucket
 
 
 def file_exists(file_path):
@@ -19,29 +18,29 @@ def file_exists(file_path):
     return Path(file_path).is_file()
 
 
-def load_neuron_from_cache(neuron_id):
-    """
-    Loads neuron from cache, if exists. Returns None otherwise
-    @param neuron_id: int
-    @return: Neuron skeleton (pd.DataFrame)
-    """
-    print(f"Root: {Params.root}")
-    path = Params.root / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
-    neuron = None
-    if file_exists(path):
-        # load neuron from filepath
-        with open(path, 'rb') as f:
-            neuron = pkl.load(f)
-            f.close()
-    return neuron
-
-
 class DataAccess:
     def __init__(self, token):
         neu.Client(get_data_server(), dataset=get_data_version(), token=token)
+        self.bucket = get_gcloud_storage_bucket()
 
-    @staticmethod
-    def dump_neurons_to_cache(neurons):
+    def load_neuron_from_cache(self, neuron_id):
+        """
+        Loads neuron from cache, if exists. Returns None otherwise
+        @param neuron_id: int
+        @return: Neuron skeleton (pd.DataFrame)
+        """
+        neuron = None
+        storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
+        blob = self.bucket.blob(str(storage_path))
+        if blob.exists():
+            pkl_in = blob.download_as_bytes()
+            try:
+                neuron = pkl.loads(pkl_in)
+            except EOFError:
+                neuron = None
+        return neuron
+
+    def dump_neurons_to_cache(self, neurons):
         """
         Dumps a list of neurons to cache
         @param neurons: [int] list of neuron ids
@@ -50,9 +49,18 @@ class DataAccess:
         path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
         for neuron in neurons:
-            with open(path / (str(neuron.id) + '.pkl'), 'wb') as f:
+            local_path = path / (str(neuron.id) + '.pkl')
+            with open(local_path, 'wb') as f:
                 pkl.dump(neuron, f)
-            f.close()
+                try:
+                    storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (
+                            str(neuron.id) + '.pkl')
+                    blob = self.bucket.blob(str(storage_path))
+                    blob.upload_from_filename(local_path)
+                except ValueError:
+                    print("Anonymous credentials cannot be refreshed.")
+                    pass
+                f.close()
 
     def filter_synapses_by_group(self, neuron_id, inputs, outputs):
         """
@@ -86,15 +94,15 @@ class DataAccess:
                 self.dump_neurons_to_cache(downloaded_neurons)
             counter += 1
 
-    @staticmethod
-    def precompute_neurons(batch, overwrite=False):
+    def precompute_neurons(self, batch, overwrite=False):
         batch_to_download = []
         if overwrite:
             batch_to_download = batch
         else:
             for id in batch:
-                path = Params.root / "cache" / "data" / "neurons" / (str(id) + ".pkl")
-                if file_exists(path):
+                storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(id) + ".pkl")
+                blob = self.bucket.blob(str(storage_path))
+                if blob.exists():
                     print("Skipping neuron {}. Already in cache.".format(id))
                 else:
                     batch_to_download.append(id)
@@ -124,18 +132,17 @@ class DataAccess:
         @param body_ids: array of neuron body ids
         @return: dict of Neuron objects
         """
+
+        print("NEW VERSION OF GET NEURONS.")
+
         cached_neurons = []  # list of neuron objects already in cache
         neurons_to_download = []  # list of neuron ids that have yet to be downloaded
         for id in body_ids:
-            neuron = load_neuron_from_cache(id)
+            neuron = self.load_neuron_from_cache(id)
             if neuron is None:
                 neurons_to_download.append(id)
             else:
-                try:
-                    if neuron.is_neuron():
-                        cached_neurons.append(neuron)
-                except:
-                    neurons_to_download.append(id)
+                cached_neurons.append(neuron)
 
         print("{} neurons loaded from cache".format(len(cached_neurons)))
         print("{} neuron(s) to download".format(len(neurons_to_download)))

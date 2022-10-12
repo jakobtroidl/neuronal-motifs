@@ -3,8 +3,10 @@ from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi import HTTPException
 from fastapi import Request
 from fastapi import WebSocket
+from requests.exceptions import HTTPError
 from starlette.middleware.cors import CORSMiddleware
 
 from models import nblast, count
@@ -23,7 +25,12 @@ app.add_middleware(
 
 @app.get("/helloworld")
 def read_root():
-    return {"Hello": "World"}
+    return {"Hello": "World!"}
+
+
+@app.get("/401")
+def four_zero_one():
+    raise HTTPException(status_code=401, detail="401: Unauthorized")
 
 
 @app.get("/items/{item_id}")
@@ -37,7 +44,12 @@ async def search_motif(req: Request):
     motif = req['motif']
     lim = req['lim']
     token = req['token']
-    return motif_search.search_hemibrain_motif(motif, lim, token)
+    try:
+        return motif_search.search_hemibrain_motif(motif, lim, token)
+    except HTTPError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=json.loads(e.response.text))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={'error': str(e)})
 
 
 # downloads the data for the given body ids
@@ -80,4 +92,4 @@ def get_motif_count(motif: str):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=5050, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=80, log_level="info")

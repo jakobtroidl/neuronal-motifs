@@ -14,8 +14,10 @@ dependencies:
   - websockets
   - zarr
   - pip
-  - git
   - pip:
-      - git+https://github.com/aplbrain/dotmotif
+      - py2neo
+      - tamarind
+      - dotmotif
+      - google-cloud-storage
       - navis
       - neuprint-python==0.4.24

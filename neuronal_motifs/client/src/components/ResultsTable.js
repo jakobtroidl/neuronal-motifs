@@ -14,6 +14,8 @@ export default function ResultsTable(props) {
     let sortedColumns = Object.entries(visibleColumns).sort((a, b) => {
       if (a[0] === "nodeKey") return -1;
       if (b[0] === "nodeKey") return 1;
+      if (a[0] === "type") return -1;
+      if (b[0] === "type") return 1;
       if (a[0] === "bodyId") return -1;
       if (b[0] === "bodyId") return 1;
       if (a[0] === "instance") return -1;
@@ -32,6 +34,7 @@ export default function ResultsTable(props) {
       columns[k] = false;
     });
     columns["nodeKey"] = true;
+    columns["type"] = true;
     columns["bodyId"] = true;
     columns["instance"] = true;
     columns["status"] = true;

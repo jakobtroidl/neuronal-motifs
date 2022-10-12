@@ -2,29 +2,54 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'build',
             '-t', 'gcr.io/jakob-troidl/motif-frontend:latest',
+            '--cache-from', 'gcr.io/jakob-troidl/motif-frontend:latest',
             './neuronal_motifs/client' ]
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'push', 'gcr.io/jakob-troidl/motif-frontend:latest' ]
-  - name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        gcloud compute instances update-container motif-frontend --zone=us-east1-b \
-          --container-image gcr.io/jakob-troidl/motif-frontend:latest
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args: [ 'compute', 'instances', 'delete', 'motif-frontend' ]
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=us-east1'
+      - 'CLOUDSDK_COMPUTE_ZONE=us-east1-b'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args: [ 'compute', 'instances', 'create-with-container', 'motif-frontend',
+            '--container-image', 'gcr.io/jakob-troidl/motif-frontend:latest',
+            '--zone', 'us-east1-b',
+            '--address', 'motif-frontend',
+            '--tags', 'https-server,http-server',
+            '--machine-type', 'e2-small',
+            '--network-tier', 'STANDARD' ]
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=us-east1'
+      - 'CLOUDSDK_COMPUTE_ZONE=us-east1-b'
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'build',
             '-t', 'gcr.io/jakob-troidl/motif-backend:latest',
+            '--cache-from', 'gcr.io/jakob-troidl/motif-backend:latest',
             './neuronal_motifs/server' ]
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'push', 'gcr.io/jakob-troidl/motif-backend:latest' ]
-  - name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'sh'
-    args:
-      - '-c'
-      - |
-        gcloud compute instances update-container motif-backend --zone=us-east1-b \
-          --container-image gcr.io/jakob-troidl/motif-backend:latest
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args: [ 'compute', 'instances', 'delete', 'motif-backend' ]
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=us-east1'
+      - 'CLOUDSDK_COMPUTE_ZONE=us-east1-b'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args: [ 'compute', 'instances', 'create-with-container', 'motif-backend',
+            '--container-image', 'gcr.io/jakob-troidl/motif-backend:latest',
+            '--zone', 'us-east1-b',
+            '--address', 'motif-backend',
+            '--machine-type', 'e2-medium',
+            '--tags', 'https-server,http-server',
+            '--boot-disk-size', '50GB',
+            '--network-tier', 'STANDARD' ]
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=us-east1'
+      - 'CLOUDSDK_COMPUTE_ZONE=us-east1-b'
 images:
   - gcr.io/jakob-troidl/motif-backend:latest
   - gcr.io/jakob-troidl/motif-frontend:latest
