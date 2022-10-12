@@ -28,6 +28,11 @@ def read_root():
     return {"Hello": "World!"}
 
 
+@app.get("/401")
+def four_zero_one():
+    raise HTTPException(status_code=401, detail="401: Unauthorized")
+
+
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: Optional[str] = None):
     return {"item_id": item_id, "q": q}
@@ -87,4 +92,4 @@ def get_motif_count(motif: str):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=5050, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=80, log_level="info")
