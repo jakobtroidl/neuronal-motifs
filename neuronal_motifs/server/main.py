@@ -30,7 +30,7 @@ def read_root():
 
 @app.get("/401")
 def four_zero_one():
-    raise HTTPException(status_code=401, detail="Test 401")
+    raise HTTPException(status_code=401, detail="401 Unauthorized")
 
 
 @app.get("/items/{item_id}")
