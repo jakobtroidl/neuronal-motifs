@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import "./SketchPanel.css";
 import QueryBuilder from "./QueryBuilder";
 import CircleTwoToneIcon from "@mui/icons-material/CircleTwoTone";
@@ -18,6 +18,7 @@ import axios from "axios";
 
 function SketchPanel() {
   const sketchPanelId = "sketch-panel";
+  const sketchPanelRef = useRef(null);
   let [nodes, setNodes] = useState([]);
   let [edges, setEdges] = useState([]);
   let [importData, setImportData] = useState(null);
@@ -46,6 +47,22 @@ function SketchPanel() {
     return (await axios.get(url)).data;
   };
 
+  const getPositionTransformedData = (data) => {
+    let newNodes = data.nodes.map((node) => {
+      let [newX, newY] = calculateNewPosition(data.dimension, node.position);
+      return {
+        ...node,
+        "position": ["Point", newX, newY]
+      }
+    });
+    let newData = {
+      ...data,
+      "nodes": newNodes,
+      "dimension": canvasDimension
+    };
+    return newData;
+  };
+
   const importMotif = () => {
     console.log("importing motif");
     clearSketch(); // clear sketch
@@ -59,7 +76,10 @@ function SketchPanel() {
       reader.readAsText(file, "UTF-8");
       reader.onload = (e) => {
         let data = JSON.parse(e.target.result);
-        setImportData(data);
+        // setImportData(data)
+        console.log(data)
+        let newData = getPositionTransformedData(data)
+        setImportData(newData)
         setNodeImportUpdate(true);
       };
     };
@@ -474,7 +494,6 @@ function SketchPanel() {
       edgeLine: edgeLine,
     };
     // If this edge already exists, don't create it
-
     // Checks from an edge going the opposite direction between the same two nodes
     let origToPoint = _.cloneDeep(edgeLine.segments[0].point);
     let circ = new paper.Path.Circle(origToPoint, 8);
@@ -573,6 +592,26 @@ function SketchPanel() {
       return { label: n.label, position: n.circle.position };
     });
   };
+
+  const [canvasDimension, setCanvasDimension] = useState({})
+  const handleWindowResized = () => {
+    if (sketchPanelRef.current) {
+      setCanvasDimension({width: sketchPanelRef.current.clientWidth, height: sketchPanelRef.current.clientHeight})
+    }
+  }
+  useEffect(() => {
+    if (sketchPanelRef.current) {
+      setCanvasDimension({width: sketchPanelRef.current.clientWidth, height: sketchPanelRef.current.clientHeight})
+    }
+    window.addEventListener("resize", handleWindowResized);
+    return () => window.removeEventListener("resize", handleWindowResized);
+    }, []);
+
+  const calculateNewPosition = (dimension, position) => {
+    let newX = canvasDimension.width / dimension.width * position[1]
+    let newY = canvasDimension.height / dimension.height * position[2]
+    return [Math.floor(newX), Math.floor(newY)]
+  }
 
   useEffect(() => {
     if (importData && nodeImportUpdate) {
@@ -761,7 +800,11 @@ function SketchPanel() {
         tree: e.tree,
       };
     });
-    return { nodes: encodedNodes, edges: encodedEdges };
+    let sketchPanelDim = {
+        width: canvasDimension.width,
+        height: canvasDimension.height
+    }
+    return { nodes: encodedNodes, edges: encodedEdges, dimension: sketchPanelDim };
   };
   // Encode the Nodes and Edges For Query
   useEffect(async () => {
@@ -783,9 +826,10 @@ function SketchPanel() {
         <Grid item xs={10.8} style={{ height: "inherit" }}>
           <div
             className="sketch-canvas"
+            id='sketch-canvas-container'
             style={{ cursor: cursor || "crosshair" }}
           >
-            <canvas id={sketchPanelId}></canvas>
+            <canvas id={sketchPanelId} ref={sketchPanelRef} resize="true"></canvas>
             {showPopper && popperLocation && context.selectedSketchElement && (
               <Popover
                 anchorReference="anchorPosition"
