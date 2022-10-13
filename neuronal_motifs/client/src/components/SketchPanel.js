@@ -594,18 +594,25 @@ function SketchPanel() {
   };
 
   const [canvasDimension, setCanvasDimension] = useState({})
-  const handleWindowResized = () => {
-    if (sketchPanelRef.current) {
-      setCanvasDimension({width: sketchPanelRef.current.clientWidth, height: sketchPanelRef.current.clientHeight})
-    }
-  }
-  useEffect(() => {
-    if (sketchPanelRef.current) {
-      setCanvasDimension({width: sketchPanelRef.current.clientWidth, height: sketchPanelRef.current.clientHeight})
-    }
-    window.addEventListener("resize", handleWindowResized);
-    return () => window.removeEventListener("resize", handleWindowResized);
-    }, []);
+  // console.log(canvasDimension)
+  // const handleWindowResized = () => {
+  //   if (sketchPanelRef.current) {
+  //     setCanvasDimension({width: sketchPanelRef.current.clientWidth, height: sketchPanelRef.current.clientHeight})
+  //   }
+  // }
+  // useEffect(() => {
+  //   if (sketchPanelRef.current) {
+  //     setCanvasDimension({width: sketchPanelRef.current.clientWidth, height: sketchPanelRef.current.clientHeight})
+  //   }
+  //   // window.addEventListener("resize", handleWindowResized);
+  //   // return () => window.removeEventListener("resize", handleWindowResized);
+  //   // paper.view.onResize = function() {
+  //   //   if (sketchPanelRef.current) {
+  //   //     setCanvasDimension({width: sketchPanelRef.current.clientWidth, height: sketchPanelRef.current.clientHeight})
+  //   //   }
+  //   // }
+  //
+  //   }, []);
 
   const calculateNewPosition = (dimension, position) => {
     let newX = canvasDimension.width / dimension.width * position[1]
@@ -767,6 +774,13 @@ function SketchPanel() {
   // On init set up our paperjs
   useEffect(() => {
     paper.setup(sketchPanelId);
+    paper.view.onResize = function() {
+
+      setCanvasDimension(paper.view.size)
+      console.log(paper)
+    }
+    setCanvasDimension(paper.view.size)
+
     let tempCircle = new paper.Path.Circle([0, 0], 6);
     tempCircle.fill = "none";
     tempCircle.strokeWidth = 0;
