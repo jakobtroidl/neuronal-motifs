@@ -779,24 +779,46 @@ function SketchPanel() {
     context.setMotifQuery(encodedMotif);
   }, [nodes, edges]);
 
+  let prevPostNeuronIds = [];
+
   useEffect(() => {
-    if (context.focusedMotif) {
+    if (context.focusedMotif && context.prevPostNeuronIds.length > 0) {
       console.log(context.prevPostNeuronIds)
-      const sourceNodeKey = getNodeKeyFromId(context.prevPostNeuronIds[0])
-      const targetNodeKey = getNodeKeyFromId(context.prevPostNeuronIds[1])
-      setEdges(
-        edges.map((e) => {
-          if (e.fromNode.label === sourceNodeKey && e.toNode.label === targetNodeKey) {
-            e.edgeLine.strokeColor = "red"
-            // change arrowhead color
-          } else {
-            e.edgeLine.strokeColor = "#000000";
-          }
-          return e;
-        })
-      );
+      console.log(context.focusedMotif)
+      if (!_.isEqual(prevPostNeuronIds, context.prevPostNeuronIds)) {
+        // check selectededge is from focusedMotif
+        console.log(prevPostNeuronIds === context.prevPostNeuronIds)
+        console.log(prevPostNeuronIds, context.prevPostNeuronIds)
+        prevPostNeuronIds = context.prevPostNeuronIds;
+
+        try {
+          const sourceNodeKey = getNodeKeyFromId(prevPostNeuronIds[0])
+          const targetNodeKey = getNodeKeyFromId(prevPostNeuronIds[1])
+          setEdges(
+            edges.map((e) => {
+              if (e.fromNode.label === sourceNodeKey && e.toNode.label === targetNodeKey) {
+                e.edgeLine.strokeColor = "red"
+                // change arrowhead color
+              } else {
+                e.edgeLine.strokeColor = "#000000";
+              }
+              return e;
+            })
+          );
+        }
+        catch (TypeError) {
+          // when prevPostNeuronIds are not the nodes from focusedMotif.
+          setEdges(
+            edges.map((e) => {
+                e.edgeLine.strokeColor = "#000000";
+              return e;
+            })
+          );
+        }
+
+      }
     }
-  }, [context.prevPostNeuronIds])
+  }, [context.prevPostNeuronIds, context.focusedMotif])
 
   function getNodeKeyFromId(id) {
     const result = context.focusedMotif.neurons.filter((neuron) => String(neuron.id) === id);

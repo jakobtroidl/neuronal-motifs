@@ -1,5 +1,5 @@
 import DragHandleIcon from "@mui/icons-material/DragHandle";
-import React, {useContext, useEffect, useState} from "react";
+import React, { useContext, useEffect, useState, useRef, useCallback } from "react";
 import "./GraphSummary.css";
 import CytoscapeComponent from "react-cytoscapejs";
 import Cytoscape from "cytoscape";
@@ -23,7 +23,7 @@ function GraphSummary() {
   const [elements, setElements] = useState(null)
   useEffect(() => {
     setElements(getGraphElements())
-  }, [context.selectedMotifs])
+  }, [context.selectedMotifs, context.focusedMotif])
 
   if (
     // hack but don't know how to do it better
@@ -42,8 +42,14 @@ function GraphSummary() {
   }
 
   function isSelectedEdge(edge) {
-    if (context.selectedEdge) {
-      return context.selectedEdge.source === edge.source && context.selectedEdge.target === edge.target
+    if (context.focusedMotif && context.selectedEdge) {
+      let isEdgeFromFocusedMotif = context.focusedMotif.edges.some((e) => String(e.start_neuron_id) === edge.data().source && String(e.end_neuron_id) === edge.data().target)
+      console.log(isEdgeFromFocusedMotif)
+      if (isEdgeFromFocusedMotif) {
+        // console.log(edge.data(), edge.data.source, context.selectedEdge)
+        console.log(context.focusedMotif)
+        return context.selectedEdge.source === edge.data().source && context.selectedEdge.target === edge.data().target
+      }
     }
     return false;
   }
@@ -55,6 +61,7 @@ function GraphSummary() {
 
     let nodes = [];
     let edges = [];
+    console.log(selectedMotifs)
 
     selectedMotifs.forEach((motif) => {
       // add nodes
@@ -109,6 +116,28 @@ function GraphSummary() {
     return result[0].id
   }
 
+  const cyRef = useRef(null);
+  useEffect(() => {
+    return () => {
+      if (cyRef.current) {
+        cyRef.current.removeAllListeners();
+        cyRef.current = null;
+      }
+    }
+  }, []);
+
+  const cyCallback = useCallback( (cy) => {
+    if (cyRef.current) return;
+    cyRef.current = cy;
+    cy.on("tap", "edge", (e) => {
+      let edgeData = e.target.data();
+      console.log(edgeData);
+      context.setSelectedEdge(edgeData)
+      context.setPrevPostNeuronIds([edgeData.source, edgeData.target]);
+    });
+    cy.layout(layout).run();
+  },[cyRef.current])
+
   return (
     <>
       {elements && (
@@ -122,15 +151,7 @@ function GraphSummary() {
             </div>
             <div id="graph">
               <CytoscapeComponent
-                cy={(cy) => {
-                  // cy.on("tap", "node", handleNodeClick);
-                  // cy.bind("click", "edge", (e) => handleEdgeClick(e));
-                  cy.on("click", "edge", (e) => {
-                    let edgeData = e.target.data()
-                    context.setPrevPostNeuronIds([edgeData.source, edgeData.target]);
-                  });
-                  cy.layout(layout).run();
-                }}
+                cy={cyCallback}
                 elements={elements}
                 style={{width: "100%", height: "100%"}}
                 stylesheet={[
@@ -150,10 +171,9 @@ function GraphSummary() {
                   },
                   {
                     selector: 'edge:selected',
-                    css: {
-                      'line-color': 'red',
-                      'target-arrow-color': 'red',
-                      'source-arrow-color': 'red'
+                    style: {
+                      'line-color': edge => isSelectedEdge(edge) ? 'red' : "",
+                      'target-arrow-color': edge => isSelectedEdge(edge) ? 'red' : "",
                     }
                   }
                 ]}
