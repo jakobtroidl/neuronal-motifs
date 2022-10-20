@@ -51,10 +51,7 @@ export const ContextWrapper = (props) => {
   const [motifPathPosition, setMotifPathPosition] = useState(0.5);
 
   // highlight synapses
-  const [prevPostNeuronIds, setPrevPostNeuronIds] = useState([]);
-  const [showEdgeHighlight, setShowEdgeHighlight] = useState(false);
-  const [selectedEdge, setSelectedEdge] = useState(null)
-  const [prevPostNeuronNodeKeys, setPrevPostNeuronNodeKeys] = useState([])
+  const [selectedCytoscapeEdge, setSelectedCytoscapeEdge] = useState(null)
   return (
     <AppContext.Provider
       value={{
@@ -98,13 +95,8 @@ export const ContextWrapper = (props) => {
         setMotifPathPosition,
         errorMessage,
         setErrorMessage,
-        prevPostNeuronIds,
-        setPrevPostNeuronIds,
-        showEdgeHighlight,
-        setShowEdgeHighlight,
-        selectedEdge,
-        setSelectedEdge,
-        prevPostNeuronNodeKeys, setPrevPostNeuronNodeKeys
+        selectedCytoscapeEdge,
+        setSelectedCytoscapeEdge,
       }}
     >
       {props.children}

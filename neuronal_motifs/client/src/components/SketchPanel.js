@@ -321,6 +321,7 @@ function SketchPanel() {
           paper.project.activeLayer.selected = false;
           selectedElement.selected = true;
           setShowPopper(true);
+          console.log(selectedElement)
         } else {
           // If they click out, make the popper go away
           setShowPopper(false);
@@ -682,6 +683,7 @@ function SketchPanel() {
       });
     }
   }, [mouseState]);
+
   useEffect(() => {
     if (context.selectedSketchElement) {
       let paperElement =
@@ -704,8 +706,6 @@ function SketchPanel() {
               e.tree = context.selectedSketchElement.tree;
               e.properties = context.selectedSketchElement.properties;
               e = addEdgePropertyLabel(e);
-              // console.log(e)
-              context.setPrevPostNeuronNodeKeys([e.fromNode.label, e.toNode.label]);
             }
             return e;
           })
@@ -779,21 +779,11 @@ function SketchPanel() {
     context.setMotifQuery(encodedMotif);
   }, [nodes, edges]);
 
-  let prevPostNeuronIds = [];
-
   useEffect(() => {
-    if (context.focusedMotif && context.prevPostNeuronIds.length > 0) {
-      console.log(context.prevPostNeuronIds)
-      console.log(context.focusedMotif)
-      if (!_.isEqual(prevPostNeuronIds, context.prevPostNeuronIds)) {
-        // check selectededge is from focusedMotif
-        console.log(prevPostNeuronIds === context.prevPostNeuronIds)
-        console.log(prevPostNeuronIds, context.prevPostNeuronIds)
-        prevPostNeuronIds = context.prevPostNeuronIds;
-
+    if (context.focusedMotif && context.selectedCytoscapeEdge) {
         try {
-          const sourceNodeKey = getNodeKeyFromId(prevPostNeuronIds[0])
-          const targetNodeKey = getNodeKeyFromId(prevPostNeuronIds[1])
+          const sourceNodeKey = getNodeKeyFromId(context.selectedCytoscapeEdge.source)
+          const targetNodeKey = getNodeKeyFromId(context.selectedCytoscapeEdge.target)
           setEdges(
             edges.map((e) => {
               if (e.fromNode.label === sourceNodeKey && e.toNode.label === targetNodeKey) {
@@ -807,7 +797,7 @@ function SketchPanel() {
           );
         }
         catch (TypeError) {
-          // when prevPostNeuronIds are not the nodes from focusedMotif.
+          // when selectedCytoscapeEdge's source and target are not the nodes from focusedMotif.
           setEdges(
             edges.map((e) => {
                 e.edgeLine.strokeColor = "#000000";
@@ -815,10 +805,8 @@ function SketchPanel() {
             })
           );
         }
-
-      }
     }
-  }, [context.prevPostNeuronIds, context.focusedMotif])
+  }, [context.selectedCytoscapeEdge, context.focusedMotif])
 
   function getNodeKeyFromId(id) {
     const result = context.focusedMotif.neurons.filter((neuron) => String(neuron.id) === id);
