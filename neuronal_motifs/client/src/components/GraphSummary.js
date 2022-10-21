@@ -53,7 +53,7 @@ function GraphSummary() {
       let isEdgeFromFocusedMotif = context.focusedMotif.edges.some((e) => String(e.start_neuron_id) === edge.data().source && String(e.end_neuron_id) === edge.data().target)
       // console.log(isEdgeFromFocusedMotif)
       // console.log(context.selectedSketchElement)
-      if (isEdgeFromFocusedMotif) {
+      if (isEdgeFromFocusedMotif && context.selectedSketchElement.type === "edge") {
         let sourceId = getIdFromNodeKey(context.selectedSketchElement.fromNode.label)
         let targetId = getIdFromNodeKey(context.selectedSketchElement.toNode.label)
         // console.log(sourceId, edge.data().source, targetId, edge.data().target)
