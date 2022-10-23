@@ -6,7 +6,7 @@ import { AppContext } from "../contexts/GlobalContext";
 import "./Viewer.css";
 import * as THREE from "three";
 import { InteractionManager } from "three.interactive";
-import { Color } from "../utils/rendering";
+import { Color, mapQueryResult } from "../utils/rendering";
 import _ from "lodash";
 import BasicMenu from "./ContextMenu";
 import axios from "axios";
@@ -222,7 +222,6 @@ function getLineName(synapse) {
 }
 
 function getSynapseName(synapse, flipped = false) {
-  console.log(synapse);
   let pre_loc = synapse.pre.x + "-" + synapse.pre.y + "-" + synapse.pre.z;
   let post_loc = synapse.post.x + "-" + synapse.post.y + "-" + synapse.post.z;
 
@@ -482,6 +481,7 @@ function Viewer() {
   useEffect(() => {
     if (sharkViewerInstance) {
       let scene = sharkViewerInstance.scene;
+      console.log("scene with suggestions: ", scene);
       scene.traverse((child) => {
         if (
           child.parent &&
@@ -489,13 +489,13 @@ function Viewer() {
           typeof child.name === "string" &&
           child.name.startsWith("syn-")
         ) {
-          let name = child.name.split("-");
-          let pre_id = parseInt(name[1]);
-          let post_id = parseInt(name[2]);
+          // let name = child.name.split("-");
+          // let pre_id = parseInt(name[1]);
+          // let post_id = parseInt(name[2]);
           if (
             highlightSynapse.highlight &&
-            (highlightSynapse.pre_id === pre_id ||
-              highlightSynapse.post_id === post_id)
+            (highlightSynapse.pre_id === child.pre ||
+              highlightSynapse.post_id === child.post)
           ) {
             child.oldMaterial = child.material.clone();
             child.material = new THREE.MeshPhongMaterial({ color: Color.red });
@@ -526,15 +526,13 @@ function Viewer() {
               (type === "input" && neuron.bodyId === synapse.pre_id) ||
               (type === "output" && neuron.bodyId === synapse.post_id)
             ) {
-              console.log("add this motif to scene");
-              console.log(result);
-              console.log(context.selectedMotifs);
-              context.setSelectedMotifs([
-                ...context.selectedMotifs,
-                Object.values(result),
-              ]);
+              let motifToAdd = mapQueryResult(result, context.globalMotifIndex);
+              context.setGlobalMotifIndex(context.globalMotifIndex + 1);
+              context.setMotifToAdd(motifToAdd);
+
+              restoreColors(sharkViewerInstance);
+              removeSynapseSuggestions();
               return true;
-              // TODO how to handle multiple motifs that match pattern?
             }
           }
         }
@@ -575,8 +573,10 @@ function Viewer() {
           let mesh = addSynapse(
             parent,
             syn,
-            type === "input" ? Color.orange : Color.blue
+            type === "input" ? Color.orange : Color.orange
           );
+          mesh.pre = syn.pre_id;
+          mesh.post = syn.post_id;
           mesh.addEventListener("mouseover", (event) =>
             onSynapseSuggestionEvent(
               "pointer",
@@ -708,6 +708,7 @@ function Viewer() {
   // Fetches the data, only runs on init
   useEffect(async () => {
     if (context.motifToAdd) {
+      console.log("motif to add: ", context.motifToAdd);
       let bodyIds = context.motifToAdd.neurons.map((n) => n.bodyId);
       let bodyIdsJSON = JSON.stringify(bodyIds);
       let motifQuery = JSON.stringify(context.motifQuery);

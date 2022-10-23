@@ -20,6 +20,7 @@ import PropTypes from "prop-types";
 import SelectionTable from "./SelectionTable";
 import SettingsPanel from "./SettingsPanel";
 import { getAuthToken } from "../utils/authentication";
+import { mapQueryResult } from "../utils/rendering";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -91,13 +92,7 @@ function MotifPanel() {
   useEffect(() => {
     if (searchedMotifs && searchedMotifs?.length > 0) {
       let rows = searchedMotifs.map((motif, j) => {
-        let motifs = Object.entries(motif).map(([k, v], i) => {
-          return { ...v, nodeKey: k };
-        });
-        motifs.sort((a, b) => {
-          return a.nodeKey.localeCompare(b.nodeKey);
-        });
-        return { name: "Motif Instance " + j, neurons: motifs };
+        return mapQueryResult(motif, j);
       });
       setResultRows(rows);
     }
