@@ -226,6 +226,18 @@ class MyMotif:
         @param n: number of clusters
         @return: predictions
         """
+
+
+        # desired data structure
+
+        # cluster level,    array of synapse objects
+        # 0:                [{synapse1}, {synapse2}, ...]
+        # 1:                [{synapse1}, {synapse2}, ...]
+        # ...
+
+
+
+
         synapse_locations = synapses[['x_pre', 'y_pre', 'z_pre']].to_numpy()
         n_clusters = int(len(synapse_locations) / 2)
         clustering = AgglomerativeClustering(n_clusters=len(synapse_locations)).fit(synapse_locations)
