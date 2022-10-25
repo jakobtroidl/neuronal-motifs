@@ -48,6 +48,12 @@ function SketchPanel() {
     return (await axios.get(url)).data;
   };
 
+  const getRelativeMotifCount = async (motif) => {
+    // get request to backend to get motif count
+    let url = `http://${process.env.REACT_APP_API_URL}/rel_count/motif=${motif}`;
+    return (await axios.get(url)).data;
+  };
+
   const calculateNewPosition = (dimension, position) => {
     let newX = canvasDimension.width / dimension.width * position[1]
     let newY = canvasDimension.height / dimension.height * position[2]
@@ -346,7 +352,7 @@ function SketchPanel() {
           paper.project.activeLayer.selected = false;
           selectedElement.selected = true;
           setShowPopper(true);
-          console.log(selectedElement)
+          console.log(selectedElement);
         } else {
           // If they click out, make the popper go away
           setShowPopper(false);
@@ -815,44 +821,60 @@ function SketchPanel() {
       ? context.setShowWarning(true)
       : context.setShowWarning(false);
 
+    // get absolute count of motif in network
     const count = await getMotifCount(JSON.stringify(encodedMotif));
     context.setAbsMotifCount(count);
+
+    // get relative count of motif in network
+    const relative_count = await getRelativeMotifCount(
+      JSON.stringify(encodedMotif)
+    );
+    context.setRelativeMotifCount(relative_count);
+
     context.setMotifQuery(encodedMotif);
   }, [nodes, edges]);
 
   useEffect(() => {
     if (context.focusedMotif && context.selectedCytoscapeEdge) {
-        try {
-          const sourceNodeKey = getNodeKeyFromId(context.selectedCytoscapeEdge.source)
-          const targetNodeKey = getNodeKeyFromId(context.selectedCytoscapeEdge.target)
-          setEdges(
-            edges.map((e) => {
-              if (e.fromNode.label === sourceNodeKey && e.toNode.label === targetNodeKey) {
-                e.edgeLine.strokeColor = "red"
-                // change arrowhead color
-              } else {
-                e.edgeLine.strokeColor = "#000000";
-              }
-              return e;
-            })
-          );
-        }
-        catch (TypeError) {
-          // when selectedCytoscapeEdge's source and target are not the nodes from focusedMotif.
-          setEdges(
-            edges.map((e) => {
-                e.edgeLine.strokeColor = "#000000";
-              return e;
-            })
-          );
-        }
+      try {
+        const sourceNodeKey = getNodeKeyFromId(
+          context.selectedCytoscapeEdge.source
+        );
+        const targetNodeKey = getNodeKeyFromId(
+          context.selectedCytoscapeEdge.target
+        );
+        setEdges(
+          edges.map((e) => {
+            if (
+              e.fromNode.label === sourceNodeKey &&
+              e.toNode.label === targetNodeKey
+            ) {
+              e.edgeLine.strokeColor = "red";
+              // change arrowhead color
+            } else {
+              e.edgeLine.strokeColor = "#000000";
+            }
+            return e;
+          })
+        );
+      } catch (TypeError) {
+        // when selectedCytoscapeEdge's source and target are not the nodes from focusedMotif.
+        setEdges(
+          edges.map((e) => {
+            e.edgeLine.strokeColor = "#000000";
+            return e;
+          })
+        );
+      }
     }
-  }, [context.selectedCytoscapeEdge, context.focusedMotif])
+  }, [context.selectedCytoscapeEdge, context.focusedMotif]);
 
   function getNodeKeyFromId(id) {
-    const result = context.focusedMotif.neurons.filter((neuron) => String(neuron.id) === id);
+    const result = context.focusedMotif.neurons.filter(
+      (neuron) => String(neuron.id) === id
+    );
     // console.log(result)
-    return result[0].nodeKey
+    return result[0].nodeKey;
   }
 
   return (
