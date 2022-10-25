@@ -575,8 +575,6 @@ function Viewer() {
             syn,
             type === "input" ? Color.orange : Color.orange
           );
-          mesh.pre = syn.pre_id;
-          mesh.post = syn.post_id;
           mesh.addEventListener("mouseover", (event) =>
             onSynapseSuggestionEvent(
               "pointer",
