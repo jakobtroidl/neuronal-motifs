@@ -58,18 +58,32 @@ function GraphSummary() {
 
   function isEdgeSameAsSketchPanel(edge) {
     if (context.focusedMotif) {
-      let isEdgeFromFocusedMotif = context.focusedMotif.edges.some((e) => String(e.start_neuron_id) === edge.data().source && String(e.end_neuron_id) === edge.data().target)
+      let isEdgeFromFocusedMotif = context.focusedMotif.edges.some(
+        (e) =>
+          String(e.start_neuron_id) === edge.data().source &&
+          String(e.end_neuron_id) === edge.data().target
+      );
       if (isEdgeFromFocusedMotif) {
         if (context.selectedSketchElement) {
           if (context.selectedSketchElement.type === "edge") {
-            let sourceId = getIdFromNodeKey(context.selectedSketchElement.fromNode.label, context)
-            let targetId = getIdFromNodeKey(context.selectedSketchElement.toNode.label, context)
-            return edge.data().source === sourceId && edge.data().target === targetId
+            let sourceId = getIdFromNodeKey(
+              context.selectedSketchElement.fromNode.label,
+              context
+            );
+            let targetId = getIdFromNodeKey(
+              context.selectedSketchElement.toNode.label,
+              context
+            );
+            return (
+              edge.data().source === sourceId && edge.data().target === targetId
+            );
           }
         } else if (context.selectedCytoscapeEdge) {
-          let sourceId = context.selectedCytoscapeEdge.source
-          let targetId = context.selectedCytoscapeEdge.target
-          return edge.data().source === sourceId && edge.data().target === targetId;
+          let sourceId = context.selectedCytoscapeEdge.source;
+          let targetId = context.selectedCytoscapeEdge.target;
+          return (
+            edge.data().source === sourceId && edge.data().target === targetId
+          );
         }
       }
     }
@@ -91,13 +105,13 @@ function GraphSummary() {
     cyRef.current = cy;
     cy.on("tap", "edge", (e) => {
       let edgeData = e.target.data();
-      context.setSelectedCytoscapeEdge(edgeData)
-      context.setSelectedSketchElement(null)
+      context.setSelectedCytoscapeEdge(edgeData);
+      context.setSelectedSketchElement(null);
     });
     cy.on("add", (e) => {
       cy.layout(layout).run();
     });
-  })
+  });
 
   function getGraphElements() {
     let selectedMotifs = context.selectedMotifs;
@@ -169,8 +183,10 @@ function GraphSummary() {
                     style: {
                       "curve-style": "bezier",
                       "target-arrow-shape": "triangle",
-                      //"line-color": edge => isEdgeSameAsSketchPanel(edge) ? 'red' : "",
-                      //'target-arrow-color': edge => isEdgeSameAsSketchPanel(edge) ? 'red' : "",
+                      "line-color": (edge) =>
+                        isEdgeSameAsSketchPanel(edge) ? "red" : "",
+                      "target-arrow-color": (edge) =>
+                        isEdgeSameAsSketchPanel(edge) ? "red" : "",
                     },
                   },
                   // {
