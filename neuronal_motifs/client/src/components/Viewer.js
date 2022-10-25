@@ -11,6 +11,7 @@ import _ from "lodash";
 import BasicMenu from "./ContextMenu";
 import axios from "axios";
 import { getAuthToken } from "../utils/authentication";
+import { getIdFromNodeKey } from "../utils/edge";
 
 const setLineVisibility = (scene, visible) => {
   scene.children.forEach((child) => {
@@ -191,8 +192,6 @@ function addNeurons(
 
     scene.add(neuronObject);
   });
-
-  console.log(scene);
 }
 
 function getAbstractionCenterName(neuron) {
@@ -222,7 +221,6 @@ function getLineName(synapse) {
 }
 
 function getSynapseName(synapse, flipped = false) {
-  console.log(synapse)
   let pre_loc = synapse.pre.x + "-" + synapse.pre.y + "-" + synapse.pre.z;
   let post_loc = synapse.post.x + "-" + synapse.post.y + "-" + synapse.post.z;
 
@@ -274,14 +272,15 @@ function addSynapses(
   setTooltipInfo,
   scene,
   interactionManager,
-  motif
+  motif,
+  highlightEdgesAndSynapses
 ) {
   synapses.forEach((syn) => {
     let mesh = addSynapse(scene, syn, Color.orange, motif);
     if (mesh) {
       // show tooltip when mouse is over the synapse and change synapse color
       mesh.addEventListener("mouseover", (event) => {
-        mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
+        mesh.material = new THREE.MeshPhongMaterial({ color: Color.pink });
         mesh.material.needsUpdate = true;
         document.body.style.cursor = "pointer";
         setDisplayTooltip(true);
@@ -297,6 +296,7 @@ function addSynapses(
         mesh.material = new THREE.MeshPhongMaterial({ color: Color.orange });
         mesh.material.needsUpdate = true;
         document.body.style.cursor = "default";
+        highlightEdgesAndSynapses(mesh)
       });
 
       interactionManager.add(mesh);
@@ -995,7 +995,8 @@ function Viewer() {
         setTooltipInfo,
         scene,
         interactionManager,
-        motif
+        motif,
+        highlightEdgesAndSynapses
       );
 
       let level = getAbstractionLevel();
@@ -1061,10 +1062,6 @@ function Viewer() {
     }
   }, [motif, sharkViewerInstance]);
 
-  function getIdFromNodeKey(nodeKey) {
-    const result = context.focusedMotif.neurons.filter((neuron) => neuron.nodeKey === nodeKey)
-    return String(result[0].id)
-  }
   useEffect(() => {
     if (sharkViewerInstance) {
       let edgeFrom = '';
@@ -1076,35 +1073,67 @@ function Viewer() {
         return;
       }
 
-      let scene = sharkViewerInstance.scene;
+      let sourceId = edgeFrom === "sketch" ? getIdFromNodeKey(context.selectedSketchElement.fromNode.label, context) : context.selectedCytoscapeEdge.source;
+      let targetId = edgeFrom === "sketch" ? getIdFromNodeKey(context.selectedSketchElement.toNode.label, context) : context.selectedCytoscapeEdge.target;
+
+      highlightSynapses(sourceId, targetId)
+    }
+  }, [context.selectedSketchElement, context.selectedCytoscapeEdge])
+
+  function highlightEdgesAndSynapses(mesh) {
+    // find edges
+    if (typeof mesh.name === "string" && mesh.name.startsWith("syn-") && mesh.neuron_ids.startsWith("syn-")) {
+      let hover_neuron_ids = mesh.neuron_ids.split("-");
+      let hover_neuron_pre_id = String(hover_neuron_ids[1]);
+      let hover_neuron_post_id = String(hover_neuron_ids[2]);
+
+      // highlight synapses
+      highlightSynapses(hover_neuron_pre_id, hover_neuron_post_id)
+      // highlight sketch and summary edge
+      highlightEdges(hover_neuron_pre_id, hover_neuron_post_id)
+    }
+  };
+
+  function highlightEdges(sourceId, targetId) {
+    let isEdgeFromFocusedMotif = context.focusedMotif.edges.some((e) => String(e.start_neuron_id) === sourceId && String(e.end_neuron_id) === targetId)
+    if (isEdgeFromFocusedMotif) {
+      context.setSelectedSketchElement(null)
+      context.setSelectedCytoscapeEdge({source: sourceId, target: targetId, label: ""})
+    }
+  }
+
+  function highlightSynapses(sourceId, targetId) {
+    let scene = sharkViewerInstance.scene;
+    let isEdgeFromFocusedMotif = context.focusedMotif.edges.some((e) => String(e.start_neuron_id) === sourceId && String(e.end_neuron_id) === targetId)
+    if (isEdgeFromFocusedMotif) {
+      // highlight synapses
       scene.traverse((child) => {
         if (
-          // child.parent &&
-          // child.parent.name === motif_synapse_suggestions_name &&
           typeof child.name === "string" &&
           child.name.startsWith("syn-") && child.neuron_ids.startsWith("syn-")
         ) {
-           let neuron_ids = child.neuron_ids.split("-");
-           let pre_id = String(neuron_ids[1]);
-           let post_id = String(neuron_ids[2]);
+          let neuron_ids = child.neuron_ids.split("-");
+          let pre_id = String(neuron_ids[1]);
+          let post_id = String(neuron_ids[2]);
 
-           let sourceId = edgeFrom === "sketch" ? getIdFromNodeKey(context.selectedSketchElement.fromNode.label) : context.selectedCytoscapeEdge.source;
-           let targetId = edgeFrom === "sketch" ? getIdFromNodeKey(context.selectedSketchElement.toNode.label) : context.selectedCytoscapeEdge.target;
-            // context.selectedSketchElement.type === "edge" &&
-           if (sourceId === pre_id && targetId === post_id) {
-             child.oldMaterial = child.material.clone();
-             child.material = new THREE.MeshPhongMaterial({ color: Color.red });
-             child.material.needsUpdate = true;
-           // } else if (child.oldMaterial) {
-           //   child.material = child.oldMaterial;
-           //   child.material.needsUpdate = true;
-           } else {
-             child.material = new THREE.MeshPhongMaterial({ color: Color.orange });
-           }
+          if (sourceId === pre_id && targetId === post_id) {
+            child.oldMaterial = child.material.clone();
+            child.material = new THREE.MeshPhongMaterial({color: Color.red});
+            child.material.needsUpdate = true;
+          } else {
+            child.material = new THREE.MeshPhongMaterial({color: Color.orange});
+          }
         }
-      })
+      });
+    } else {
+       scene.traverse((child) => {
+         if (typeof child.name === "string" && child.name.startsWith("syn-") && child.neuron_ids.startsWith("syn-")
+        ) {
+           child.material = new THREE.MeshPhongMaterial({color: Color.orange});
+         }
+       });
     }
-  }, [context.selectedSketchElement, context.selectedCytoscapeEdge])
+  }
 
   return (
     <div id={id} className={className} onKeyDown={handleKeyPress}>

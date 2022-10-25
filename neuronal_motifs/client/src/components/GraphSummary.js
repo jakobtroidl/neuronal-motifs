@@ -11,6 +11,7 @@ import CytoscapeComponent from "react-cytoscapejs";
 import Cytoscape from "cytoscape";
 import COSEBilkent from "cytoscape-cose-bilkent";
 import { AppContext } from "../contexts/GlobalContext";
+import { getIdFromNodeKey } from "../utils/edge";
 
 function GraphSummary() {
   const [randomize, setRandomize] = React.useState(true);
@@ -47,51 +48,32 @@ function GraphSummary() {
     return false;
   }
 
-  function isSelectedCytoscapeEdgeFromFocusedMotif(edge) {
-    if (context.focusedMotif && context.selectedCytoscapeEdge) {
-      return context.focusedMotif.edges.some(
-        (e) =>
-          String(e.start_neuron_id) === edge.data().source &&
-          String(e.end_neuron_id) === edge.data().target
-      );
-    }
-    return false;
-  }
+  // function isSelectedCytoscapeEdgeFromFocusedMotif(edge) {
+  //   // if (context.focusedMotif && context.selectedCytoscapeEdge && !context.selectedSketchElement) {
+  //   if (context.focusedMotif && !context.selectedSketchElement) {
+  //     return context.focusedMotif.edges.some((e) => String(e.start_neuron_id) === edge.data().source && String(e.end_neuron_id) === edge.data().target);
+  //   }
+  //   return false;
+  // }
 
   function isEdgeSameAsSketchPanel(edge) {
-    if (context.focusedMotif && context.selectedSketchElement) {
-      let isEdgeFromFocusedMotif = context.focusedMotif.edges.some(
-        (e) =>
-          String(e.start_neuron_id) === edge.data().source &&
-          String(e.end_neuron_id) === edge.data().target
-      );
-      // console.log(isEdgeFromFocusedMotif)
-      // console.log(context.selectedSketchElement)
-      if (
-        isEdgeFromFocusedMotif &&
-        context.selectedSketchElement.type === "edge"
-      ) {
-        let sourceId = getIdFromNodeKey(
-          context.selectedSketchElement.fromNode.label
-        );
-        let targetId = getIdFromNodeKey(
-          context.selectedSketchElement.toNode.label
-        );
-        // console.log(sourceId, edge.data().source, targetId, edge.data().target)
-        // console.log(edge.data().source === sourceId && edge.data().target === targetId)
-        return (
-          edge.data().source === sourceId && edge.data().target === targetId
-        );
+    if (context.focusedMotif) {
+      let isEdgeFromFocusedMotif = context.focusedMotif.edges.some((e) => String(e.start_neuron_id) === edge.data().source && String(e.end_neuron_id) === edge.data().target)
+      if (isEdgeFromFocusedMotif) {
+        if (context.selectedSketchElement) {
+          if (context.selectedSketchElement.type === "edge") {
+            let sourceId = getIdFromNodeKey(context.selectedSketchElement.fromNode.label, context)
+            let targetId = getIdFromNodeKey(context.selectedSketchElement.toNode.label, context)
+            return edge.data().source === sourceId && edge.data().target === targetId
+          }
+        } else if (context.selectedCytoscapeEdge) {
+          let sourceId = context.selectedCytoscapeEdge.source
+          let targetId = context.selectedCytoscapeEdge.target
+          return edge.data().source === sourceId && edge.data().target === targetId;
+        }
       }
     }
     return false;
-  }
-
-  function getIdFromNodeKey(nodeKey) {
-    const result = context.focusedMotif.neurons.filter(
-      (neuron) => neuron.nodeKey === nodeKey
-    );
-    return String(result[0].id);
   }
 
   const cyRef = useRef(null);
@@ -109,15 +91,15 @@ function GraphSummary() {
     cyRef.current = cy;
     cy.on("tap", "edge", (e) => {
       let edgeData = e.target.data();
-      context.setSelectedCytoscapeEdge(edgeData);
+      context.setSelectedCytoscapeEdge(edgeData)
+      context.setSelectedSketchElement(null)
     });
     cy.on("add", (e) => {
       cy.layout(layout).run();
     });
-  });
+  })
 
   function getGraphElements() {
-    console.log("new");
     let selectedMotifs = context.selectedMotifs;
     let neuronColors = context.neuronColors;
 
@@ -191,13 +173,13 @@ function GraphSummary() {
                       //'target-arrow-color': edge => isEdgeSameAsSketchPanel(edge) ? 'red' : "",
                     },
                   },
-                  {
-                    selector: "edge:selected",
-                    style: {
-                      //'line-color': edge => isSelectedCytoscapeEdgeFromFocusedMotif(edge) ? 'red' : "",
-                      //'target-arrow-color': edge => isSelectedCytoscapeEdgeFromFocusedMotif(edge) ? 'red' : "",
-                    },
-                  },
+                  // {
+                  //   selector: 'edge:selected',
+                  //   style: {
+                  //     'line-color': edge => isSelectedCytoscapeEdgeFromFocusedMotif(edge) ? 'red' : "",
+                  //     'target-arrow-color': edge => isSelectedCytoscapeEdgeFromFocusedMotif(edge) ? 'red' : "",
+                  //   }
+                  // },
                 ]}
                 layout={layout}
               />
