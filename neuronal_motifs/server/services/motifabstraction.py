@@ -23,8 +23,8 @@ def get_motif(ids, motif, token, prev_labels):
     path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
     filepath = path / (filename + ".pkl")
-    # if filepath.is_file() is False:
-    if True:
+    if filepath.is_file() is False:
+    # if True:
         yield {'status': 202, 'message': 'Downloading Motif'}
         try:
             motif_data_generator = compute_motif_data(ids, motif, token, prev_labels)
