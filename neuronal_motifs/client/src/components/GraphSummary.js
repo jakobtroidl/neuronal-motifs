@@ -188,23 +188,15 @@ function GraphSummary() {
                     style: {
                       "curve-style": "bezier",
                       "target-arrow-shape": "triangle",
-                      "line-color": (edge) =>
-                        isEdgeSameAsSketchPanel(edge) ? "red" : "",
-                      "target-arrow-color": (edge) =>
-                        isEdgeSameAsSketchPanel(edge) ? "red" : "",
+                      //"line-color": edge => isEdgeSameAsSketchPanel(edge) ? 'red' : "",
+                      //'target-arrow-color': edge => isEdgeSameAsSketchPanel(edge) ? 'red' : "",
                     },
                   },
                   {
                     selector: "edge:selected",
                     style: {
-                      "line-color": (edge) =>
-                        isSelectedCytoscapeEdgeFromFocusedMotif(edge)
-                          ? "red"
-                          : "",
-                      "target-arrow-color": (edge) =>
-                        isSelectedCytoscapeEdgeFromFocusedMotif(edge)
-                          ? "red"
-                          : "",
+                      //'line-color': edge => isSelectedCytoscapeEdgeFromFocusedMotif(edge) ? 'red' : "",
+                      //'target-arrow-color': edge => isSelectedCytoscapeEdgeFromFocusedMotif(edge) ? 'red' : "",
                     },
                   },
                 ]}
