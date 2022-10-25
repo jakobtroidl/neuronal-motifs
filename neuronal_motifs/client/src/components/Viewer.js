@@ -236,7 +236,11 @@ function addSynapse(scene, synapse, color, motif) {
     mesh.position.y = (synapse.post.y + synapse.pre.y) / 2.0;
     mesh.position.z = (synapse.post.z + synapse.pre.z) / 2.0;
     mesh.motifs = [motif];
-    mesh.origin = mesh.position;
+    mesh.origin = new THREE.Vector3(
+      (synapse.post.x + synapse.pre.x) / 2.0,
+      (synapse.post.y + synapse.pre.y) / 2.0,
+      (synapse.post.z + synapse.pre.z) / 2.0
+    );
 
     scene.add(mesh);
     return mesh;
@@ -846,6 +850,21 @@ function Viewer() {
       });
 
       // animate synapse
+      scene.children.forEach((child) => {
+        if (typeof child.name === "string" && child.name.startsWith("syn")) {
+          console.log(child);
+
+          child.translateX(-child.position.x);
+          child.translateY(-child.position.y);
+          child.translateZ(-child.position.z);
+
+          let [n, i] = getNeuronListId(neurons, child.pre);
+
+          child.translateX(child.origin.x + j * factor * directions[i][0]);
+          child.translateY(child.origin.y + j * factor * directions[i][1]);
+          child.translateZ(child.origin.z + j * factor * directions[i][2]);
+        }
+      });
 
       setPrevSliderValue(level);
     }
