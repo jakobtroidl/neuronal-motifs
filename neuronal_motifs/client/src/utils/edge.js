@@ -9,13 +9,19 @@ export class Edge {
 }
 
  export function getNodeKeyFromId(id, context) {
-  const result = context.focusedMotif.neurons.filter((neuron) => String(neuron.id) === id);
-  // console.log(result)
-  return result[0].nodeKey
+  if (context.focusedMotif) {
+    const result = context.focusedMotif.neurons.filter((neuron) => String(neuron.id) === id);
+    // console.log(result)
+    return result[0].nodeKey
+  }
+  return;
 }
 
 export function getIdFromNodeKey(nodeKey, context) {
-  const result = context.focusedMotif.neurons.filter((neuron) => neuron.nodeKey === nodeKey)
-  return String(result[0].id)
+  if (context.focusedMotif) {
+    const result = context.focusedMotif.neurons.filter((neuron) => neuron.nodeKey === nodeKey)
+    return String(result[0].id)
+  }
+  return;
 }
 

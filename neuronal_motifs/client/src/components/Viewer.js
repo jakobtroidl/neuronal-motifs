@@ -1064,19 +1064,23 @@ function Viewer() {
 
   useEffect(() => {
     if (sharkViewerInstance) {
-      let edgeFrom = '';
+      let sourceId = '';
+      let targetId = '';
       if (context.selectedSketchElement) {
-        edgeFrom = "sketch";
+        if (context.selectedSketchElement.type === 'edge') {
+          sourceId = getIdFromNodeKey(context.selectedSketchElement.fromNode.label, context)
+          targetId = getIdFromNodeKey(context.selectedSketchElement.toNode.label, context)
+        }
       } else if (context.selectedCytoscapeEdge) {
-        edgeFrom = "cytoscape"
+        sourceId = context.selectedCytoscapeEdge.source
+        targetId = context.selectedCytoscapeEdge.target
       } else {
         return;
       }
 
-      let sourceId = edgeFrom === "sketch" ? getIdFromNodeKey(context.selectedSketchElement.fromNode.label, context) : context.selectedCytoscapeEdge.source;
-      let targetId = edgeFrom === "sketch" ? getIdFromNodeKey(context.selectedSketchElement.toNode.label, context) : context.selectedCytoscapeEdge.target;
-
-      highlightSynapses(sourceId, targetId)
+      if (sourceId !== '' && targetId !== '' && context.focusedMotif) {
+        highlightSynapses(sourceId, targetId)
+      }
     }
   }, [context.selectedSketchElement, context.selectedCytoscapeEdge])
 
@@ -1087,10 +1091,12 @@ function Viewer() {
       let hover_neuron_pre_id = String(hover_neuron_ids[1]);
       let hover_neuron_post_id = String(hover_neuron_ids[2]);
 
-      // highlight synapses
-      highlightSynapses(hover_neuron_pre_id, hover_neuron_post_id)
-      // highlight sketch and summary edge
-      highlightEdges(hover_neuron_pre_id, hover_neuron_post_id)
+      if (context.focusedMotif) {
+        // highlight synapses
+        highlightSynapses(hover_neuron_pre_id, hover_neuron_post_id)
+        // highlight sketch and summary edge
+        highlightEdges(hover_neuron_pre_id, hover_neuron_post_id)
+      }
     }
   };
 
