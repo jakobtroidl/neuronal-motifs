@@ -238,8 +238,7 @@ function SketchPanel() {
             nodes[intersections].circle.position
           );
           currentPath.segments[1].point = nodes[
-            intersections
-          ].circle.getNearestPoint(currentNode.circle.position);
+            intersections].circle.getNearestPoint(currentNode.circle.position);
         } // Otherwise move the line glyph
         else {
           currentPath.segments[0].point = new paper.Point([
@@ -322,7 +321,7 @@ function SketchPanel() {
             );
             currentPath.segments[1].point = nodes[
               intersections
-            ].circle.getNearestPoint(currentNode.circle.position);
+              ].circle.getNearestPoint(currentNode.circle.position);
             let edge = currentPath.clone();
             edge.opacity = 1;
             addEdge(currentNode, nodes[intersections], edge);
@@ -445,10 +444,10 @@ function SketchPanel() {
             }
             edges[i].edgeLine.segments[0].point = nodes[
               e.indices[0]
-            ].circle.getNearestPoint(nodes[e.indices[1]].circle.position);
+              ].circle.getNearestPoint(nodes[e.indices[1]].circle.position);
             edges[i].edgeLine.segments[1].point = nodes[
               e.indices[1]
-            ].circle.getNearestPoint(nodes[e.indices[0]].circle.position);
+              ].circle.getNearestPoint(nodes[e.indices[0]].circle.position);
           }
         });
       }
