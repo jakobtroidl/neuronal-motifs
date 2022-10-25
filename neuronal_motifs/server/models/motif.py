@@ -212,7 +212,6 @@ class MyMotif:
         # Plot the corresponding dendrogram
         dendrogram(linkage_matrix, **kwargs)
 
-
     def cluster_synapses(self, synapses, n):
 
         from matplotlib import pyplot as plt
@@ -227,16 +226,14 @@ class MyMotif:
         @return: predictions
         """
 
+        # {}
 
         # desired data structure
 
         # cluster level,    array of synapse objects
-        # 0:                [{synapse1}, {synapse2}, ...]
-        # 1:                [{synapse1}, {synapse2}, ...]
+        # 0:                [[{synapse1}], [{synapse2}], ...]
+        # 1:                [ [{synapse1}, {synapse2}], [{synapse3}, {synapse4}] ...]
         # ...
-
-
-
 
         synapse_locations = synapses[['x_pre', 'y_pre', 'z_pre']].to_numpy()
         n_clusters = int(len(synapse_locations) / 2)
@@ -249,33 +246,24 @@ class MyMotif:
 
         levels = math.ceil(math.sqrt(len(synapse_locations)))
 
-        # init dataframe with levels columns
-        synapse_clusters = pd.DataFrame(columns=range(levels))
-        for p in hierarchy.items(): # iterate over all elements
-            [c1, c2] = hierarchy[p]  # child 1 and child 2
-            # get first column of synapse_clusters
-            for i in range(levels):
-                column = synapse_clusters.iloc[:, i]
-                # check of i in first column
-                if c1 in column.values:
-                    column_plus_1 = synapse_clusters.iloc[:, i + 1]
-                    ## add to next level column
-
-
-
-
-
-
+        # # init dataframe with levels columns
+        # synapse_clusters = pd.DataFrame(columns=range(levels))
+        # for p in hierarchy.items():  # iterate over all elements
+        #     [c1, c2] = hierarchy[p]  # child 1 and child 2
+        #     # get first column of synapse_clusters
+        #     for i in range(levels):
+        #         column = synapse_clusters.iloc[:, i]
+        #         # check of i in first column
+        #         if c1 in column.values:
+        #             column_plus_1 = synapse_clusters.iloc[:, i + 1]
+        #             ## add to next level column
 
         # for i in range(len(hierarchy)):
         #     hierarchy[i]['node_id'] = i
         # clusters = pd.DataFrame(data, columns=['Numbers'])
 
-
-
-
         print(clustering)
-        # self.plot_dendrogram(clustering, truncate_mode="level", p=8)
-        # plt.xlabel("Number of points in node (or index of point if no parenthesis).")
-        # plt.show()
-        # print("hello world")
+        self.plot_dendrogram(clustering, truncate_mode="level", p=8)
+        plt.xlabel("Number of points in node (or index of point if no parenthesis).")
+        plt.show()
+        print("hello world")

@@ -11,6 +11,7 @@ import _ from "lodash";
 import BasicMenu from "./ContextMenu";
 import axios from "axios";
 import { getAuthToken } from "../utils/authentication";
+import { getTranslationVectors } from "../utils/rendering";
 
 const setLineVisibility = (scene, visible) => {
   scene.children.forEach((child) => {
@@ -135,29 +136,6 @@ const getNeuronListId = (neurons, id) => {
   return [out_neuron, out_id];
 };
 
-/**
- * Computes uniformly distributed points on the unit sphere
- * @param count: number of points to sample
- * @return {[number,number,number][]}
- */
-const getTranslationVectors = (count) => {
-  // Following Saff and Kuijlaars via https://discuss.dizzycoding.com/evenly-distributing-n-points-on-a-sphere/
-  const indices = _.range(0.5, count + 0.5);
-  const phi = indices.map((ind) => {
-    return Math.acos(1 - (2 * ind) / count);
-  });
-  const theta = indices.map((ind) => {
-    return Math.PI * (1 + Math.sqrt(5)) * ind;
-  });
-  let directions = _.range(count).map((i) => {
-    const x = Math.cos(_.toNumber(theta[i])) * Math.sin(phi[i]);
-    const y = Math.sin(_.toNumber(theta[i])) * Math.sin(phi[i]);
-    const z = Math.cos(phi[i]);
-    return [x, y, z];
-  });
-  return directions;
-};
-
 function addNeurons(
   motif,
   context,
@@ -189,6 +167,8 @@ function addNeurons(
     neuronObject.translateY(translate.y);
     neuronObject.translateZ(translate.z);
 
+    neuronObject.origin = neuronObject.position;
+
     scene.add(neuronObject);
   });
 
@@ -211,6 +191,11 @@ function addAbstractionCenters(motif, context, scene, interactionManager) {
       mesh.position.x = neuron.abstraction_center[0];
       mesh.position.y = neuron.abstraction_center[1];
       mesh.position.z = neuron.abstraction_center[2];
+      mesh.origin = new THREE.Vector3(
+        neuron.abstraction_center[0],
+        neuron.abstraction_center[1],
+        neuron.abstraction_center[2]
+      );
 
       scene.add(mesh);
     }
@@ -222,7 +207,7 @@ function getLineName(synapse) {
 }
 
 function getSynapseName(synapse, flipped = false) {
-  console.log(synapse)
+  console.log(synapse);
   let pre_loc = synapse.pre.x + "-" + synapse.pre.y + "-" + synapse.pre.z;
   let post_loc = synapse.post.x + "-" + synapse.post.y + "-" + synapse.post.z;
 
@@ -233,15 +218,10 @@ function getSynapseName(synapse, flipped = false) {
   }
 }
 
-function getSynapseIds(synapse) {
-  return "syn-" + synapse.pre_id + "-" + synapse.post_id
-}
-
 function addSynapse(scene, synapse, color, motif) {
   // create a sphere shape
   let name_variant1 = getSynapseName(synapse, false);
   let name_variant2 = getSynapseName(synapse, true);
-  let neuron_ids = getSynapseIds(synapse)
   if (
     !scene.getObjectByName(name_variant1) &&
     !scene.getObjectByName(name_variant2)
@@ -249,12 +229,14 @@ function addSynapse(scene, synapse, color, motif) {
     let geometry = new THREE.SphereGeometry(100, 16, 16);
     let material = new THREE.MeshPhongMaterial({ color: color });
     let mesh = new THREE.Mesh(geometry, material);
-    mesh.neuron_ids = neuron_ids;
     mesh.name = name_variant1;
+    mesh.pre = synapse.pre_id;
+    mesh.post = synapse.post_id;
     mesh.position.x = (synapse.post.x + synapse.pre.x) / 2.0;
     mesh.position.y = (synapse.post.y + synapse.pre.y) / 2.0;
     mesh.position.z = (synapse.post.z + synapse.pre.z) / 2.0;
     mesh.motifs = [motif];
+    mesh.origin = mesh.position;
 
     scene.add(mesh);
     return mesh;
@@ -378,7 +360,7 @@ function Viewer() {
 
   const context = useContext(AppContext);
 
-  let factor = 20000;
+  let factor = 10000;
   let offset = 0.001;
 
   const [motif, setMotif] = React.useState();
@@ -825,59 +807,46 @@ function Viewer() {
 
       let directions = getTranslationVectors(neurons.length);
 
+      let bound = 0.08;
+
       if (edgesEnabled) {
         refreshEdges(scene, abstraction_boundary);
       }
 
-      if (
-        level > motif_path_threshold + offset &&
-        prevSliderValue <= motif_path_threshold + offset
-      ) {
-        neurons.forEach((neuron, i) => {
-          neuron.translateX(factor * directions[i][0]);
-          neuron.translateY(factor * directions[i][1]);
-          neuron.translateZ(factor * directions[i][2]);
+      let j = (level - motif_path_threshold) / bound;
+      j = Math.max(0.0, Math.min(j, 1.0)); // lamp between 0 and 1
 
-          let center = scene.getObjectByName(
-            "abstraction-center-" + neuron.name
-          );
-          if (center) {
-            center.translateX(factor * directions[i][0]);
-            center.translateY(factor * directions[i][1]);
-            center.translateZ(factor * directions[i][2]);
-          }
+      console.log("scene", scene);
 
-          setSynapseVisibility(scene, false);
-          setLineVisibility(scene, true);
+      neurons.forEach((neuron, i) => {
+        // set neuron to origin
+        neuron.translateX(-neuron.position.x);
+        neuron.translateY(-neuron.position.y);
+        neuron.translateZ(-neuron.position.z);
 
-          setEdgesEnabled(true);
-        });
-      }
-      if (
-        level <= motif_path_threshold + offset &&
-        prevSliderValue > motif_path_threshold + offset
-      ) {
-        neurons.forEach((neuron, i) => {
-          //let mesh = scene.getObjectByName(neuron.id);
-          neuron.translateX(factor * -directions[i][0]);
-          neuron.translateY(factor * -directions[i][1]);
-          neuron.translateZ(factor * -directions[i][2]);
+        neuron.translateX(neuron.origin.x + j * factor * directions[i][0]);
+        neuron.translateY(neuron.origin.y + j * factor * directions[i][1]);
+        neuron.translateZ(neuron.origin.z + j * factor * directions[i][2]);
 
-          let center = scene.getObjectByName(
-            "abstraction-center-" + neuron.name
-          );
-          if (center) {
-            center.translateX(factor * -directions[i][0]);
-            center.translateY(factor * -directions[i][1]);
-            center.translateZ(factor * -directions[i][2]);
-          }
+        let center = scene.getObjectByName("abstraction-center-" + neuron.name);
+        if (center) {
+          center.translateX(-center.position.x);
+          center.translateY(-center.position.y);
+          center.translateZ(-center.position.z);
 
-          setSynapseVisibility(scene, true);
-          setLineVisibility(scene, false);
+          center.translateX(center.origin.x + j * factor * directions[i][0]);
+          center.translateY(center.origin.y + j * factor * directions[i][1]);
+          center.translateZ(center.origin.z + j * factor * directions[i][2]);
+        }
 
-          setEdgesEnabled(false);
-        });
-      }
+        //setSynapseVisibility(scene, false);
+        //setLineVisibility(scene, true);
+
+        //setEdgesEnabled(true);
+      });
+
+      // animate synapse
+
       setPrevSliderValue(level);
     }
   }, [context.abstractionLevel]);
@@ -1062,49 +1031,53 @@ function Viewer() {
   }, [motif, sharkViewerInstance]);
 
   function getIdFromNodeKey(nodeKey) {
-    const result = context.focusedMotif.neurons.filter((neuron) => neuron.nodeKey === nodeKey)
-    return String(result[0].id)
+    const result = context.focusedMotif.neurons.filter(
+      (neuron) => neuron.nodeKey === nodeKey
+    );
+    return String(result[0].id);
   }
   useEffect(() => {
     if (sharkViewerInstance) {
-      let edgeFrom = '';
+      let edgeFrom = "";
       if (context.selectedSketchElement) {
         edgeFrom = "sketch";
       } else if (context.selectedCytoscapeEdge) {
-        edgeFrom = "cytoscape"
+        edgeFrom = "cytoscape";
       } else {
         return;
       }
 
       let scene = sharkViewerInstance.scene;
       scene.traverse((child) => {
-        if (
-          // child.parent &&
-          // child.parent.name === motif_synapse_suggestions_name &&
-          typeof child.name === "string" &&
-          child.name.startsWith("syn-") && child.neuron_ids.startsWith("syn-")
-        ) {
-           let neuron_ids = child.neuron_ids.split("-");
-           let pre_id = String(neuron_ids[1]);
-           let post_id = String(neuron_ids[2]);
+        if (typeof child.name === "string" && child.name.startsWith("syn-")) {
+          let pre_id = String(child.pre);
+          let post_id = String(child.post);
 
-           let sourceId = edgeFrom === "sketch" ? getIdFromNodeKey(context.selectedSketchElement.fromNode.label) : context.selectedCytoscapeEdge.source;
-           let targetId = edgeFrom === "sketch" ? getIdFromNodeKey(context.selectedSketchElement.toNode.label) : context.selectedCytoscapeEdge.target;
-            // context.selectedSketchElement.type === "edge" &&
-           if (sourceId === pre_id && targetId === post_id) {
-             child.oldMaterial = child.material.clone();
-             child.material = new THREE.MeshPhongMaterial({ color: Color.red });
-             child.material.needsUpdate = true;
-           // } else if (child.oldMaterial) {
-           //   child.material = child.oldMaterial;
-           //   child.material.needsUpdate = true;
-           } else {
-             child.material = new THREE.MeshPhongMaterial({ color: Color.orange });
-           }
+          let sourceId =
+            edgeFrom === "sketch"
+              ? getIdFromNodeKey(context.selectedSketchElement.fromNode.label)
+              : context.selectedCytoscapeEdge.source;
+          let targetId =
+            edgeFrom === "sketch"
+              ? getIdFromNodeKey(context.selectedSketchElement.toNode.label)
+              : context.selectedCytoscapeEdge.target;
+          // context.selectedSketchElement.type === "edge" &&
+          if (sourceId === pre_id && targetId === post_id) {
+            child.oldMaterial = child.material.clone();
+            child.material = new THREE.MeshPhongMaterial({ color: Color.red });
+            child.material.needsUpdate = true;
+            // } else if (child.oldMaterial) {
+            //   child.material = child.oldMaterial;
+            //   child.material.needsUpdate = true;
+          } else {
+            child.material = new THREE.MeshPhongMaterial({
+              color: Color.orange,
+            });
+          }
         }
-      })
+      });
     }
-  }, [context.selectedSketchElement, context.selectedCytoscapeEdge])
+  }, [context.selectedSketchElement, context.selectedCytoscapeEdge]);
 
   return (
     <div id={id} className={className} onKeyDown={handleKeyPress}>
