@@ -232,8 +232,7 @@ function SketchPanel() {
             nodes[intersections].circle.position
           );
           currentPath.segments[1].point = nodes[
-            intersections
-          ].circle.getNearestPoint(currentNode.circle.position);
+            intersections].circle.getNearestPoint(currentNode.circle.position);
         } // Otherwise move the line glyph
         else {
           currentPath.segments[0].point = new paper.Point([
@@ -316,7 +315,7 @@ function SketchPanel() {
             );
             currentPath.segments[1].point = nodes[
               intersections
-            ].circle.getNearestPoint(currentNode.circle.position);
+              ].circle.getNearestPoint(currentNode.circle.position);
             let edge = currentPath.clone();
             edge.opacity = 1;
             addEdge(currentNode, nodes[intersections], edge);
@@ -347,6 +346,7 @@ function SketchPanel() {
           paper.project.activeLayer.selected = false;
           selectedElement.selected = true;
           setShowPopper(true);
+          console.log(selectedElement)
         } else {
           // If they click out, make the popper go away
           setShowPopper(false);
@@ -438,10 +438,10 @@ function SketchPanel() {
             }
             edges[i].edgeLine.segments[0].point = nodes[
               e.indices[0]
-            ].circle.getNearestPoint(nodes[e.indices[1]].circle.position);
+              ].circle.getNearestPoint(nodes[e.indices[1]].circle.position);
             edges[i].edgeLine.segments[1].point = nodes[
               e.indices[1]
-            ].circle.getNearestPoint(nodes[e.indices[0]].circle.position);
+              ].circle.getNearestPoint(nodes[e.indices[0]].circle.position);
           }
         });
       }
@@ -715,6 +715,7 @@ function SketchPanel() {
       });
     }
   }, [mouseState]);
+
   useEffect(() => {
     if (context.selectedSketchElement) {
       let paperElement =
@@ -757,6 +758,7 @@ function SketchPanel() {
       setPopperLocation(null);
     }
   }, [context.selectedSketchElement]);
+
   // On init set up our paperjs
   useEffect(() => {
     paper.setup(sketchPanelId);
@@ -773,11 +775,11 @@ function SketchPanel() {
   }, []);
 
   // Update global motif tracker
-  useEffect(() => {
-    if (edges) {
-      console.log("Edges", edges);
-    }
-  }, [edges]);
+  // useEffect(() => {
+  //     if (edges) {
+  //         console.log("Edges", edges);
+  //     }
+  // }, [edges]);
 
   const getEncodedMotif = (nodes, edges) => {
     let encodedNodes = nodes.map((n, i) => {
@@ -817,6 +819,41 @@ function SketchPanel() {
     context.setAbsMotifCount(count);
     context.setMotifQuery(encodedMotif);
   }, [nodes, edges]);
+
+  useEffect(() => {
+    if (context.focusedMotif && context.selectedCytoscapeEdge) {
+        try {
+          const sourceNodeKey = getNodeKeyFromId(context.selectedCytoscapeEdge.source)
+          const targetNodeKey = getNodeKeyFromId(context.selectedCytoscapeEdge.target)
+          setEdges(
+            edges.map((e) => {
+              if (e.fromNode.label === sourceNodeKey && e.toNode.label === targetNodeKey) {
+                e.edgeLine.strokeColor = "red"
+                // change arrowhead color
+              } else {
+                e.edgeLine.strokeColor = "#000000";
+              }
+              return e;
+            })
+          );
+        }
+        catch (TypeError) {
+          // when selectedCytoscapeEdge's source and target are not the nodes from focusedMotif.
+          setEdges(
+            edges.map((e) => {
+                e.edgeLine.strokeColor = "#000000";
+              return e;
+            })
+          );
+        }
+    }
+  }, [context.selectedCytoscapeEdge, context.focusedMotif])
+
+  function getNodeKeyFromId(id) {
+    const result = context.focusedMotif.neurons.filter((neuron) => String(neuron.id) === id);
+    // console.log(result)
+    return result[0].nodeKey
+  }
 
   return (
     <div className="sketch-panel-style">

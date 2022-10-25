@@ -50,6 +50,8 @@ export const ContextWrapper = (props) => {
   const [currentNeuronLabels, setCurrentNeuronLabels] = useState({});
   const [motifPathPosition, setMotifPathPosition] = useState(0.5);
 
+  // highlight synapses
+  const [selectedCytoscapeEdge, setSelectedCytoscapeEdge] = useState(null)
   return (
     <AppContext.Provider
       value={{
@@ -93,6 +95,8 @@ export const ContextWrapper = (props) => {
         setMotifPathPosition,
         errorMessage,
         setErrorMessage,
+        selectedCytoscapeEdge,
+        setSelectedCytoscapeEdge,
       }}
     >
       {props.children}
