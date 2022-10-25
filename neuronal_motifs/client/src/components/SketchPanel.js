@@ -15,6 +15,7 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { Builder, Query, Utils as QbUtils } from "react-awesome-query-builder";
 import axios from "axios";
+import { getNodeKeyFromId } from "../utils/edge";
 
 function SketchPanel() {
   const sketchPanelId = "sketch-panel";
@@ -315,13 +316,13 @@ function SketchPanel() {
         );
         // select the clicked on element and show the popper
         if (nodeIntersections !== -1 || edgeIntersections !== -1) {
+          context.setSelectedCytoscapeEdge(null);
           context.setSelectedSketchElement(currentSelection);
           let selectedElement =
             currentSelection?.lineGroup || currentSelection?.circle;
           paper.project.activeLayer.selected = false;
           selectedElement.selected = true;
           setShowPopper(true);
-          console.log(selectedElement)
         } else {
           // If they click out, make the popper go away
           setShowPopper(false);
@@ -685,6 +686,7 @@ function SketchPanel() {
   }, [mouseState]);
 
   useEffect(() => {
+    // if context.selectedSketchElement is not null
     if (context.selectedSketchElement) {
       let paperElement =
         context.selectedSketchElement?.circle ||
@@ -707,6 +709,13 @@ function SketchPanel() {
               e.properties = context.selectedSketchElement.properties;
               e = addEdgePropertyLabel(e);
             }
+            if (e.fromNode.label === context.selectedSketchElement.fromNode.label && e.toNode.label === context.selectedSketchElement.toNode.label) {
+              e.edgeLine.strokeColor = "red"
+              e.lineGroup.children[0].strokeColor = "red";
+            } else {
+              e.edgeLine.strokeColor = "#000000";
+              e.lineGroup.children[0].strokeColor = "#000000";
+            }
             return e;
           })
         );
@@ -724,6 +733,13 @@ function SketchPanel() {
       }
     } else {
       setPopperLocation(null);
+      setEdges(
+        edges.map((e) => {
+          e.edgeLine.strokeColor = "#000000";
+          e.lineGroup.children[0].strokeColor = "#000000";
+          return e;
+        })
+      );
     }
   }, [context.selectedSketchElement]);
 
@@ -780,39 +796,45 @@ function SketchPanel() {
   }, [nodes, edges]);
 
   useEffect(() => {
+    if (!context.selectedCytoscapeEdge) {
+      setEdges(
+        edges.map((e) => {
+            e.edgeLine.strokeColor = "#000000";
+            e.lineGroup.children[0].strokeColor = "#000000";
+          return e;
+        })
+      );
+    }
     if (context.focusedMotif && context.selectedCytoscapeEdge) {
-        try {
-          const sourceNodeKey = getNodeKeyFromId(context.selectedCytoscapeEdge.source)
-          const targetNodeKey = getNodeKeyFromId(context.selectedCytoscapeEdge.target)
-          setEdges(
-            edges.map((e) => {
-              if (e.fromNode.label === sourceNodeKey && e.toNode.label === targetNodeKey) {
-                e.edgeLine.strokeColor = "red"
-                // change arrowhead color
-              } else {
-                e.edgeLine.strokeColor = "#000000";
-              }
-              return e;
-            })
-          );
-        }
-        catch (TypeError) {
-          // when selectedCytoscapeEdge's source and target are not the nodes from focusedMotif.
-          setEdges(
-            edges.map((e) => {
-                e.edgeLine.strokeColor = "#000000";
-              return e;
-            })
-          );
-        }
+      try {
+        const sourceNodeKey = getNodeKeyFromId(context.selectedCytoscapeEdge.source, context)
+        const targetNodeKey = getNodeKeyFromId(context.selectedCytoscapeEdge.target, context)
+
+        setEdges(
+          edges.map((e) => {
+            if (e.fromNode.label === sourceNodeKey && e.toNode.label === targetNodeKey) {
+              e.edgeLine.strokeColor = "red"
+              e.lineGroup.children[0].strokeColor = "red";
+            } else {
+              e.edgeLine.strokeColor = "#000000";
+              e.lineGroup.children[0].strokeColor = "#000000";
+            }
+            return e;
+          })
+        );
+      }
+      catch (TypeError) {
+        // when selectedCytoscapeEdge's source and target are not the nodes from focusedMotif.
+        setEdges(
+          edges.map((e) => {
+              e.edgeLine.strokeColor = "#000000";
+              e.lineGroup.children[0].strokeColor = "#000000";
+            return e;
+          })
+        );
+      }
     }
   }, [context.selectedCytoscapeEdge, context.focusedMotif])
-
-  function getNodeKeyFromId(id) {
-    const result = context.focusedMotif.neurons.filter((neuron) => String(neuron.id) === id);
-    // console.log(result)
-    return result[0].nodeKey
-  }
 
   return (
     <div className="sketch-panel-style">
