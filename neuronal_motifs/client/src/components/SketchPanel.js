@@ -18,6 +18,7 @@ import axios from "axios";
 function SketchPanel() {
     const sketchPanelId = "sketch-panel";
     let [nodes, setNodes] = useState([]);
+    let [nodeLabels, setNodeLabels] = useState([]);
     let [edges, setEdges] = useState([]);
     let [importData, setImportData] = useState(null);
     let [nodeImportUpdate, setNodeImportUpdate] = useState(false);
@@ -325,6 +326,9 @@ function SketchPanel() {
         };
         pencil.onMouseDrag = function (event) {
             if (mouseState === "move") {
+                nodeLabels.forEach((label) => {
+                    label?.remove();
+                })
                 let intersections = _.findLastIndex(nodes.map((n) => {
                     return n.circle.contains(event.point);
                 }), (e) => e === true);
@@ -648,6 +652,27 @@ function SketchPanel() {
         context.setMotifQuery(encodedMotif);
     }, [nodes, edges]);
 
+    useEffect(() => {
+        if (!nodes) return;
+        nodeLabels.forEach((label) => {
+            label?.remove();
+        })
+        setNodeLabels(nodes.map((n) => {
+            if (!showInfo) return null
+            console.log('nodes', n, 'show', showInfo);
+            let propertiesText = _.entries(n?.properties).map((p) => {
+                return `${p[0]}: ${p[1]}\n`;
+            })
+            let labelPoint = [n.circle.position.x, n.circle.position.y - circleRadius - (10 * propertiesText.length)];
+            let label = new paper.PointText({
+                point: labelPoint, justification: "center", fillColor: "black", font: "Roboto", fontSize: 10,
+            });
+            label.content = propertiesText.join('');
+            return label;
+        }));
+
+    }, [nodes, showInfo, edges])
+
     return (<div className="sketch-panel-style">
         <Grid container className="canvas-wrapper" spacing={0}>
             <Grid item xs={1}>
@@ -774,12 +799,7 @@ function SketchPanel() {
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Import Motif" placement="right">
-                        <IconButton
-                            value="edit"
-                            color={mouseState === "move" ? "primary" : "default"}
-                            onClick={() => importMotif()}
-                        >
-
+                        <IconButton value="edit" color="default" onClick={() => importMotif()}>
                             <FontAwesomeIcon
                                 size={'sm'}
                                 icon={faFileImport}
@@ -789,7 +809,7 @@ function SketchPanel() {
                     <Tooltip title="Export Motif" placement="right">
                         <IconButton
                             value="edit"
-                            color={mouseState === "move" ? "primary" : "default"}
+                            color="default"
                             onClick={() => exportMotif()}
                         >
                             <FontAwesomeIcon
