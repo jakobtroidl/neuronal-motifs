@@ -728,7 +728,7 @@ function SketchPanel() {
                             <FontAwesomeIcon size={'sm'} icon={faHand}/>
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="Node Info" placement="right">
+                    <Tooltip title="Show Node Info" placement="right">
                         <IconButton
                             value="node"
                             color={showInfo ? "primary" : "default"}
