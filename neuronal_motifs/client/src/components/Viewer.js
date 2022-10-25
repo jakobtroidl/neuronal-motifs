@@ -218,15 +218,10 @@ function getSynapseName(synapse, flipped = false) {
   }
 }
 
-function getSynapseIds(synapse) {
-  return "syn-" + synapse.pre_id + "-" + synapse.post_id;
-}
-
 function addSynapse(scene, synapse, color, motif) {
   // create a sphere shape
   let name_variant1 = getSynapseName(synapse, false);
   let name_variant2 = getSynapseName(synapse, true);
-  let neuron_ids = getSynapseIds(synapse);
   if (
     !scene.getObjectByName(name_variant1) &&
     !scene.getObjectByName(name_variant2)
