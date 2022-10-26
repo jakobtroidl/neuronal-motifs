@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import SharkViewer, { stretch, swcParser } from "./shark_viewer";
-import { bundle } from "../services/bundling";
+import { bundle, getClusterLineName } from "../services/bundling";
 import ArrowTooltips from "./ArrowTooltips";
 import { AppContext } from "../contexts/GlobalContext";
 import "./Viewer.css";
@@ -38,8 +38,6 @@ const getEdgeGroups = (motifs, boundary, neurons, factor) => {
 
   motifs.forEach((motif) => {
     motif.edges.forEach((edge) => {
-      console.log("edge: ", edge);
-
       let [pre_neuron, pre_neuron_number] = getNeuronListId(
         neurons,
         edge.start_neuron_id
@@ -75,6 +73,11 @@ const getEdgeGroups = (motifs, boundary, neurons, factor) => {
           factor * directions[pre_neuron_number][1],
           factor * directions[pre_neuron_number][2]
         );
+
+        let default_start = new THREE.Vector3().fromArray(
+          edge.default_start_position
+        );
+        default_start = default_start.add(translate);
         let line_start = pre_loc.add(translate);
         //let line_start = pre_loc;
 
@@ -98,6 +101,11 @@ const getEdgeGroups = (motifs, boundary, neurons, factor) => {
           factor * directions[post_neuron_number][2]
         );
         let line_end = post_loc.add(translate);
+        let default_end = new THREE.Vector3().fromArray(
+          edge.default_end_position
+        );
+        default_end = default_end.add(translate);
+
         //let line_end = post_loc;
 
         let group_id = edge.start_neuron_id + "-" + edge.end_neuron_id;
@@ -105,14 +113,17 @@ const getEdgeGroups = (motifs, boundary, neurons, factor) => {
           groups[group_id] = {
             start: [],
             end: [],
+            default_start: [],
+            default_end: [],
             start_id: edge.start_neuron_id,
             end_id: edge.end_neuron_id,
           };
         }
-
         let group_points = groups[group_id];
         group_points["start"].push(line_start);
         group_points["end"].push(line_end);
+        group_points["default_start"].push(default_start);
+        group_points["default_end"].push(default_end);
       }
     });
   });
@@ -799,16 +810,16 @@ function Viewer() {
   }, [context.motifToAdd]);
 
   function addEdgeGroupToScene(groups, scene) {
-    // let lines_identifier = "lines";
-    // let prevLines = scene.getObjectByName(lines_identifier);
-    // scene.remove(prevLines);
+    let lines_identifier = "lines";
+    let prevLines = scene.getObjectByName(lines_identifier);
+    scene.remove(prevLines);
 
     let prevClusters = scene.getObjectByName(syn_clusters_identifier);
     scene.remove(prevClusters);
 
-    // let lines = new THREE.Object3D();
-    // lines.name = lines_identifier;
-    // lines.visible = edgesEnabled;
+    let lines = new THREE.Object3D();
+    lines.name = lines_identifier;
+    lines.visible = true;
 
     let syn_clusters = new THREE.Object3D();
     syn_clusters.name = syn_clusters_identifier;
@@ -823,9 +834,12 @@ function Viewer() {
       //   lines.children.push(line);
       // });
 
+      let [n, post_neuron_number] = getNeuronListId(neurons, group.end_id);
       group.start.forEach((start, i) => {
         let geometry = new THREE.SphereGeometry(100, 16, 16);
-        let material = new THREE.MeshPhongMaterial({ color: Color.blue });
+        let material = new THREE.MeshPhongMaterial({
+          color: context.neuronColors[post_neuron_number],
+        });
         let mesh = new THREE.Mesh(geometry, material);
         mesh.neuron_ids = "syn-test";
         mesh.name = "syn-test";
@@ -833,7 +847,34 @@ function Viewer() {
         mesh.position.y = start.y;
         mesh.position.z = start.z;
         mesh.motifs = [motif];
+        mesh.selected = false;
+        mesh.oldMaterial = material.clone();
 
+        let line_start = group.default_start[i];
+        let line_end = group.default_end[i];
+
+        mesh.addEventListener("click", (event) => {
+          document.body.style.cursor = "pointer";
+          if (mesh.selected) {
+            let name_to_remove = getClusterLineName(line_start, line_end);
+            let line = scene.getObjectByName(name_to_remove);
+            scene.remove(line);
+            mesh.material = mesh.oldMaterial;
+            mesh.material.needsUpdate = true;
+            mesh.selected = false;
+          } else {
+            let line_group = bundle([line_start], [line_end], 0.3, "#696969");
+            line_group.forEach((line, i) => {
+              scene.add(line);
+            });
+            mesh.material = new THREE.MeshPhongMaterial({
+              color: Color.red,
+            });
+            mesh.material.needsUpdate = true;
+            mesh.selected = true;
+          }
+        });
+        scene.interactionManager.add(mesh);
         syn_clusters.children.push(mesh);
       });
     }
@@ -881,6 +922,8 @@ function Viewer() {
       if (level > motif_path_threshold) {
         refreshEdges(scene, abstraction_boundary);
         setSynapseVisibility(scene, false);
+        setLineVisibility(scene, true);
+        setEdgesEnabled(true);
       } else {
         setSynapseVisibility(scene, true);
       }
@@ -891,6 +934,8 @@ function Viewer() {
         }
       }
 
+      console.log("scene", scene);
+
       let j = (level - motif_path_threshold) / bound;
       j = Math.max(0.0, Math.min(j, 1.0)); // lamp between 0 and 1
 
@@ -899,8 +944,6 @@ function Viewer() {
         // let center = scene.getObjectByName("abstraction-center-" + neuron.name);
         // if (center) moveObject(center, directions[i], j);
         //setSynapseVisibility(scene, false);
-        //setLineVisibility(scene, true);
-        //setEdgesEnabled(true);
       });
 
       let syn_clusters = scene.getObjectByName(syn_clusters_identifier);

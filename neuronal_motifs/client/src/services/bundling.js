@@ -1,19 +1,19 @@
 import * as THREE from "three";
 
-export function bundle(group, strength, color) {
+export function bundle(start_points, end_points, strength, color) {
   /**
-   * @param start: array of Vector3 holding all start points of the lines [start_1, start_2, ..., start_n]
-   * @param end: array of Vector3 holding all end points of the lines [end_1, end_2, ..., end_n]
+   * @param start_points: array of Vector3 holding all start points of the lines [start_1, start_2, ..., start_n]
+   * @param end_points: array of Vector3 holding all end points of the lines [end_1, end_2, ..., end_n]
    * @param strength: bundling strength, must be in [0.0, 1.0]
    * @param color: line color
    * @return list of splines that in conjunction represent a bundles version of the lines
    */
   // compute mean edge
-  let start = group["start"];
-  let end = group["end"];
+  // let start = group["start"];
+  // let end = group["end"];
 
-  let mean_start = avg(start);
-  let mean_end = avg(end);
+  let mean_start = avg(start_points);
+  let mean_end = avg(end_points);
   let direction = mean_end.sub(mean_start);
 
   let mean_samples = [];
@@ -23,10 +23,10 @@ export function bundle(group, strength, color) {
   }
 
   let splines = [];
-  start.forEach((start_point, i) => {
+  start_points.forEach((start_point, i) => {
     let samples = [...mean_samples];
     samples.unshift(start_point);
-    samples.push(end[i]);
+    samples.push(end_points[i]);
 
     const curve = new THREE.CatmullRomCurve3(samples, false, "chordal");
 
@@ -41,12 +41,28 @@ export function bundle(group, strength, color) {
     // Create the final object to add to the scene
     let spline = new THREE.Line(geometry, material);
     spline.visible = true;
-    spline.name = "line-" + group.start_id + "-" + group.end_id;
-
+    spline.name = getClusterLineName(start_point, end_points[i]);
     splines.push(spline);
   });
 
   return splines;
+}
+
+export function getClusterLineName(start, end) {
+  return (
+    "cluster-line-" +
+    start.x +
+    "-" +
+    start.y +
+    "-" +
+    start.z +
+    "-" +
+    end.x +
+    "-" +
+    end.y +
+    "-" +
+    end.z
+  );
 }
 
 function scale(x) {
