@@ -121,7 +121,6 @@ function GraphSummary() {
     let edges = [];
 
     selectedMotifs.forEach((motif) => {
-      console.log(motif);
       // add nodes
       motif.graph.nodes.forEach((node, idx) => {
         nodes.push({
