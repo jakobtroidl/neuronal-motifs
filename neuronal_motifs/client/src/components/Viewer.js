@@ -38,6 +38,8 @@ const getEdgeGroups = (motifs, boundary, neurons, factor) => {
 
   motifs.forEach((motif) => {
     motif.edges.forEach((edge) => {
+      //console.log("edge: ", edge);
+
       let [pre_neuron, pre_neuron_number] = getNeuronListId(
         neurons,
         edge.start_neuron_id
@@ -74,6 +76,7 @@ const getEdgeGroups = (motifs, boundary, neurons, factor) => {
           factor * directions[pre_neuron_number][2]
         );
         let line_start = pre_loc.add(translate);
+        //let line_start = pre_loc;
 
         let post_loc = new THREE.Vector3();
         if (boundary in edge.abstraction.end) {
@@ -95,6 +98,7 @@ const getEdgeGroups = (motifs, boundary, neurons, factor) => {
           factor * directions[post_neuron_number][2]
         );
         let line_end = post_loc.add(translate);
+        //let line_end = post_loc;
 
         let group_id = edge.start_neuron_id + "-" + edge.end_neuron_id;
         if (!(group_id in groups)) {
@@ -114,6 +118,41 @@ const getEdgeGroups = (motifs, boundary, neurons, factor) => {
   });
 
   return groups;
+};
+
+const getSynapseGroups = (motifs, boundary, neurons, factor, scene) => {
+  //let directions = getTranslationVectors(neurons.length);
+  boundary = Math.floor(boundary);
+
+  console.log("boundary: ", boundary);
+
+  // delete all synapses
+  scene.children.forEach((child) => {
+    if (typeof child.name == "string" && child.name.includes("syn")) {
+      scene.remove(child);
+    }
+  });
+
+  motifs.forEach((motif) => {
+    motif.edges.forEach((edge) => {
+      let loc = new THREE.Vector3();
+      if (boundary in edge.abstraction.start) {
+        loc = edge.abstraction.start[boundary];
+
+        // else {
+        //   loc.fromArray(edge.default_start_position);
+        // }
+
+        let syn = {
+          pre_id: edge.start_neuron_id,
+          post_id: edge.end_neuron_id,
+          pre: new THREE.Vector3(loc[0], loc[1], loc[2]),
+          post: new THREE.Vector3(loc[0], loc[1], loc[2]),
+        };
+        addSynapse(scene, syn, Color.orange, motif);
+      }
+    });
+  });
 };
 
 const setSynapseVisibility = (scene, visible) => {
@@ -171,8 +210,6 @@ function addNeurons(
 
     scene.add(neuronObject);
   });
-
-  console.log(scene);
 }
 
 function getAbstractionCenterName(neuron) {
@@ -207,7 +244,6 @@ function getLineName(synapse) {
 }
 
 function getSynapseName(synapse, flipped = false) {
-  console.log(synapse);
   let pre_loc = synapse.pre.x + "-" + synapse.pre.y + "-" + synapse.pre.z;
   let post_loc = synapse.post.x + "-" + synapse.post.y + "-" + synapse.post.z;
 
@@ -222,36 +258,38 @@ function addSynapse(scene, synapse, color, motif) {
   // create a sphere shape
   let name_variant1 = getSynapseName(synapse, false);
   let name_variant2 = getSynapseName(synapse, true);
-  if (
-    !scene.getObjectByName(name_variant1) &&
-    !scene.getObjectByName(name_variant2)
-  ) {
-    let geometry = new THREE.SphereGeometry(100, 16, 16);
-    let material = new THREE.MeshPhongMaterial({ color: color });
-    let mesh = new THREE.Mesh(geometry, material);
-    mesh.name = name_variant1;
-    mesh.pre = synapse.pre_id;
-    mesh.post = synapse.post_id;
-    mesh.position.x = (synapse.post.x + synapse.pre.x) / 2.0;
-    mesh.position.y = (synapse.post.y + synapse.pre.y) / 2.0;
-    mesh.position.z = (synapse.post.z + synapse.pre.z) / 2.0;
-    mesh.motifs = [motif];
-    mesh.origin = new THREE.Vector3(
-      (synapse.post.x + synapse.pre.x) / 2.0,
-      (synapse.post.y + synapse.pre.y) / 2.0,
-      (synapse.post.z + synapse.pre.z) / 2.0
-    );
+  // if (
+  //   !scene.getObjectByName(name_variant1) &&
+  //   !scene.getObjectByName(name_variant2)
+  // ) {
+  let geometry = new THREE.SphereGeometry(100, 16, 16);
+  let material = new THREE.MeshPhongMaterial({ color: color });
+  let mesh = new THREE.Mesh(geometry, material);
+  mesh.name = name_variant1;
+  mesh.pre = synapse.pre_id;
+  mesh.post = synapse.post_id;
+  mesh.position.x = (synapse.post.x + synapse.pre.x) / 2.0;
+  mesh.position.y = (synapse.post.y + synapse.pre.y) / 2.0;
+  mesh.position.z = (synapse.post.z + synapse.pre.z) / 2.0;
+  mesh.motifs = [motif];
+  mesh.origin = new THREE.Vector3(
+    (synapse.post.x + synapse.pre.x) / 2.0,
+    (synapse.post.y + synapse.pre.y) / 2.0,
+    (synapse.post.z + synapse.pre.z) / 2.0
+  );
 
-    scene.add(mesh);
-    return mesh;
-  } else {
-    let mesh = scene.getObjectByName(name_variant1);
-    if (!mesh) {
-      mesh = scene.getObjectByName(name_variant2);
-    }
-    mesh.motifs.push(motif);
-    return mesh;
-  }
+  console.log("adding synapse", mesh.name);
+  scene.add(mesh);
+  return mesh;
+  // } else {
+  //   console.log("skip adding syn -> already in scene ");
+  //   let mesh = scene.getObjectByName(name_variant1);
+  //   if (!mesh) {
+  //     mesh = scene.getObjectByName(name_variant2);
+  //   }
+  //   mesh.motifs.push(motif);
+  //   return mesh;
+  // }
 }
 
 function addSynapses(
@@ -693,7 +731,6 @@ function Viewer() {
   // Fetches the data, only runs on init
   useEffect(async () => {
     if (context.motifToAdd) {
-      console.log("motif to add: ", context.motifToAdd);
       let bodyIds = context.motifToAdd.neurons.map((n) => n.bodyId);
       let bodyIdsJSON = JSON.stringify(bodyIds);
       let motifQuery = JSON.stringify(context.motifQuery);
@@ -761,26 +798,49 @@ function Viewer() {
   }, [context.motifToAdd]);
 
   function addEdgeGroupToScene(groups, scene) {
-    let lines_identifier = "lines";
-    let prevLines = scene.getObjectByName(lines_identifier);
-    scene.remove(prevLines);
+    // let lines_identifier = "lines";
+    // let prevLines = scene.getObjectByName(lines_identifier);
+    // scene.remove(prevLines);
+    //
+    // let lines = new THREE.Object3D();
+    // lines.name = lines_identifier;
+    // lines.visible = edgesEnabled;
 
-    let lines = new THREE.Object3D();
-    lines.name = lines_identifier;
-    lines.visible = edgesEnabled;
+    // delete all synapses
+    scene.children.forEach((child) => {
+      if (typeof child.name == "string" && child.name.includes("syn")) {
+        scene.remove(child);
+      }
+    });
+
     for (const [id, group] of Object.entries(groups)) {
-      let groupColor = groupFocused(group, context.focusedMotif)
-        ? "#d3d3d3"
-        : "#d3d3d3";
-      let line_group = bundle(group, 0.3, groupColor);
-      line_group.forEach((line, i) => {
-        lines.children.push(line);
+      group.start.forEach((start, i) => {
+        console.log("start", start);
+        console.log("end", group.end[i]);
+
+        let syn = {
+          pre_id: group.start_id,
+          post_id: group.end_id,
+          pre: start,
+          post: group.end[i],
+        };
+
+        addSynapse(scene, syn, Color.orange, motif);
       });
+
+      // let groupColor = groupFocused(group, context.focusedMotif)
+      //   ? "#d3d3d3"
+      //   : "#d3d3d3";
+      // let line_group = bundle(group, 0.3, groupColor);
+      // line_group.forEach((line, i) => {
+      //   lines.children.push(line);
+      // });
     }
-    scene.add(lines);
+    //scene.add(lines);
   }
 
   function refreshEdges(scene, abstraction_boundary) {
+    console.log("abstraction_boundary", abstraction_boundary);
     let groups = getEdgeGroups(
       context.selectedMotifs,
       abstraction_boundary,
@@ -797,7 +857,11 @@ function Viewer() {
 
   function getAbstractionBoundary(sharkViewerInstance) {
     let level = getAbstractionLevel();
-    sharkViewerInstance.setAbstractionThreshold(level);
+    let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
+    if (level <= motif_path_threshold) {
+      // only prune till motif path threshold
+      sharkViewerInstance.setAbstractionThreshold(level);
+    }
     return sharkViewerInstance.getAbstractionBoundary(level);
   }
 
@@ -813,7 +877,7 @@ function Viewer() {
 
       let bound = 0.08;
 
-      if (edgesEnabled) {
+      if (level > motif_path_threshold) {
         refreshEdges(scene, abstraction_boundary);
       }
 
@@ -822,53 +886,53 @@ function Viewer() {
 
       console.log("scene", scene);
 
-      neurons.forEach((neuron, i) => {
-        // set neuron to origin
-        neuron.translateX(-neuron.position.x);
-        neuron.translateY(-neuron.position.y);
-        neuron.translateZ(-neuron.position.z);
-
-        neuron.translateX(neuron.origin.x + j * factor * directions[i][0]);
-        neuron.translateY(neuron.origin.y + j * factor * directions[i][1]);
-        neuron.translateZ(neuron.origin.z + j * factor * directions[i][2]);
-
-        let center = scene.getObjectByName("abstraction-center-" + neuron.name);
-        if (center) {
-          center.translateX(-center.position.x);
-          center.translateY(-center.position.y);
-          center.translateZ(-center.position.z);
-
-          center.translateX(center.origin.x + j * factor * directions[i][0]);
-          center.translateY(center.origin.y + j * factor * directions[i][1]);
-          center.translateZ(center.origin.z + j * factor * directions[i][2]);
-        }
-
-        //setSynapseVisibility(scene, false);
-        //setLineVisibility(scene, true);
-
-        //setEdgesEnabled(true);
-      });
+      // neurons.forEach((neuron, i) => {
+      //   moveObject(neuron, directions[i], j);
+      //   let center = scene.getObjectByName("abstraction-center-" + neuron.name);
+      //   if (center) moveObject(center, directions[i], j);
+      //   //setSynapseVisibility(scene, false);
+      //   //setLineVisibility(scene, true);
+      //   //setEdgesEnabled(true);
+      // });
 
       // animate synapse
-      scene.children.forEach((child) => {
-        if (typeof child.name === "string" && child.name.startsWith("syn")) {
-          console.log(child);
-
-          child.translateX(-child.position.x);
-          child.translateY(-child.position.y);
-          child.translateZ(-child.position.z);
-
-          let [n, i] = getNeuronListId(neurons, child.pre);
-
-          child.translateX(child.origin.x + j * factor * directions[i][0]);
-          child.translateY(child.origin.y + j * factor * directions[i][1]);
-          child.translateZ(child.origin.z + j * factor * directions[i][2]);
-        }
-      });
+      // scene.children.forEach((child) => {
+      //   if (typeof child.name === "string" && child.name.startsWith("syn")) {
+      //     let [pre_neuron, pre_idx] = getNeuronListId(neurons, child.pre);
+      //     moveObject(child, directions[pre_idx], j);
+      //
+      //     if (level > motif_path_threshold) {
+      //       let [post_neuron, post_idx] = getNeuronListId(neurons, child.post);
+      //
+      //       child.material = new THREE.MeshPhongMaterial({
+      //         color: context.neuronColors[post_idx],
+      //       });
+      //       child.material.needsUpdate = true;
+      //     } else {
+      //       child.material = new THREE.MeshPhongMaterial({
+      //         color: Color.orange,
+      //       });
+      //       child.material.needsUpdate = true;
+      //     }
+      //   }
+      // });
 
       setPrevSliderValue(level);
     }
   }, [context.abstractionLevel]);
+
+  function moveObject(object, direction, relPos) {
+    /**
+     * Moves an object in a direction by a relative position
+     */
+    object.translateX(-object.position.x);
+    object.translateY(-object.position.y);
+    object.translateZ(-object.position.z);
+
+    object.translateX(object.origin.x + relPos * factor * direction[0]);
+    object.translateY(object.origin.y + relPos * factor * direction[1]);
+    object.translateZ(object.origin.z + relPos * factor * direction[2]);
+  }
 
   function deleteAbstractionCenter(scene, neuron) {
     let center = scene.getObjectByName(getAbstractionCenterName(neuron));

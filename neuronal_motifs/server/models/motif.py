@@ -6,7 +6,7 @@ import pandas as pd
 from networkx.readwrite import json_graph
 import numpy as np
 
-from models.edge import NodeLink3DEdge
+from models.edge import NodeLink3DEdge, compute_line_abstractions
 from utils.data_conversion import synapse_array_to_object, edges_to_json
 
 
@@ -66,11 +66,11 @@ class MyMotif:
                 edge = NodeLink3DEdge(pre_neuron.id, pre_neuron.skeleton_nk_graph, [pre_x, pre_y, pre_z],
                                       post_neuron.id, post_neuron.skeleton_nk_graph, [post_x, post_y, post_z])
 
-                start_abs = edge.compute_line_abstractions(edge.start_skel_graph, pre_neuron.skeleton.nodes, pre_node,
+                start_abs = compute_line_abstractions(edge.start_skel_graph, pre_neuron.skeleton.nodes, pre_node,
                                                            pre_neuron.abstraction_center)
                 edge.set_start_abstraction(start_abs)
 
-                end_abs = edge.compute_line_abstractions(edge.end_skel_graph, post_neuron.skeleton.nodes, post_node,
+                end_abs = compute_line_abstractions(edge.end_skel_graph, post_neuron.skeleton.nodes, post_node,
                                                          post_neuron.abstraction_center)
                 edge.set_end_abstraction(end_abs)
 
