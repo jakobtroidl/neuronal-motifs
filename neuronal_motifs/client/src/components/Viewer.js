@@ -38,7 +38,7 @@ const getEdgeGroups = (motifs, boundary, neurons, factor) => {
 
   motifs.forEach((motif) => {
     motif.edges.forEach((edge) => {
-      //console.log("edge: ", edge);
+      console.log("edge: ", edge);
 
       let [pre_neuron, pre_neuron_number] = getNeuronListId(
         neurons,
@@ -370,14 +370,14 @@ function colorMotif(sharkViewerInstance, motif, colors) {
       sharkViewerInstance.setColor(neuronObject, colors[i]);
     }
     // update abstraction center color
-    let abstractionCenterName = getAbstractionCenterName(neuron);
-    let abstractionCenter = scene.getObjectByName(abstractionCenterName);
-    if (abstractionCenter) {
-      abstractionCenter.material = new THREE.MeshPhongMaterial({
-        color: colors[i],
-      });
-      abstractionCenter.material.needsUpdate = true;
-    }
+    // let abstractionCenterName = getAbstractionCenterName(neuron);
+    // let abstractionCenter = scene.getObjectByName(abstractionCenterName);
+    // if (abstractionCenter) {
+    //   abstractionCenter.material = new THREE.MeshPhongMaterial({
+    //     color: colors[i],
+    //   });
+    //   abstractionCenter.material.needsUpdate = true;
+    // }
   });
 }
 
@@ -896,8 +896,8 @@ function Viewer() {
 
       neurons.forEach((neuron, i) => {
         moveObject(neuron, directions[i], j);
-        let center = scene.getObjectByName("abstraction-center-" + neuron.name);
-        if (center) moveObject(center, directions[i], j);
+        // let center = scene.getObjectByName("abstraction-center-" + neuron.name);
+        // if (center) moveObject(center, directions[i], j);
         //setSynapseVisibility(scene, false);
         //setLineVisibility(scene, true);
         //setEdgesEnabled(true);
@@ -968,7 +968,7 @@ function Viewer() {
         mesh.motifs.splice(idx, 1);
       }
       if (mesh.motifs.length === 0) {
-        deleteAbstractionCenter(scene, neuron);
+        //deleteAbstractionCenter(scene, neuron);
         scene.remove(mesh);
       }
     }
@@ -1054,7 +1054,7 @@ function Viewer() {
 
       addLights(scene);
 
-      addAbstractionCenters(motif, context, scene, interactionManager);
+      //addAbstractionCenters(motif, context, scene, interactionManager);
 
       addSynapses(
         motif.synapses,
@@ -1083,18 +1083,18 @@ function Viewer() {
           neuron.translateY(factor * new_directions[i][1]);
           neuron.translateZ(factor * new_directions[i][2]);
 
-          let center = scene.getObjectByName(
-            "abstraction-center-" + neuron.name
-          );
-          if (center) {
-            center.translateX(factor * -old_directions[i][0]);
-            center.translateY(factor * -old_directions[i][1]);
-            center.translateZ(factor * -old_directions[i][2]);
-
-            center.translateX(factor * new_directions[i][0]);
-            center.translateY(factor * new_directions[i][1]);
-            center.translateZ(factor * new_directions[i][2]);
-          }
+          // let center = scene.getObjectByName(
+          //   "abstraction-center-" + neuron.name
+          // );
+          // if (center) {
+          //   center.translateX(factor * -old_directions[i][0]);
+          //   center.translateY(factor * -old_directions[i][1]);
+          //   center.translateZ(factor * -old_directions[i][2]);
+          //
+          //   center.translateX(factor * new_directions[i][0]);
+          //   center.translateY(factor * new_directions[i][1]);
+          //   center.translateZ(factor * new_directions[i][2]);
+          // }
 
           // setSynapseVisibility(scene, false);
           // setLineVisibility(scene, true);
