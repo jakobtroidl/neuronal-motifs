@@ -404,6 +404,7 @@ function Viewer() {
 
   let factor = 10000;
   let offset = 0.001;
+  let syn_clusters_identifier = "clusters";
 
   const [motif, setMotif] = React.useState();
   const [sharkViewerInstance, setSharkViewerInstance] = useState();
@@ -801,46 +802,46 @@ function Viewer() {
     // let lines_identifier = "lines";
     // let prevLines = scene.getObjectByName(lines_identifier);
     // scene.remove(prevLines);
-    //
+
+    let prevClusters = scene.getObjectByName(syn_clusters_identifier);
+    scene.remove(prevClusters);
+
     // let lines = new THREE.Object3D();
     // lines.name = lines_identifier;
     // lines.visible = edgesEnabled;
 
-    // delete all synapses
-    scene.children.forEach((child) => {
-      if (typeof child.name == "string" && child.name.includes("syn")) {
-        scene.remove(child);
-      }
-    });
+    let syn_clusters = new THREE.Object3D();
+    syn_clusters.name = syn_clusters_identifier;
+    syn_clusters.visible = true;
 
     for (const [id, group] of Object.entries(groups)) {
-      group.start.forEach((start, i) => {
-        console.log("start", start);
-        console.log("end", group.end[i]);
-
-        let syn = {
-          pre_id: group.start_id,
-          post_id: group.end_id,
-          pre: start,
-          post: group.end[i],
-        };
-
-        addSynapse(scene, syn, Color.orange, motif);
-      });
-
       // let groupColor = groupFocused(group, context.focusedMotif)
-      //   ? "#d3d3d3"
+      //   ? "#696969"
       //   : "#d3d3d3";
       // let line_group = bundle(group, 0.3, groupColor);
       // line_group.forEach((line, i) => {
       //   lines.children.push(line);
       // });
+
+      group.start.forEach((start, i) => {
+        let geometry = new THREE.SphereGeometry(100, 16, 16);
+        let material = new THREE.MeshPhongMaterial({ color: Color.blue });
+        let mesh = new THREE.Mesh(geometry, material);
+        mesh.neuron_ids = "syn-test";
+        mesh.name = "syn-test";
+        mesh.position.x = start.x;
+        mesh.position.y = start.y;
+        mesh.position.z = start.z;
+        mesh.motifs = [motif];
+
+        syn_clusters.children.push(mesh);
+      });
     }
     //scene.add(lines);
+    scene.add(syn_clusters);
   }
 
   function refreshEdges(scene, abstraction_boundary) {
-    console.log("abstraction_boundary", abstraction_boundary);
     let groups = getEdgeGroups(
       context.selectedMotifs,
       abstraction_boundary,
@@ -879,43 +880,57 @@ function Viewer() {
 
       if (level > motif_path_threshold) {
         refreshEdges(scene, abstraction_boundary);
+        setSynapseVisibility(scene, false);
+      } else {
+        setSynapseVisibility(scene, true);
+      }
+      if (level < motif_path_threshold + bound) {
+        let prevClusters = scene.getObjectByName(syn_clusters_identifier);
+        if (prevClusters) {
+          prevClusters.visible = false;
+        }
       }
 
       let j = (level - motif_path_threshold) / bound;
       j = Math.max(0.0, Math.min(j, 1.0)); // lamp between 0 and 1
 
-      console.log("scene", scene);
+      neurons.forEach((neuron, i) => {
+        moveObject(neuron, directions[i], j);
+        let center = scene.getObjectByName("abstraction-center-" + neuron.name);
+        if (center) moveObject(center, directions[i], j);
+        //setSynapseVisibility(scene, false);
+        //setLineVisibility(scene, true);
+        //setEdgesEnabled(true);
+      });
 
-      // neurons.forEach((neuron, i) => {
-      //   moveObject(neuron, directions[i], j);
-      //   let center = scene.getObjectByName("abstraction-center-" + neuron.name);
-      //   if (center) moveObject(center, directions[i], j);
-      //   //setSynapseVisibility(scene, false);
-      //   //setLineVisibility(scene, true);
-      //   //setEdgesEnabled(true);
-      // });
+      let syn_clusters = scene.getObjectByName(syn_clusters_identifier);
 
       // animate synapse
-      // scene.children.forEach((child) => {
-      //   if (typeof child.name === "string" && child.name.startsWith("syn")) {
-      //     let [pre_neuron, pre_idx] = getNeuronListId(neurons, child.pre);
-      //     moveObject(child, directions[pre_idx], j);
+      // if (syn_clusters) {
+      //   syn_clusters.children.forEach((child) => {
+      //     if (typeof child.name === "string" && child.name.startsWith("syn")) {
+      //       let [pre_neuron, pre_idx] = getNeuronListId(neurons, child.pre);
+      //       moveObject(child, directions[pre_idx], j);
       //
-      //     if (level > motif_path_threshold) {
-      //       let [post_neuron, post_idx] = getNeuronListId(neurons, child.post);
+      //       if (level > motif_path_threshold) {
+      //         let [post_neuron, post_idx] = getNeuronListId(
+      //           neurons,
+      //           child.post
+      //         );
       //
-      //       child.material = new THREE.MeshPhongMaterial({
-      //         color: context.neuronColors[post_idx],
-      //       });
-      //       child.material.needsUpdate = true;
-      //     } else {
-      //       child.material = new THREE.MeshPhongMaterial({
-      //         color: Color.orange,
-      //       });
-      //       child.material.needsUpdate = true;
+      //         child.material = new THREE.MeshPhongMaterial({
+      //           color: context.neuronColors[post_idx],
+      //         });
+      //         child.material.needsUpdate = true;
+      //       } else {
+      //         child.material = new THREE.MeshPhongMaterial({
+      //           color: Color.orange,
+      //         });
+      //         child.material.needsUpdate = true;
+      //       }
       //     }
-      //   }
-      // });
+      //   });
+      // }
 
       setPrevSliderValue(level);
     }
