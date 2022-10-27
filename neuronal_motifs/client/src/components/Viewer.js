@@ -810,16 +810,16 @@ function Viewer() {
   }, [context.motifToAdd]);
 
   function addEdgeGroupToScene(groups, scene) {
-    let lines_identifier = "lines";
-    let prevLines = scene.getObjectByName(lines_identifier);
-    scene.remove(prevLines);
-
     let prevClusters = scene.getObjectByName(syn_clusters_identifier);
     scene.remove(prevClusters);
 
-    let lines = new THREE.Object3D();
-    lines.name = lines_identifier;
-    lines.visible = true;
+    let lines = scene.getObjectByName(lines_identifier);
+    if (!lines) {
+      lines = new THREE.Object3D();
+      lines.name = lines_identifier;
+      lines.visible = true;
+      scene.add(lines);
+    }
 
     let syn_clusters = new THREE.Object3D();
     syn_clusters.name = syn_clusters_identifier;
@@ -856,16 +856,17 @@ function Viewer() {
         mesh.addEventListener("click", (event) => {
           document.body.style.cursor = "pointer";
           if (mesh.selected) {
+            let lines = scene.getObjectByName(lines_identifier);
             let name_to_remove = getClusterLineName(line_start, line_end);
-            let line = scene.getObjectByName(name_to_remove);
-            scene.remove(line);
+            let line = lines.getObjectByName(name_to_remove);
+            lines.remove(line);
             mesh.material = mesh.oldMaterial;
             mesh.material.needsUpdate = true;
             mesh.selected = false;
           } else {
             let line_group = bundle([line_start], [line_end], 0.3, "#696969");
             line_group.forEach((line, i) => {
-              scene.add(line);
+              lines.add(line);
             });
             mesh.material = new THREE.MeshPhongMaterial({
               color: Color.red,
@@ -878,7 +879,6 @@ function Viewer() {
         syn_clusters.children.push(mesh);
       });
     }
-    //scene.add(lines);
     scene.add(syn_clusters);
   }
 
