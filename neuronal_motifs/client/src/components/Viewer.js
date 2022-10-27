@@ -274,7 +274,7 @@ function addSynapse(scene, synapse, color, motif, setDisplayTooltip,
       document.body.style.cursor = "default";
 
       console.log("mouseout: ", mesh.highlighted)
-      if (mesh.uuid, mesh.highlighted) {
+      if (mesh.highlighted) {
         mesh.material = new THREE.MeshPhongMaterial({color: Color.red});
         mesh.material.needsUpdate = true;
         mesh.highlighted = true;
@@ -385,6 +385,17 @@ function restoreColors(sharkViewerInstance) {
   });
 }
 
+function resetSynapsesColor(sharkViewerInstance) {
+  let scene = sharkViewerInstance.scene;
+  scene.traverse((child) => {
+    if (typeof child.name === "string" && child.name.startsWith("syn-") && child.neuron_ids.startsWith("syn-")) {
+      child.material = new THREE.MeshPhongMaterial({color: Color.orange});
+      child.material.needsUpdate = true;
+      child.highlighted = false;
+    }
+  });
+}
+
 function Viewer() {
   const id = "my_shark_viewer";
   const className = "shark_viewer";
@@ -433,6 +444,10 @@ function Viewer() {
       restoreColors(sharkViewerInstance);
       removeSynapseSuggestions();
       context.setNeighborhoodQuery(null);
+    } else if (event.key === 'c') {
+      console.log('c was pressed');
+      resetSynapsesColor(sharkViewerInstance);
+      unselectEdges();
     }
   }
 
@@ -591,21 +606,21 @@ function Viewer() {
             syn,
             type === "input" ? Color.orange : Color.blue
           );
-          // mesh.addEventListener("mouseover", (event) =>
-          //   onSynapseSuggestionEvent(
-          //     "pointer",
-          //     true,
-          //     type === "input" ? syn.pre_id : null,
-          //     type === "output" ? syn.post_id : null
-          //   )
-          // );
-          // mesh.addEventListener("mouseout", (event) =>
-          //   onSynapseSuggestionEvent("default", false, null, null)
-          // );
-          // mesh.addEventListener("click", (event) =>
-          //   onSynapseSuggestionClick(syn, type)
-          // );
-          // interactionManager.add(mesh);
+          mesh.addEventListener("mouseover", (event) =>
+            onSynapseSuggestionEvent(
+              "pointer",
+              true,
+              type === "input" ? syn.pre_id : null,
+              type === "output" ? syn.post_id : null
+            )
+          );
+          mesh.addEventListener("mouseout", (event) =>
+            onSynapseSuggestionEvent("default", false, null, null)
+          );
+          mesh.addEventListener("click", (event) =>
+            onSynapseSuggestionClick(syn, type)
+          );
+          interactionManager.add(mesh);
         });
       }
     }
@@ -1079,27 +1094,27 @@ function Viewer() {
     }
   }, [motif, sharkViewerInstance]);
 
-  // useEffect(() => {
-  //   if (sharkViewerInstance) {
-  //     let sourceId = '';
-  //     let targetId = '';
-  //     if (context.selectedSketchElement) {
-  //       if (context.selectedSketchElement.type === 'edge') {
-  //         sourceId = getIdFromNodeKey(context.selectedSketchElement.fromNode.label, context)
-  //         targetId = getIdFromNodeKey(context.selectedSketchElement.toNode.label, context)
-  //       }
-  //     } else if (context.selectedCytoscapeEdge) {
-  //       sourceId = context.selectedCytoscapeEdge.source
-  //       targetId = context.selectedCytoscapeEdge.target
-  //     } else {
-  //       return;
-  //     }
-  //
-  //     if (sourceId !== '' && targetId !== '' && context.focusedMotif) {
-  //       highlightSynapses(sourceId, targetId)
-  //     }
-  //   }
-  // }, [context.selectedSketchElement, context.selectedCytoscapeEdge])
+  useEffect(() => {
+    if (sharkViewerInstance) {
+      let sourceId = '';
+      let targetId = '';
+      if (context.selectedSketchElement) {
+        if (context.selectedSketchElement.type === 'edge') {
+          sourceId = getIdFromNodeKey(context.selectedSketchElement.fromNode.label, context)
+          targetId = getIdFromNodeKey(context.selectedSketchElement.toNode.label, context)
+        }
+      } else if (context.selectedCytoscapeEdge) {
+        sourceId = context.selectedCytoscapeEdge.source
+        targetId = context.selectedCytoscapeEdge.target
+      } else {
+        return;
+      }
+
+      if (sourceId !== '' && targetId !== '' && context.focusedMotif) {
+        highlightSynapses(sourceId, targetId)
+      }
+    }
+  }, [context.selectedSketchElement, context.selectedCytoscapeEdge])
 
   function onClickHighlightEdgesAndSynapses(mesh) {
     if (typeof mesh.name === "string" && mesh.name.startsWith("syn-") && mesh.neuron_ids.startsWith("syn-")) {
@@ -1138,15 +1153,9 @@ function Viewer() {
           let post_id = String(neuron_ids[2]);
 
           if (sourceId === pre_id && targetId === post_id) {
-            if (child.highlighted) { // synapses
-              child.material = new THREE.MeshPhongMaterial({color: Color.orange});
-              child.material.needsUpdate = true;
-              child.highlighted = false;
-            } else {
               child.material = new THREE.MeshPhongMaterial({color: Color.red});
               child.material.needsUpdate = true;
               child.highlighted = true;
-            }
           } else {
             child.material = new THREE.MeshPhongMaterial({color: Color.orange});
             child.material.needsUpdate = true;
@@ -1162,6 +1171,17 @@ function Viewer() {
            child.highlighted = false;
          }
        });
+    }
+  }
+
+  function unselectEdges() {
+    if (context.selectedSketchElement) {
+      if (context.selectedSketchElement.type === "edge") {
+        context.setSelectedSketchElement(null);
+      }
+    }
+    if (context.selectedCytoscapeEdge) {
+      context.setSelectedCytoscapeEdge(null)
     }
   }
 

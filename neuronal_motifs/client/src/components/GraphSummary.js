@@ -84,6 +84,8 @@ function GraphSummary() {
           return (
             edge.data().source === sourceId && edge.data().target === targetId
           );
+        } else { // null
+          return false;
         }
       }
     }
