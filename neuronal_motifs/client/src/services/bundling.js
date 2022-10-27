@@ -48,6 +48,27 @@ export function bundle(start_points, end_points, strength, color) {
   return splines;
 }
 
+export function clusterSynapses(positions, delta) {
+  let clusters = [];
+  let cluster_positions = [];
+
+  positions.forEach((position, i) => {
+    let cluster_found = false;
+    cluster_positions.forEach((cp, j) => {
+      if (cp.distanceTo(position) < delta) {
+        clusters[j].push(i);
+        cluster_found = true;
+      }
+    });
+    if (!cluster_found) {
+      clusters.push([i]);
+      cluster_positions.push(position);
+    }
+  });
+
+  return clusters;
+}
+
 export function getClusterLineName(start, end) {
   return (
     "cluster-line-" +

@@ -1,6 +1,10 @@
 import React, { useContext, useEffect, useState } from "react";
 import SharkViewer, { stretch, swcParser } from "./shark_viewer";
-import { bundle, getClusterLineName } from "../services/bundling";
+import {
+  bundle,
+  getClusterLineName,
+  clusterSynapses,
+} from "../services/bundling";
 import ArrowTooltips from "./ArrowTooltips";
 import { AppContext } from "../contexts/GlobalContext";
 import "./Viewer.css";
@@ -574,6 +578,7 @@ function Viewer() {
               (type === "input" && neuron.bodyId === synapse.pre_id) ||
               (type === "output" && neuron.bodyId === synapse.post_id)
             ) {
+              console.log("found neuron: ", neuron);
               let motifToAdd = mapQueryResult(result, context.globalMotifIndex);
               context.setGlobalMotifIndex(context.globalMotifIndex + 1);
               context.setMotifToAdd(motifToAdd);
@@ -836,6 +841,8 @@ function Viewer() {
     syn_clusters.name = syn_clusters_identifier;
     syn_clusters.visible = true;
 
+    console.log("groups", groups);
+
     for (const [id, group] of Object.entries(groups)) {
       // let groupColor = groupFocused(group, context.focusedMotif)
       //   ? "#696969"
@@ -846,23 +853,41 @@ function Viewer() {
       // });
 
       let [n, post_neuron_number] = getNeuronListId(neurons, group.end_id);
-      group.start.forEach((start, i) => {
-        let geometry = new THREE.SphereGeometry(100, 16, 16);
+      let clusters = clusterSynapses(group.start, 0.001);
+
+      console.log("clusters", clusters);
+
+      clusters.forEach((cluster, i) => {
+        let synapses = cluster.map((i) => group.start[i]);
+        let radius = 100 + synapses.length * 10;
+        // });
+        //
+        // group.start.forEach((start, i) => {
+        let geometry = new THREE.SphereGeometry(radius, 16, 16);
         let material = new THREE.MeshPhongMaterial({
           color: context.neuronColors[post_neuron_number],
         });
         let mesh = new THREE.Mesh(geometry, material);
         mesh.neuron_ids = "syn-test";
         mesh.name = "syn-test";
-        mesh.position.x = start.x;
-        mesh.position.y = start.y;
-        mesh.position.z = start.z;
+        mesh.position.x = synapses[0].x;
+        mesh.position.y = synapses[0].y;
+        mesh.position.z = synapses[0].z;
         mesh.motifs = [motif];
         mesh.selected = false;
         mesh.oldMaterial = material.clone();
+        mesh.synapses = synapses;
 
         let line_start = group.default_start[i];
         let line_end = group.default_end[i];
+
+        mesh.addEventListener("mouseover", (e) => {
+          document.body.style.cursor = "pointer";
+        });
+
+        mesh.addEventListener("mouseout", (e) => {
+          document.body.style.cursor = "default";
+        });
 
         mesh.addEventListener("click", (event) => {
           document.body.style.cursor = "pointer";
