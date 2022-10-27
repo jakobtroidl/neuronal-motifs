@@ -1,0 +1,24 @@
+#roi-info-div {
+    position: absolute;
+    top: -65vh;
+    right: -99vw;
+    width: 20vw;
+    padding: 5px;
+    background-color: rgba(255, 255, 255, 0.75);
+    margin: 20px;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+#roi-info-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 20vh;
+    align-items: center;
+    margin: 5px 5px 0 5px;
+}
+
+#graph {
+    width: 100%;
+    height: 100%;
+}
