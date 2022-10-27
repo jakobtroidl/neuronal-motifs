@@ -416,6 +416,7 @@ function Viewer() {
   let factor = 10000;
   let offset = 0.001;
   let syn_clusters_identifier = "clusters";
+  let lines_identifier = "lines";
 
   const [motif, setMotif] = React.useState();
   const [sharkViewerInstance, setSharkViewerInstance] = useState();
@@ -448,6 +449,12 @@ function Viewer() {
     }
   }
 
+  function removeLines() {
+    let scene = sharkViewerInstance.scene;
+    let lines = scene.getObjectByName(lines_identifier);
+    lines.remove(...lines.children);
+  }
+
   function handleKeyPress(event) {
     // check if R key was pressed
     if (event.key === "r") {
@@ -455,6 +462,10 @@ function Viewer() {
       restoreColors(sharkViewerInstance);
       removeSynapseSuggestions();
       context.setNeighborhoodQuery(null);
+    }
+    if (event.key === "c") {
+      console.log("c was pressed");
+      removeLines();
     }
   }
 
