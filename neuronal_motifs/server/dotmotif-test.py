@@ -6,9 +6,23 @@ MY_NEUPRINT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Imp0cm9pZG
 E = NeuPrintExecutor(host="neuprint.janelia.org", token=MY_NEUPRINT_TOKEN, dataset="hemibrain:v1.2.1")
 
 # Build your own motif here!
-motif = Motif("A -> B [roi_pre=EB]")
+
+query = """
+    A -> C ["EB.pre" > 1, "LX(R).pre" > 1] 
+    B -> A ["EB.pre" > 1] 
+    C -> B ["EB.pre" > 1] 
+    A -> B ["LX(R).pre" > 1] 
+    A.status = "Traced" 
+    A['type'] = "ExR1"
+    B['type'] != "ExR1"
+    B['type'] != "ExR2"
+    C['type'] != "ExR1"
+    C['type'] != "ExR2"
+    B.status = "Traced" 
+    C.status = "Traced" 
+"""
+
+motif = Motif(query)
 
 results = E.find(motif, limit=5)
-
-
 print(f"{len(results)} results.")
