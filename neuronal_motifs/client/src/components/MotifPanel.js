@@ -121,12 +121,12 @@ function MotifPanel() {
             color="primary"
             icon={<SearchIcon />}
           />
-          {enableAbsMotifCountInfo ? (
-            <InfoButton
-              text={context.relativeMotifCount + " %"}
-              color="secondary"
-            />
-          ) : null}
+          {/*{enableAbsMotifCountInfo ? (*/}
+          {/*  <InfoButton*/}
+          {/*    text={context.relativeMotifCount + " %"}*/}
+          {/*    color="secondary"*/}
+          {/*  />*/}
+          {/*) : null}*/}
           {context.showWarning ? (
             <InfoButton color="error" icon={<PriorityHighIcon />} />
           ) : null}
