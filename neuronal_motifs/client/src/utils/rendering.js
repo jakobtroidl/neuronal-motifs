@@ -28,3 +28,13 @@ export function hexToRgbA(hex, alpha = 1) {
   }
   throw new Error("Bad Hex");
 }
+
+export function mapQueryResult(result, idx) {
+  let motifs = Object.entries(result).map(([k, v], i) => {
+    return { ...v, nodeKey: k };
+  });
+  motifs.sort((a, b) => {
+    return a.nodeKey.localeCompare(b.nodeKey);
+  });
+  return { name: "Motif Instance " + idx, neurons: motifs };
+}

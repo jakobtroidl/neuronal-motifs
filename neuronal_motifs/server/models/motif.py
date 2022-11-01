@@ -2,6 +2,7 @@ import time
 
 import navis
 import pandas as pd
+import numpy as np
 from networkx.readwrite import json_graph
 
 from models.edge import NodeLink3DEdge, compute_line_abstractions
