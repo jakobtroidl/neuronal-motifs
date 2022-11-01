@@ -135,41 +135,6 @@ const getEdgeGroups = (motifs, boundary, neurons, factor) => {
   return groups;
 };
 
-const getSynapseGroups = (motifs, boundary, neurons, factor, scene) => {
-  //let directions = getTranslationVectors(neurons.length);
-  boundary = Math.floor(boundary);
-
-  console.log("boundary: ", boundary);
-
-  // delete all synapses
-  scene.children.forEach((child) => {
-    if (typeof child.name == "string" && child.name.includes("syn")) {
-      scene.remove(child);
-    }
-  });
-
-  motifs.forEach((motif) => {
-    motif.edges.forEach((edge) => {
-      let loc = new THREE.Vector3();
-      if (boundary in edge.abstraction.start) {
-        loc = edge.abstraction.start[boundary];
-
-        // else {
-        //   loc.fromArray(edge.default_start_position);
-        // }
-
-        let syn = {
-          pre_id: edge.start_neuron_id,
-          post_id: edge.end_neuron_id,
-          pre: new THREE.Vector3(loc[0], loc[1], loc[2]),
-          post: new THREE.Vector3(loc[0], loc[1], loc[2]),
-        };
-        addSynapse(scene, syn, Color.orange, motif);
-      }
-    });
-  });
-};
-
 const setSynapseVisibility = (scene, visible) => {
   scene.children.forEach((child) => {
     if (typeof child.name == "string" && child.name.includes("syn")) {
@@ -371,6 +336,7 @@ function addSynapses(
   motif,
   onClickHighlightEdgesAndSynapses
 ) {
+  console.log("motif: ", motif);
   synapses.forEach((syn) => {
     let mesh = addSynapse(
       scene,
