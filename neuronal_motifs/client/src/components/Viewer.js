@@ -334,8 +334,6 @@ function addSynapse(
     mesh.addEventListener("mouseout", (event) => {
       setDisplayTooltip(false);
       document.body.style.cursor = "default";
-
-      console.log("mouseout: ", mesh.highlighted);
       if (mesh.highlighted) {
         mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
         mesh.material.needsUpdate = true;
@@ -348,7 +346,6 @@ function addSynapse(
     });
 
     mesh.addEventListener("click", (event) => {
-      console.log("clickkkk");
       onClickHighlightEdgesAndSynapses(mesh);
     });
 
