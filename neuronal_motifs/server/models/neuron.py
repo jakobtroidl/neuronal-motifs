@@ -66,7 +66,6 @@ class Neuron:
         self.motif_synapses = None
         self.incoming_synapses = incoming_synapses
         self.outgoing_synapses = outgoing_synapses
-        self.synapse_clusters = None
         self.labels = None
 
     def is_neuron(self):
@@ -85,32 +84,10 @@ class Neuron:
             'abstraction_center': self.compute_abstraction_root(),
             'min_skel_label': self.get_min_skeleton_label(),
             'max_skel_label': self.get_max_skeleton_label(),
-            'labels': self.labels,
-            'synapse_clusters': self.synapse_clusters,
+            'labels': self.labels
         }
 
         return neuron
-
-    def cluster_synapses(self):
-        """
-        Hierarchical clustering of synapses. @n_clusters is the number of clusters to be generated
-        @return: np array of cluster labels for each cluster hierarchy
-        """
-        from sklearn.cluster import AgglomerativeClustering
-
-        syn = self.motif_synapses
-        locations = syn[['x_pre', 'y_pre', 'z_pre']].to_numpy()
-        n_clusters = int(len(locations) / 3)
-
-        # create empty numpy array
-        labels = np.empty((n_clusters - 1, len(locations)), dtype=object)
-
-        for i in range(1, n_clusters):
-            model = AgglomerativeClustering(n_clusters=i)
-            y = model.fit_predict(locations)
-            labels[i - 1] = y
-
-        self.synapse_clusters = labels.tolist()
 
     def connection_to(self, neuron_id):
         """

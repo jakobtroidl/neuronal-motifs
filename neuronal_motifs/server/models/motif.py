@@ -17,6 +17,7 @@ class MyMotif:
         self.synapses = synapses
         self.nodeLinkEdges = edges
         self.compute_motif_synapses()
+        self.syn_clusters = None
 
     def as_json(self):
         """
@@ -35,7 +36,8 @@ class MyMotif:
             'graph': json_graph.node_link_data(self.graph),
             'neurons': neuron_json,
             'synapses': syn_export,
-            'edges': edges_export
+            'edges': edges_export,
+            'syn_clusters': self.syn_clusters
         }
 
         return motif
@@ -188,10 +190,37 @@ class MyMotif:
         self.synapses['soma_distance_post'] = post_synaptic_soma_distances
         print('Done. Took {} sec'.format(time.time() - t))
 
+    def cluster_synapse_group(self, group):
+        """
+        Hierarchical clustering of synapses. @n_clusters is the number of clusters to be generated
+        @return: list of cluster labels for each cluster hierarchy
+        """
+        from sklearn.cluster import AgglomerativeClustering
+
+        locations = group[['x_pre', 'y_pre', 'z_pre']].to_numpy()
+        n_clusters = int(len(locations) / 3)
+
+        # create empty numpy array
+        labels = np.empty((n_clusters - 1, len(locations)), dtype=object)
+
+        for i in range(1, n_clusters):
+            model = AgglomerativeClustering(n_clusters=i)
+            y = model.fit_predict(locations)
+            labels[i - 1] = y
+        return labels.tolist()
+
     def cluster_synapses(self):
         """
         Clusters synapses for each motif neuron based on their spatial location
-        @return:
+        @return: hierarchy of synapse clusters per group
         """
-        for neuron in self.neurons:
-            neuron.cluster_synapses()
+        # group synapses based on their pre and post synaptic neurons
+        groups = self.synapses.groupby(['bodyId_pre', 'bodyId_post'])
+        results = []
+        for ((pre_id, post_id), data) in groups:
+            pre_loc = data[['x_pre', 'y_pre', 'z_pre']].to_numpy()
+            post_loc = data[['x_post', 'y_post', 'z_post']].to_numpy()
+            labels = self.cluster_synapse_group(data)
+            results.append({"pre": int(pre_id), "post": int(post_id), "labels": labels, "pre_loc": pre_loc.tolist(), "post_loc": post_loc.tolist()})
+        self.syn_clusters = results
+
