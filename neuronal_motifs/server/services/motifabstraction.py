@@ -49,6 +49,8 @@ def compute_motif_data(body_ids, motif, token, prev_labels):
     data_access = DataAccess(token)
     neurons = data_access.get_neurons(body_ids)
     motif = MyMotif(neurons, motif_graph)
+    yield 'Compute Synapse Clusters'
+    motif.cluster_synapses()
     yield 'Computing Motif Path'
     motif.compute_motif_paths(prev_labels)
     yield 'Compute Synapse Trajectory'

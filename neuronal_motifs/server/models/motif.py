@@ -67,11 +67,11 @@ class MyMotif:
                                       post_neuron.id, post_neuron.skeleton_nk_graph, [post_x, post_y, post_z])
 
                 start_abs = compute_line_abstractions(edge.start_skel_graph, pre_neuron.skeleton.nodes, pre_node,
-                                                           pre_neuron.abstraction_center)
+                                                      pre_neuron.abstraction_center)
                 edge.set_start_abstraction(start_abs)
 
                 end_abs = compute_line_abstractions(edge.end_skel_graph, post_neuron.skeleton.nodes, post_node,
-                                                         post_neuron.abstraction_center)
+                                                    post_neuron.abstraction_center)
                 edge.set_end_abstraction(end_abs)
 
                 edges.append(edge)
@@ -188,82 +188,10 @@ class MyMotif:
         self.synapses['soma_distance_post'] = post_synaptic_soma_distances
         print('Done. Took {} sec'.format(time.time() - t))
 
-    def plot_dendrogram(self, model, **kwargs):
-
-        from scipy.cluster.hierarchy import dendrogram
-
-        # Create linkage matrix and then plot the dendrogram
-        # create the counts of samples under each node
-        counts = np.zeros(model.children_.shape[0])
-        n_samples = len(model.labels_)
-        for i, merge in enumerate(model.children_):
-            current_count = 0
-            for child_idx in merge:
-                if child_idx < n_samples:
-                    current_count += 1  # leaf node
-                else:
-                    current_count += counts[child_idx - n_samples]
-            counts[i] = current_count
-
-        linkage_matrix = np.column_stack(
-            [model.children_, model.distances_, counts]
-        ).astype(float)
-
-        # Plot the corresponding dendrogram
-        dendrogram(linkage_matrix, **kwargs)
-
-    def cluster_synapses(self, synapses, n):
-
-        from matplotlib import pyplot as plt
-        from sklearn.cluster import AgglomerativeClustering
-        import itertools
-        import math
-
+    def cluster_synapses(self):
         """
-        Creates n clusters of synapses
-        @param synapses: synapse pd.Dataframe
-        @param n: number of clusters
-        @return: predictions
+        Clusters synapses for each motif neuron based on their spatial location
+        @return:
         """
-
-        # {}
-
-        # desired data structure
-
-        # cluster level,    array of synapse objects
-        # 0:                [[{synapse1}], [{synapse2}], ...]
-        # 1:                [ [{synapse1}, {synapse2}], [{synapse3}, {synapse4}] ...]
-        # ...
-
-        synapse_locations = synapses[['x_pre', 'y_pre', 'z_pre']].to_numpy()
-        n_clusters = int(len(synapse_locations) / 2)
-        clustering = AgglomerativeClustering(n_clusters=len(synapse_locations)).fit(synapse_locations)
-
-        hierarchy = {}
-        ii = itertools.count(synapses.shape[0])
-        for x in clustering.children_:
-            hierarchy[next(ii)] = [x[0], x[1]]
-
-        levels = math.ceil(math.sqrt(len(synapse_locations)))
-
-        # # init dataframe with levels columns
-        # synapse_clusters = pd.DataFrame(columns=range(levels))
-        # for p in hierarchy.items():  # iterate over all elements
-        #     [c1, c2] = hierarchy[p]  # child 1 and child 2
-        #     # get first column of synapse_clusters
-        #     for i in range(levels):
-        #         column = synapse_clusters.iloc[:, i]
-        #         # check of i in first column
-        #         if c1 in column.values:
-        #             column_plus_1 = synapse_clusters.iloc[:, i + 1]
-        #             ## add to next level column
-
-        # for i in range(len(hierarchy)):
-        #     hierarchy[i]['node_id'] = i
-        # clusters = pd.DataFrame(data, columns=['Numbers'])
-
-        print(clustering)
-        self.plot_dendrogram(clustering, truncate_mode="level", p=8)
-        plt.xlabel("Number of points in node (or index of point if no parenthesis).")
-        plt.show()
-        print("hello world")
+        for neuron in self.neurons:
+            neuron.cluster_synapses()
