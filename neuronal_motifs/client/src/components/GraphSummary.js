@@ -84,7 +84,8 @@ function GraphSummary() {
           return (
             edge.data().source === sourceId && edge.data().target === targetId
           );
-        } else { // null
+        } else {
+          // null
           return false;
         }
       }
@@ -186,9 +187,9 @@ function GraphSummary() {
                       "curve-style": "bezier",
                       "target-arrow-shape": "triangle",
                       "line-color": (edge) =>
-                        isEdgeSameAsSketchPanel(edge) ? "red" : "",
+                        isEdgeSameAsSketchPanel(edge) ? "#ff1010" : "#9b9b9b",
                       "target-arrow-color": (edge) =>
-                        isEdgeSameAsSketchPanel(edge) ? "red" : "",
+                        isEdgeSameAsSketchPanel(edge) ? "#ff1010" : "#9b9b9b",
                     },
                   },
                   // {
