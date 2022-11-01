@@ -1,10 +1,8 @@
-import math
 import time
 
 import navis
 import pandas as pd
 from networkx.readwrite import json_graph
-import numpy as np
 
 from models.edge import NodeLink3DEdge, compute_line_abstractions
 from utils.data_conversion import synapse_array_to_object, edges_to_json
@@ -114,7 +112,6 @@ class MyMotif:
             incoming_synapses = neuron.incoming_synapses.loc[neuron.incoming_synapses['bodyId_pre'].isin(incoming_ids)]
             synapses = pd.concat([outgoing_synapses, incoming_synapses], ignore_index=True, sort=False)
             all_synapses.append(synapses)
-            # self.cluster_synapses(synapses, 5)
             neuron.set_motif_synapses(synapses)
         self.synapses = pd.concat(all_synapses)
 
