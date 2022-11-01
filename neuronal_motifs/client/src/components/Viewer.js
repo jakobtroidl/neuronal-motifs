@@ -239,6 +239,17 @@ function getLineName(synapse) {
   return "line-" + synapse.pre + "-" + synapse.post;
 }
 
+function getSynapseNameFromLocations(pre_loc, post_loc, flipped = false) {
+  let pre = pre_loc[0] + "-" + pre_loc[1] + "-" + pre_loc[2];
+  let post = post_loc[0] + "-" + post_loc[1] + "-" + post_loc[2];
+
+  if (flipped) {
+    return "syn-" + post + "-" + pre;
+  } else {
+    return "syn-" + pre + "-" + post;
+  }
+}
+
 function getSynapseName(synapse, flipped = false) {
   let pre_loc = synapse.pre.x + "-" + synapse.pre.y + "-" + synapse.pre.z;
   let post_loc = synapse.post.x + "-" + synapse.post.y + "-" + synapse.post.z;
@@ -250,13 +261,16 @@ function getSynapseName(synapse, flipped = false) {
   }
 }
 
-function getSynapseIds(synapse) {
-  return "syn-" + synapse.pre_id + "-" + synapse.post_id;
+function getSynapseIds(pre_id, post_id) {
+  return "syn-" + pre_id + "-" + post_id;
 }
 
 function addSynapse(
   scene,
-  synapse,
+  pre_id,
+  post_id,
+  pre_syn_location,
+  post_syn_location,
   color,
   motif,
   setDisplayTooltip,
@@ -265,9 +279,17 @@ function addSynapse(
   onClickHighlightEdgesAndSynapses
 ) {
   // create a sphere shape
-  let name_variant1 = getSynapseName(synapse, false);
-  let name_variant2 = getSynapseName(synapse, true);
-  let neuron_ids = getSynapseIds(synapse);
+  let name_variant1 = getSynapseNameFromLocations(
+    pre_syn_location,
+    post_syn_location,
+    false
+  );
+  let name_variant2 = getSynapseNameFromLocations(
+    pre_syn_location,
+    post_syn_location,
+    true
+  );
+  let neuron_ids = getSynapseIds(pre_id, post_id);
   if (
     !scene.getObjectByName(name_variant1) &&
     !scene.getObjectByName(name_variant2)
@@ -277,17 +299,17 @@ function addSynapse(
     let mesh = new THREE.Mesh(geometry, material);
     mesh.neuron_ids = neuron_ids;
     mesh.name = name_variant1;
-    mesh.position.x = (synapse.post.x + synapse.pre.x) / 2.0;
-    mesh.position.y = (synapse.post.y + synapse.pre.y) / 2.0;
-    mesh.position.z = (synapse.post.z + synapse.pre.z) / 2.0;
+    mesh.position.x = (post_syn_location[0] + pre_syn_location[0]) / 2.0;
+    mesh.position.y = (post_syn_location[1] + pre_syn_location[1]) / 2.0;
+    mesh.position.z = (post_syn_location[2] + pre_syn_location[2]) / 2.0;
     mesh.motifs = [motif];
     mesh.highlighted = false;
 
     mesh.addEventListener("mouseover", (event) => {
       setDisplayTooltip(true);
       setTooltipInfo({
-        pre_soma_dist: synapse.pre_soma_dist,
-        post_soma_dist: synapse.post_soma_dist,
+        pre_soma_dist: 0.0,
+        post_soma_dist: 0.0, // TODO fix this
         event: event,
       });
       document.body.style.cursor = "pointer";
@@ -326,29 +348,74 @@ function addSynapse(
     return mesh;
   }
 }
+function getSynapseClusterLabels(syn_idx, labels) {
+  return [];
+}
 
 function addSynapses(
-  synapses,
+  motif,
   setDisplayTooltip,
   setTooltipInfo,
   scene,
   interactionManager,
-  motif,
   onClickHighlightEdgesAndSynapses
 ) {
   console.log("motif: ", motif);
-  synapses.forEach((syn) => {
-    let mesh = addSynapse(
-      scene,
-      syn,
-      Color.orange,
-      motif,
-      setDisplayTooltip,
-      setTooltipInfo,
-      interactionManager,
-      onClickHighlightEdgesAndSynapses
-    );
+  console.log("interactionManager: ", interactionManager);
+
+  let default_color = "#797979";
+
+  let cluster_colors = [
+    "#ff0000",
+    "#00fff6",
+    "#ce00ff",
+    "#18ff00",
+    "#5e206b",
+    "#37ec0f",
+    "#008000",
+    "#0000ff",
+    "#4b0082",
+    "#ee82ee",
+  ];
+
+  let level = 4;
+
+  let synapses = motif.syn_clusters;
+
+  synapses.forEach((connection, i) => {
+    connection.pre_loc.forEach((pre_syn_location, j) => {
+      let color = default_color;
+      if (connection.labels.length > level) {
+        color = cluster_colors[connection.labels[level][j]];
+      }
+      addSynapse(
+        scene,
+        connection.pre_id,
+        connection.post_id,
+        pre_syn_location,
+        connection.post_loc[j],
+        color,
+        motif,
+        setDisplayTooltip,
+        setTooltipInfo,
+        interactionManager,
+        onClickHighlightEdgesAndSynapses
+      );
+    });
   });
+
+  // synapses.forEach((syn) => {
+  //   let mesh = addSynapse(
+  //     scene,
+  //     syn,
+  //     Color.orange,
+  //     motif,
+  //     setDisplayTooltip,
+  //     setTooltipInfo,
+  //     interactionManager,
+  //     onClickHighlightEdgesAndSynapses
+  //   );
+  // });
 }
 
 function addLights(scene) {
@@ -1161,16 +1228,12 @@ function Viewer() {
       //addAbstractionCenters(motif, context, scene, interactionManager);
 
       addSynapses(
-        motif.synapses,
+        motif,
         setDisplayTooltip,
         setTooltipInfo,
         scene,
         interactionManager,
-        motif,
-        // highlightEdgesAndSynapses,
         onClickHighlightEdgesAndSynapses
-        // onMouseoverHighlightSynapses,
-        // onMouseoutHighlightSynapses
       );
 
       let level = getAbstractionLevel();
