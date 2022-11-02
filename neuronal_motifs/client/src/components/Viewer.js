@@ -384,17 +384,17 @@ function addSynapses(
 
   synapses.forEach((connection, i) => {
     connection.pre_loc.forEach((pre_syn_location, j) => {
-      let color = default_color;
-      if (connection.labels.length > level) {
-        color = cluster_colors[connection.labels[level][j]];
-      }
+      // let color = default_color;
+      // if (connection.labels.length > level) {
+      //   color = cluster_colors[connection.labels[level][j]];
+      // }
       addSynapse(
         scene,
         connection.pre_id,
         connection.post_id,
         pre_syn_location,
         connection.post_loc[j],
-        color,
+        Color.orange,
         motif,
         setDisplayTooltip,
         setTooltipInfo,
