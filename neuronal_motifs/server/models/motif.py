@@ -198,14 +198,25 @@ class MyMotif:
         locations = group[['x_pre', 'y_pre', 'z_pre']].to_numpy()
         n_clusters = int(len(locations) / 3)
 
-        # create empty numpy array
-        labels = np.empty((n_clusters - 1, len(locations)), dtype=object)
+        clusters_per_synapse = {int(idx): [] for idx in range(0, len(locations))}
+        synapses_per_cluster = []
 
         for i in range(1, n_clusters):
             model = AgglomerativeClustering(n_clusters=i)
             y = model.fit_predict(locations)
-            labels[i - 1] = y
-        return labels.tolist()
+
+            # determine which clusters each synapse belongs to
+            for j in range(0, y.size):
+                clusters_per_synapse[j].append(int(y[j]))
+
+            # for each cluster, which synapses belong to it
+            cluster_indices = {}
+            for j in np.unique(y):
+                indices = np.where(y == j)[0]
+                cluster_indices[int(j)] = indices.tolist()
+            synapses_per_cluster.append(cluster_indices)
+
+        return synapses_per_cluster, clusters_per_synapse
 
     def cluster_synapses(self):
         """
@@ -218,7 +229,9 @@ class MyMotif:
         for ((pre_id, post_id), data) in groups:
             pre_loc = data[['x_pre', 'y_pre', 'z_pre']].to_numpy()
             post_loc = data[['x_post', 'y_post', 'z_post']].to_numpy()
-            labels = self.cluster_synapse_group(data)
-            results.append({"pre": int(pre_id), "post": int(post_id), "labels": labels, "pre_loc": pre_loc.tolist(), "post_loc": post_loc.tolist()})
-        self.syn_clusters = results
+            synapses_per_cluster, clusters_per_synapse = self.cluster_synapse_group(data)
 
+            results.append({"pre": int(pre_id), "post": int(post_id), "synapses_per_cluster": synapses_per_cluster,
+                            "clusters_per_synapse": clusters_per_synapse, "pre_loc": pre_loc.tolist(),
+                            "post_loc": post_loc.tolist()})
+        self.syn_clusters = results
