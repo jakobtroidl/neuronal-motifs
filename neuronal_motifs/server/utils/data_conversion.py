@@ -4,8 +4,8 @@ import tempfile
 from pathlib import Path
 
 import networkx as nx
-from scipy.spatial import KDTree
 from neuprint import fetch_all_rois
+from scipy.spatial import KDTree
 
 
 def get_cache_filename(ids):
@@ -111,7 +111,13 @@ def nodes_and_edges_to_motif_string(motif):
         node_str = str(node['label']) + '.status = "Traced" \n'
         if 'properties' in node and node['properties'] is not None:
             for prop in list(node['properties'].items()):
-                if type(prop[1]) == bool or type(prop[1]) == int or type(prop[1]) == float:
+                # Special Handling for Wildcard Type Fields
+                if prop[0] == 'type' and type(prop[1]) == str and prop[1].endswith('*'):
+                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] contains " + str(prop[1])[:-1] + '\n'
+                elif prop[0] == 'type' and '$ne' in prop[1] and prop[1]['$ne'].endswith('*'):
+                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] !contains " + '"' + str(
+                        prop[1]['$ne'])[:-1] + '"' + '\n'
+                elif type(prop[1]) == bool or type(prop[1]) == int or type(prop[1]) == float:
                     node_str += str(node['label']) + "['" + str(prop[0]) + "'] = " + str(prop[1]) + '\n'
                 elif type(prop[1]) == str:
                     node_str += str(node['label']) + "['" + str(prop[0]) + "'] = " + '"' + str(prop[1]) + '"' + '\n'
@@ -120,7 +126,8 @@ def nodes_and_edges_to_motif_string(motif):
                 elif '$gt' in prop[1]:
                     node_str += str(node['label']) + "['" + str(prop[0]) + "'] > " + str(prop[1]['$gt']) + '\n'
                 elif '$ne' in prop[1]:
-                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] != " + '"' + str(prop[1]['$ne']) + '"' + '\n'
+                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] != " + '"' + str(
+                        prop[1]['$ne']) + '"' + '\n'
         output += node_str
     return output
 
