@@ -20,7 +20,6 @@ import PropTypes from "prop-types";
 import SelectionTable from "./SelectionTable";
 import SettingsPanel from "./SettingsPanel";
 import { getAuthToken } from "../utils/authentication";
-import { mapQueryResult } from "../utils/rendering";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -92,7 +91,13 @@ function MotifPanel() {
   useEffect(() => {
     if (searchedMotifs && searchedMotifs?.length > 0) {
       let rows = searchedMotifs.map((motif, j) => {
-        return mapQueryResult(motif, j);
+        let motifs = Object.entries(motif).map(([k, v], i) => {
+          return { ...v, nodeKey: k };
+        });
+        motifs.sort((a, b) => {
+          return a.nodeKey.localeCompare(b.nodeKey);
+        });
+        return { name: "Motif Instance " + j, neurons: motifs };
       });
       setResultRows(rows);
     }
@@ -122,10 +127,7 @@ function MotifPanel() {
             icon={<SearchIcon />}
           />
           {enableAbsMotifCountInfo ? (
-            <InfoButton
-              text={context.relativeMotifCount + " %"}
-              color="secondary"
-            />
+            <InfoButton text="Medium" color="secondary" />
           ) : null}
           {context.showWarning ? (
             <InfoButton color="error" icon={<PriorityHighIcon />} />
@@ -163,7 +165,7 @@ function MotifPanel() {
           </div>
         </div>
 
-       <Box sx={{ width: "100%", borderBottom: 1, borderColor: "divider" }}>
+        <Box sx={{ width: "100%", borderBottom: 1, borderColor: "divider" }}>
           <Tabs
             value={selectedTab}
             onChange={handleTabChange}
