@@ -1062,7 +1062,7 @@ function SketchPanel() {
             <Tooltip title="Import Motif" placement="right">
               <IconButton
                 value="edit"
-                color={mouseState === "move" ? "primary" : "default"}
+                color={"default"}
                 onClick={() => importMotif()}
               >
                 <ArrowBackIosNewIcon fontSize="small" />
@@ -1071,7 +1071,7 @@ function SketchPanel() {
             <Tooltip title="Export Motif" placement="right">
               <IconButton
                 value="edit"
-                color={mouseState === "move" ? "primary" : "default"}
+                color={"default"}
                 onClick={() => exportMotif()}
               >
                 <ArrowForwardIosIcon fontSize="small" />
