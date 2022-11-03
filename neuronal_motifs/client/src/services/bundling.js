@@ -1,4 +1,126 @@
 import * as THREE from "three";
+import { Color } from "paper";
+
+function getPointsByIndices(points, indices) {
+  if (indices.constructor === Array) {
+    let toVector3 = points.map((p, i) => {
+      return new THREE.Vector3().fromArray(p);
+    });
+
+    return toVector3.filter((p, i) => {
+      return indices.includes(i);
+    });
+  } else {
+    let p = points[indices];
+    return new THREE.Vector3().fromArray(p);
+  }
+}
+
+function addSphere(x, y, z, color) {
+  let geometry = new THREE.SphereGeometry(100, 16, 16);
+  let material = new THREE.MeshPhongMaterial({ color: color });
+  let mesh = new THREE.Mesh(geometry, material);
+  mesh.name = "debug-sphere";
+  mesh.position.x = x;
+  mesh.position.y = y;
+  mesh.position.z = z;
+
+  return mesh;
+}
+
+export function hierarchicalBundling(
+  start_points,
+  end_points,
+  clusters_per_synapse,
+  synapses_per_cluster,
+  scene
+) {
+  let num_clusters = synapses_per_cluster.length;
+  let control_points = [];
+  synapses_per_cluster.forEach((hierarchy, i) => {
+    let mean_lines = {};
+    for (const [j, syn_indices] of Object.entries(hierarchy)) {
+      let start = getPointsByIndices(start_points, syn_indices);
+      let end = getPointsByIndices(end_points, syn_indices);
+
+      let mean_start = avg(start);
+      let mean_end = avg(end);
+      let direction = mean_end.sub(mean_start);
+      let start_control = line(
+        mean_start,
+        direction,
+        ((num_clusters - i) / num_clusters) * 0.2
+      );
+      let end_control = line(
+        mean_start,
+        direction,
+        1.0 - ((num_clusters - i) / num_clusters) * 0.2
+      );
+      mean_lines[j] = {
+        start: start_control,
+        end: end_control,
+      };
+    }
+    control_points.push(mean_lines);
+  });
+
+  let lines = [];
+
+  for (const [i, clusters] of Object.entries(clusters_per_synapse)) {
+    let control_samples = [];
+    // add location of postsynaptic site
+    clusters.forEach((cluster, hierarchy) => {
+      let points = control_points[hierarchy][cluster];
+
+      control_samples.unshift(points.start);
+      control_samples.push(points.end);
+
+      // if (i == 1) {
+      //   console.log("adding spheres");
+      //   let sphere1 = addSphere(
+      //     points.start.x,
+      //     points.start.y,
+      //     points.start.z,
+      //     0x000fff
+      //   );
+      //   let sphere2 = addSphere(
+      //     points.end.x,
+      //     points.end.y,
+      //     points.end.z,
+      //     0x888ccc
+      //   );
+      //   scene.add(sphere1);
+      //   scene.add(sphere2);
+      // }
+    });
+
+    control_samples.unshift(getPointsByIndices(start_points, i)); // add location of presynaptic site
+    control_samples.push(getPointsByIndices(end_points, i));
+
+    const curve = new THREE.CatmullRomCurve3(
+      control_samples,
+      false,
+      "catmullrom",
+      0.0
+    );
+
+    const points = curve.getPoints(1000);
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+    const material = new THREE.LineBasicMaterial({
+      color: 0x222222,
+      linewidth: 1,
+    });
+
+    // Create the final object to add to the scene
+    let spline = new THREE.Line(geometry, material);
+    spline.visible = true;
+    spline.name = "test-line";
+    lines.push(spline);
+  }
+
+  return lines;
+}
 
 export function bundle(start_points, end_points, strength, color) {
   /**
@@ -93,11 +215,8 @@ function scale(x) {
 function line(start, direction, x) {
   let dir = new THREE.Vector3();
   dir.copy(direction);
-
   let s = new THREE.Vector3();
   s.copy(start);
-
-  //console.log('----------------');
   return s.add(dir.multiplyScalar(x));
 }
 

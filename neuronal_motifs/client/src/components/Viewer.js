@@ -4,6 +4,7 @@ import {
   bundle,
   getClusterLineName,
   clusterSynapses,
+  hierarchicalBundling,
 } from "../services/bundling";
 import ArrowTooltips from "./ArrowTooltips";
 import { AppContext } from "../contexts/GlobalContext";
@@ -1025,6 +1026,19 @@ function Viewer() {
     return context.abstractionLevel;
   }
 
+  function transformPoints(points, direction) {
+    /**
+     * adds a vector to a given array of spatial points ([x, y, z])
+     */
+    return points.map((p) => {
+      return [
+        p[0] + direction[0] * factor,
+        p[1] + direction[1] * factor,
+        p[2] + direction[2] * factor,
+      ];
+    });
+  }
+
   function getAbstractionBoundary(sharkViewerInstance) {
     let level = getAbstractionLevel();
     let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
@@ -1044,6 +1058,59 @@ function Viewer() {
       let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
 
       let directions = getTranslationVectors(neurons.length);
+
+      if (
+        level > motif_path_threshold &&
+        prevSliderValue < motif_path_threshold
+      ) {
+        // move neurons
+        neurons.forEach((neuron, i) => {
+          neuron.translateX(directions[i][0] * factor);
+          neuron.translateY(directions[i][1] * factor);
+          neuron.translateZ(directions[i][2] * factor);
+        });
+      }
+
+      if (level > motif_path_threshold) {
+        motif.syn_clusters.forEach((connection, i) => {
+          let [pre_neuron, pre_neuron_number] = getNeuronListId(
+            neurons,
+            connection.pre
+          );
+          let [post_neuron, post_neuron_number] = getNeuronListId(
+            neurons,
+            connection.post
+          );
+
+          let pre_loc_transformed = transformPoints(
+            connection.pre_loc,
+            directions[pre_neuron_number]
+          );
+          let post_loc_transformed = transformPoints(
+            connection.post_loc,
+            directions[post_neuron_number]
+          );
+
+          console.log("pre_loc_transformed: ", pre_loc_transformed);
+          console.log("post_loc_transformed: ", post_loc_transformed);
+
+          let lines = hierarchicalBundling(
+            pre_loc_transformed,
+            post_loc_transformed,
+            connection.clusters_per_synapse,
+            connection.synapses_per_cluster,
+            scene
+          );
+
+          console.log("lines", lines);
+
+          // scene.add(lines[0]);
+
+          lines.forEach((line) => {
+            scene.add(line);
+          });
+        });
+      }
 
       // let bound = 0.08;
 
