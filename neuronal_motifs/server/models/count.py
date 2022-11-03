@@ -19,8 +19,8 @@ def get_random(motif):
     hemibrain_nodes = 21_740  # number of neurons in hemibrain
     hemibrain_edges = 4_000_000  # number of edges in hemibrain
 
-    lamda = 1.0
-    p = 0.5
+    lamda = 0.5
+    p = hemibrain_edges / ((hemibrain_nodes - 1) * hemibrain_nodes)
 
     binom = scipy.special.binom(hemibrain_nodes, num_nodes)
 
@@ -34,10 +34,15 @@ def get_relative(motif):
     @return:
     """
 
-    absolute_count = get_absolute(motif)
-    random_count = get_random(motif)
+    absolute_count = int(get_absolute(motif))
+    random_count = int(get_random(motif))
 
-    return round((absolute_count / random_count - 1.0) * 100.0, 2)
+    print(f"abs: {absolute_count}")
+    print(f"ran: {random_count}")
+
+    if absolute_count == 0:
+        return 0
+    return random_count / absolute_count
 
 
 def get_absolute(motif):
