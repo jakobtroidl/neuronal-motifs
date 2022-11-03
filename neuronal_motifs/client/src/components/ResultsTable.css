@@ -7,7 +7,7 @@
     background-color: rgba(255, 255, 255, 0.5);
     width: inherit;
     height: 100%;
-    max-height: 50vh;
+    max-height: inherit;
     overflow-y: scroll;
     z-index: 1;
 }

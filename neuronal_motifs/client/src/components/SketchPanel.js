@@ -14,6 +14,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faFileExport, faFileImport, faHand} from "@fortawesome/free-solid-svg-icons";
 import {Utils as QbUtils} from "react-awesome-query-builder";
 import axios from "axios";
+import { getNodeKeyFromId } from "../utils/edge";
 
 function SketchPanel() {
     const sketchPanelId = "sketch-panel";

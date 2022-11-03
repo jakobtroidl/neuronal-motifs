@@ -30,14 +30,22 @@ class DataAccess:
         @return: Neuron skeleton (pd.DataFrame)
         """
         neuron = None
-        storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
-        blob = self.bucket.blob(str(storage_path))
-        if blob.exists():
-            pkl_in = blob.download_as_bytes()
-            try:
-                neuron = pkl.loads(pkl_in)
-            except EOFError:
-                neuron = None
+        if Params.load_cache_from_gcloud:
+            storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
+            blob = self.bucket.blob(str(storage_path))
+            if blob.exists():
+                pkl_in = blob.download_as_bytes()
+                try:
+                    neuron = pkl.loads(pkl_in)
+                except EOFError:
+                    neuron = None
+        else:
+            path = Params.root / "cache" / "data" / "neurons" / (str(neuron_id) + ".pkl")
+            print(path, file_exists(path))
+            if file_exists(path):
+                with open(path, 'rb') as f:
+                    neuron = pkl.load(f)
+                    f.close()
         return neuron
 
     def dump_neurons_to_cache(self, neurons):

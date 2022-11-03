@@ -24,17 +24,22 @@ if __name__ == '__main__':
         for local_path in tqdm(glob(base_path + "*.pkl"), desc="Upload cache to GCloud"):
             fname = str(local_path).split('/')[-1]
 
-            storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / fname
+            # storage_path = Params.storage_root / "server" / "cache" / "data" / "neurons" / fname
 
-            blob = bucket.blob(str(storage_path))
-            if not blob.exists():
-                with open(local_path, 'rb') as f:
+            # blob = bucket.blob(str(storage_path))
+            # if not blob.exists():
+            with open(local_path, 'rb') as f:
+                try:
                     data = renamed_load(f)
-                    f.close()
+                except EOFError:
+                    print(local_path)
+                    pass
+                f.close()
 
-                with open(local_path,'wb') as f:
-                    pickle.dump(data, f)
-                    blob.upload_from_filename(local_path)
+            with open(local_path,'wb') as f:
+                pickle.dump(data, f)
+                # blob.upload_from_filename(local_path)
+                f.close()
 
 
 
