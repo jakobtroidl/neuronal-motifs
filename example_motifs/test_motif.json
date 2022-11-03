@@ -1,0 +1,133 @@
+{
+  "nodes": [
+    {
+      "label": "A",
+      "properties": {
+        "CRE(L)": true
+      },
+      "index": 0,
+      "position": [
+        "Point",
+        47.20313,
+        332.50781
+      ],
+      "tree": {
+        "id": "ab9aa88a-cdef-4012-b456-71825ad46555",
+        "type": "group",
+        "path": [
+          "ab9aa88a-cdef-4012-b456-71825ad46555"
+        ],
+        "children1": {
+          "bb9aab88-89ab-4cde-b012-31825ad469f1": {
+            "type": "rule",
+            "id": "bb9aab88-89ab-4cde-b012-31825ad469f1",
+            "properties": {
+              "field": "CRE(L)",
+              "operator": "equal",
+              "value": [
+                true
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "boolean"
+              ]
+            },
+            "path": [
+              "ab9aa88a-cdef-4012-b456-71825ad46555",
+              "bb9aab88-89ab-4cde-b012-31825ad469f1"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "B",
+      "properties": null,
+      "index": 1,
+      "position": [
+        "Point",
+        130.20313,
+        64.50781
+      ]
+    },
+    {
+      "label": "C",
+      "properties": null,
+      "index": 2,
+      "position": [
+        "Point",
+        243.20313,
+        338.50781
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "label": "A -> C",
+      "properties": {
+        "weight": {
+          "$gt": 20
+        }
+      },
+      "index": 0,
+      "indices": [
+        0,
+        2
+      ],
+      "tree": {
+        "id": "aa8ba999-89ab-4cde-b012-31825ad47a83",
+        "type": "group",
+        "path": [
+          "aa8ba999-89ab-4cde-b012-31825ad47a83"
+        ],
+        "children1": {
+          "aa9abaab-0123-4456-b89a-b1825ad47e87": {
+            "type": "rule",
+            "id": "aa9abaab-0123-4456-b89a-b1825ad47e87",
+            "properties": {
+              "field": "weight",
+              "operator": "greater",
+              "value": [
+                20
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "number"
+              ]
+            },
+            "path": [
+              "aa8ba999-89ab-4cde-b012-31825ad47a83",
+              "aa9abaab-0123-4456-b89a-b1825ad47e87"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "A -> B",
+      "properties": null,
+      "index": 1,
+      "indices": [
+        0,
+        1
+      ],
+      "tree": null
+    },
+    {
+      "label": "B -> C",
+      "properties": null,
+      "index": 2,
+      "indices": [
+        1,
+        2
+      ],
+      "tree": null
+    }
+  ]
+}
