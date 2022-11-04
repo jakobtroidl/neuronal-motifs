@@ -155,8 +155,6 @@ function SketchPanel() {
           return edge;
         }
       });
-      // delete adjacent edges
-      let newEdges = edges.filter((edge) => !adjacentEdges.includes(edge));
 
       // delete edges from canvas
       adjacentEdges.map((edge) => {
@@ -165,22 +163,43 @@ function SketchPanel() {
         edge.propertyLabel?.remove();
       });
 
-      // delete and rename
+      // delete node from canvas
+      const selectedNodeLabel = context.selectedSketchElement.label;
+      context.selectedSketchElement.circle.remove();
+      context.selectedSketchElement.circleGroup.remove();
+      context.setSelectedSketchElement(null);
+
+      // delete node and rename remaining nodes
       let newNodes = nodes
-        .filter((node) => node.label !== context.selectedSketchElement.label)
+        .filter((node) => node.label !== selectedNodeLabel)
         .map((node, i) =>
           renameCircle(
             node.circle,
             i,
             node.properties,
-            "tree" in node ? node.tree : null
+            "tree" in node ? node.tree : null,
+            node.label
           )
         );
 
-      // delete node from canvas
-      context.selectedSketchElement.circle.remove();
-      context.selectedSketchElement.circleGroup.remove();
-      context.setSelectedSketchElement(null);
+      const getNewNode = (previousLabel) =>
+        newNodes.find((node) => node.previousLabel === previousLabel);
+
+      // delete adjacent edges
+      let newEdges = edges
+        .filter((edge) => !adjacentEdges.includes(edge))
+        .map((edge) => {
+          let newFromNode = getNewNode(edge.fromNode.label);
+          let newToNode = getNewNode(edge.toNode.label);
+          let newNodeIndices = [
+            _.findLastIndex(newNodes, newFromNode),
+            _.findLastIndex(newNodes, newToNode),
+          ];
+
+          return renameEdge(newFromNode, newToNode, newNodeIndices, edge);
+        });
+
+      console.log(newEdges, newNodes);
 
       // reset edges and nodes
       setEdges(newEdges);
@@ -188,7 +207,31 @@ function SketchPanel() {
     }
   };
 
-  const renameCircle = (circle, index, properties = null, tree = null) => {
+  const renameEdge = (fromNode, toNode, nodeIndices, edge) => {
+    let tree = "tree" in edge ? edge.tree : null;
+    let edgeObj = {
+      ...edge,
+    };
+    edgeObj["fromNode"] = fromNode;
+    edgeObj["toNode"] = toNode;
+    edgeObj["indices"] = nodeIndices;
+    edgeObj["label"] = `${fromNode.label} -> ${toNode.label}`;
+    if (tree !== null) {
+      edgeObj["tree"] = QbUtils.loadTree(tree);
+    } else {
+      edgeObj["tree"] = tree;
+    }
+
+    return edgeObj;
+  };
+
+  const renameCircle = (
+    circle,
+    index,
+    properties = null,
+    tree = null,
+    previousLabel
+  ) => {
     circle.fillColor = context.neuronColors[index];
     let textPoint = [circle.position.x, circle.position.y + 7];
     let label = new paper.PointText({
@@ -206,6 +249,7 @@ function SketchPanel() {
       return {
         circle: circle,
         label: letter,
+        previousLabel: previousLabel,
         properties: properties,
         type: "node",
         circleGroup: circleGroup,
@@ -215,6 +259,7 @@ function SketchPanel() {
       return {
         circle: circle,
         label: letter,
+        previousLabel: previousLabel,
         properties: properties,
         type: "node",
         circleGroup: circleGroup,
@@ -777,7 +822,7 @@ function SketchPanel() {
   // Checks for edges going opposite to each other and offsets them so they are distinguishable
   useEffect(() => {
     if (!edges) return;
-    console.log("Edges", edges);
+    console.log("Edges", edges, nodes);
     edges.forEach((e, i) => {
       let oppositeEdge = _.findIndex(edges, (oppE) => {
         return _.isEqual(oppE.indices, [e.indices[1], e.indices[0]]);
