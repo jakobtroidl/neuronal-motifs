@@ -48,6 +48,12 @@ function SketchPanel() {
     return (await axios.get(url)).data;
   };
 
+  const getRelativeMotifCount = async (motif) => {
+    // get request to backend to get motif count
+    let url = `http://${process.env.REACT_APP_API_URL}/rel_count/motif=${motif}`;
+    return (await axios.get(url)).data;
+  };
+
   const calculateNewPosition = (dimension, position) => {
     let newX = (canvasDimension.width / dimension.width) * position[1];
     let newY = (canvasDimension.height / dimension.height) * position[2];
@@ -944,6 +950,13 @@ function SketchPanel() {
 
     const count = await getMotifCount(JSON.stringify(encodedMotif));
     context.setAbsMotifCount(count);
+
+    // get relative count of motif in network
+    const relative_count = await getRelativeMotifCount(
+      JSON.stringify(encodedMotif)
+    );
+    context.setRelativeMotifCount(relative_count);
+
     context.setMotifQuery(encodedMotif);
   }, [nodes, edges]);
 
