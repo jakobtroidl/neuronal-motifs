@@ -49,12 +49,13 @@ export function hierarchicalBundling(
       let start_control = line(
         mean_start,
         direction,
-        ((num_clusters - i) / num_clusters) * 0.2
+        (Math.max(num_clusters - Math.pow(i, 1), 0.0) / num_clusters) * 0.2
       );
       let end_control = line(
         mean_start,
         direction,
-        1.0 - ((num_clusters - i) / num_clusters) * 0.2
+        1.0 -
+          (Math.max(num_clusters - Math.pow(i, 1), 0.0) / num_clusters) * 0.2
       );
       mean_lines[j] = {
         start: start_control,
