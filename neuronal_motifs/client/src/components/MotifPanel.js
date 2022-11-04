@@ -213,27 +213,28 @@ function MotifPanel() {
           </div>
         </div>
 
-        <Box sx={{ width: "100%" }}>
-          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-            <Tabs
-              value={selectedTab}
-              onChange={handleTabChange}
-              aria-label="basic tabs example"
-            >
-              <Tab label="Results" {...a11yProps(0)} />
-              <Tab label="Selection" {...a11yProps(1)} />
-              <Tab
-                label={
-                  <Badge color="primary" variant="dot" invisible={!showBadge()}>
-                    {" "}
-                    Settings{" "}
-                  </Badge>
-                }
-                {...a11yProps(2)}
-              />
-            </Tabs>
-          </Box>
-          <TabPanel value={selectedTab} index={0}>
+        <Box sx={{ width: "100%", borderBottom: 1, borderColor: "divider" }}>
+          <Tabs
+            value={selectedTab}
+            onChange={handleTabChange}
+            aria-label="basic tabs example"
+            flexContainer
+          >
+            <Tab label="Results" {...a11yProps(0)} />
+            <Tab label="Selection" {...a11yProps(1)} />
+            <Tab
+              label={
+                <Badge color="primary" variant="dot" invisible={!showBadge()}>
+                  {" "}
+                  Settings{" "}
+                </Badge>
+              }
+              {...a11yProps(2)}
+            />
+          </Tabs>
+        </Box>
+        <div className="result-section">
+          <TabPanel value={selectedTab} index={0} >
             {resultRows.length > 0 ? (
               <ResultsTable results={resultRows} />
             ) : (
@@ -251,7 +252,7 @@ function MotifPanel() {
             <SettingsPanel />
             {/*<span className="hint">This is where the settings will go </span>*/}
           </TabPanel>
-        </Box>
+        </div>
       </div>
     </div>
   );

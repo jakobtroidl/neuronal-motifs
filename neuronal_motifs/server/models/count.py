@@ -1,12 +1,11 @@
 import pickle as pkl
 from params import Params
 import networkx as nx
-import scipy.special
 
 from utils import nodes_and_edges_to_networkx
 
 
-def get_random(motif):
+def get(motif):
     """
     Gets the expected number of occurrences of a given motif in a random network.
     @param motif: motif
