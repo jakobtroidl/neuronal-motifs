@@ -164,7 +164,6 @@ function MotifPanel() {
       <div className="form">
         <div className="handle">
           <DragHandleIcon />
-
           <ThemeProvider theme={Color.theme}>
             <Tooltip title={parseButtonTooltip()} arrow placement="right">
               <span>
@@ -234,7 +233,7 @@ function MotifPanel() {
           </Tabs>
         </Box>
         <div className="result-section">
-          <TabPanel value={selectedTab} index={0} >
+          <TabPanel value={selectedTab} index={0}>
             {resultRows.length > 0 ? (
               <ResultsTable results={resultRows} />
             ) : (

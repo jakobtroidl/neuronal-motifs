@@ -8,7 +8,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import paper from "paper";
 import { AppContext } from "../contexts/GlobalContext";
 import _ from "lodash";
-import { Grid, IconButton, Popover, Tooltip } from "@mui/material";
+import { Grid, IconButton, Popover, Tooltip, Button } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHand } from "@fortawesome/free-solid-svg-icons";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
@@ -122,6 +122,149 @@ function SketchPanel() {
     // Remove all edges and nodes
     setNodes([]);
     setEdges([]);
+  };
+
+  const deleteSketchElement = () => {
+    // edges
+    if (
+      context.selectedSketchElement &&
+      context.selectedSketchElement.type === "edge"
+    ) {
+      let newEdges = edges.filter(
+        (edge) => edge.label !== context.selectedSketchElement.label
+      );
+      context.selectedSketchElement.edgeLine.remove();
+      context.selectedSketchElement.lineGroup.remove();
+      context.selectedSketchElement.propertyLabel?.remove();
+      context.setSelectedSketchElement(null);
+      setEdges(newEdges);
+    }
+
+    // nodes
+    if (
+      context.selectedSketchElement &&
+      context.selectedSketchElement.type === "node"
+    ) {
+      // find adjacent edges
+      let nodeLabel = context.selectedSketchElement.label;
+      let adjacentEdges = edges.filter((edge) => {
+        if (
+          edge.fromNode.label === nodeLabel ||
+          edge.toNode.label === nodeLabel
+        ) {
+          return edge;
+        }
+      });
+
+      // delete edges from canvas
+      adjacentEdges.map((edge) => {
+        edge.edgeLine.remove();
+        edge.lineGroup.remove();
+        edge.propertyLabel?.remove();
+      });
+
+      // delete node from canvas
+      const selectedNodeLabel = context.selectedSketchElement.label;
+      context.selectedSketchElement.circle.remove();
+      context.selectedSketchElement.circleGroup.remove();
+      context.setSelectedSketchElement(null);
+
+      // delete node and rename remaining nodes
+      let newNodes = nodes
+        .filter((node) => node.label !== selectedNodeLabel)
+        .map((node, i) =>
+          renameCircle(
+            node.circle,
+            i,
+            node.properties,
+            "tree" in node ? node.tree : null,
+            node.label
+          )
+        );
+
+      const getNewNode = (previousLabel) =>
+        newNodes.find((node) => node.previousLabel === previousLabel);
+
+      // delete adjacent edges
+      let newEdges = edges
+        .filter((edge) => !adjacentEdges.includes(edge))
+        .map((edge) => {
+          let newFromNode = getNewNode(edge.fromNode.label);
+          let newToNode = getNewNode(edge.toNode.label);
+          let newNodeIndices = [
+            _.findLastIndex(newNodes, newFromNode),
+            _.findLastIndex(newNodes, newToNode),
+          ];
+
+          return renameEdge(newFromNode, newToNode, newNodeIndices, edge);
+        });
+
+      console.log(newEdges, newNodes);
+
+      // reset edges and nodes
+      setEdges(newEdges);
+      setNodes(newNodes);
+    }
+  };
+
+  const renameEdge = (fromNode, toNode, nodeIndices, edge) => {
+    let tree = "tree" in edge ? edge.tree : null;
+    let edgeObj = {
+      ...edge,
+    };
+    edgeObj["fromNode"] = fromNode;
+    edgeObj["toNode"] = toNode;
+    edgeObj["indices"] = nodeIndices;
+    edgeObj["label"] = `${fromNode.label} -> ${toNode.label}`;
+    if (tree !== null) {
+      edgeObj["tree"] = QbUtils.loadTree(tree);
+    } else {
+      edgeObj["tree"] = tree;
+    }
+
+    return edgeObj;
+  };
+
+  const renameCircle = (
+    circle,
+    index,
+    properties = null,
+    tree = null,
+    previousLabel
+  ) => {
+    circle.fillColor = context.neuronColors[index];
+    let textPoint = [circle.position.x, circle.position.y + 7];
+    let label = new paper.PointText({
+      point: textPoint,
+      justification: "center",
+      fillColor: "white",
+      font: "Roboto",
+      fontSize: 20,
+    });
+    let letter = String.fromCharCode(65 + index);
+    label.content = letter;
+    let circleGroup = new paper.Group([circle, label]);
+
+    if (tree !== null) {
+      return {
+        circle: circle,
+        label: letter,
+        previousLabel: previousLabel,
+        properties: properties,
+        type: "node",
+        circleGroup: circleGroup,
+        tree: QbUtils.loadTree(tree),
+      };
+    } else {
+      return {
+        circle: circle,
+        label: letter,
+        previousLabel: previousLabel,
+        properties: properties,
+        type: "node",
+        circleGroup: circleGroup,
+      };
+    }
   };
 
   const addCircle = (point, node) => {
@@ -679,7 +822,7 @@ function SketchPanel() {
   // Checks for edges going opposite to each other and offsets them so they are distinguishable
   useEffect(() => {
     if (!edges) return;
-    console.log("Edges");
+    console.log("Edges", edges, nodes);
     edges.forEach((e, i) => {
       let oppositeEdge = _.findIndex(edges, (oppE) => {
         return _.isEqual(oppE.indices, [e.indices[1], e.indices[0]]);
@@ -958,6 +1101,28 @@ function SketchPanel() {
                   </span>
                 </Grid>
 
+                <Grid
+                  container
+                  className={"popover-grid"}
+                  direction="column"
+                  justifyContent="center"
+                  alignItems="flex-end"
+                  style={{
+                    position: "absolute",
+                    height: "40.75px",
+                    right: "110px",
+                  }}
+                  zIndex={3}
+                >
+                  <Button
+                    size="small"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => deleteSketchElement()}
+                  >
+                    Delete
+                  </Button>
+                </Grid>
+
                 <QueryBuilder />
               </Popover>
             )}
@@ -1038,7 +1203,7 @@ function SketchPanel() {
             <Tooltip title="Import Motif" placement="right">
               <IconButton
                 value="edit"
-                color={mouseState === "move" ? "primary" : "default"}
+                color={"default"}
                 onClick={() => importMotif()}
               >
                 <ArrowBackIosNewIcon fontSize="small" />
@@ -1047,7 +1212,7 @@ function SketchPanel() {
             <Tooltip title="Export Motif" placement="right">
               <IconButton
                 value="edit"
-                color={mouseState === "move" ? "primary" : "default"}
+                color={"default"}
                 onClick={() => exportMotif()}
               >
                 <ArrowForwardIosIcon fontSize="small" />
