@@ -13,7 +13,7 @@ export class Color {
   static theme = createTheme({
     palette: {
       stronger: {
-        main: "#c41d38",
+        main: "#b94759",
         contrastText: "#000000",
       },
       strong: {
