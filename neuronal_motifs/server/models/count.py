@@ -40,9 +40,9 @@ def get_relative(motif):
     print(f"abs: {absolute_count}")
     print(f"ran: {random_count}")
 
-    if absolute_count == 0:
-        return 0
-    return random_count / absolute_count
+    if random_count <= 1:
+        return 2
+    return 2 * (absolute_count / random_count) - 2
 
 
 def get_absolute(motif):

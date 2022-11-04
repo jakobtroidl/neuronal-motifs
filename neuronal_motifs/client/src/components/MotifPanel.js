@@ -7,7 +7,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import DragHandleIcon from "@mui/icons-material/DragHandle";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import Button from "@mui/material/Button";
-import { Badge, FormControl, TextField } from "@mui/material";
+import { Badge, FormControl, TextField, ThemeProvider } from "@mui/material";
 import _ from "lodash";
 import InfoButton from "./InfoButton";
 import { queryMotifs } from "../services/data";
@@ -20,6 +20,8 @@ import PropTypes from "prop-types";
 import SelectionTable from "./SelectionTable";
 import SettingsPanel from "./SettingsPanel";
 import { getAuthToken } from "../utils/authentication";
+import { Color } from "../utils/rendering";
+import Tooltip from "@mui/material/Tooltip";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -56,6 +58,7 @@ function MotifPanel() {
   const [resultRows, setResultRows] = useState([]);
   const [enableAbsMotifCountInfo, setEnableAbsMotifCountInfo] = useState(false);
   const [selectedTab, setSelectedTab] = React.useState(0);
+  const [countButtonColor, setCountButtonColor] = useState("neutral");
 
   const motifPanelId = "motif-panel-div";
   const context = useContext(AppContext);
@@ -87,6 +90,47 @@ function MotifPanel() {
       context.setLoadingMessage(null);
     }
   };
+
+  const getMotifCountAsString = () => {
+    if (context.absMotifCount) {
+      return context.absMotifCount.toLocaleString();
+    } else {
+      return "N/A";
+    }
+  };
+
+  const parseButtonTooltip = () => {
+    let exp = "";
+    if (countButtonColor === "neutral") {
+      exp = "Expressed as in random network";
+    } else if (countButtonColor === "weak") {
+      exp = "Under expressed";
+    } else if (countButtonColor === "strong") {
+      exp = "Over expressed";
+    } else if (countButtonColor === "stronger") {
+      exp = "Strongly over expressed";
+    } else if (countButtonColor === "weaker") {
+      exp = "Strongly under expressed";
+    }
+    return `${exp} in hemibrain`;
+  };
+
+  useEffect(() => {
+    let relCount = context.relativeMotifCount;
+    if (relCount >= 2.0) {
+      setCountButtonColor("stronger");
+    } else if (relCount > 0.5 && relCount < 2.0) {
+      setCountButtonColor("strong");
+    } else if (relCount >= -0.5 && relCount <= 0.5) {
+      setCountButtonColor("neutral");
+    } else if (relCount < -0.5 && relCount > -2.0) {
+      setCountButtonColor("weak");
+    } else if (relCount <= -2.0) {
+      setCountButtonColor("weaker");
+    } else {
+      setCountButtonColor("neutral");
+    }
+  }, [context.relativeMotifCount]);
 
   useEffect(() => {
     if (searchedMotifs && searchedMotifs?.length > 0) {
@@ -120,18 +164,19 @@ function MotifPanel() {
       <div className="form">
         <div className="handle">
           <DragHandleIcon />
-          <InfoButton
-            text={context.absMotifCount}
-            disabled={!enableAbsMotifCountInfo}
-            color="primary"
-            icon={<SearchIcon />}
-          />
-          {enableAbsMotifCountInfo ? (
-            <InfoButton
-              text={context.relativeMotifCount + " %"}
-              color="secondary"
-            />
-          ) : null}
+
+          <ThemeProvider theme={Color.theme}>
+            <Tooltip title={parseButtonTooltip()} arrow placement="right">
+              <span>
+                <InfoButton
+                  text={getMotifCountAsString()}
+                  disabled={!enableAbsMotifCountInfo}
+                  color={countButtonColor}
+                  icon={<SearchIcon />}
+                />
+              </span>
+            </Tooltip>
+          </ThemeProvider>
           {context.showWarning ? (
             <InfoButton color="error" icon={<PriorityHighIcon />} />
           ) : null}
