@@ -988,15 +988,15 @@ function Viewer() {
     return context.abstractionLevel;
   }
 
-  function transformPoints(points, direction) {
+  function transformPoints(points, direction, relPos) {
     /**
      * adds a vector to a given array of spatial points ([x, y, z])
      */
     return points.map((p) => {
       return [
-        p[0] + direction[0] * factor,
-        p[1] + direction[1] * factor,
-        p[2] + direction[2] * factor,
+        p[0] + relPos * direction[0] * factor,
+        p[1] + relPos * direction[1] * factor,
+        p[2] + relPos * direction[2] * factor,
       ];
     });
   }
@@ -1019,10 +1019,18 @@ function Viewer() {
       let abstraction_boundary = getAbstractionBoundary(sharkViewerInstance);
       let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
 
+      let line_clusters_identifier = "line_clusters";
+
       let directions = getTranslationVectors(neurons.length);
 
-      if (level > motif_path_threshold) {
-        motif.syn_clusters.forEach((connection, i) => {
+      motif.syn_clusters.forEach((connection, i) => {
+        let bound = 0.08;
+        let j = (level - motif_path_threshold) / bound;
+        j = Math.max(0.0, Math.min(j, 1.0)); // lamp between 0 and 1
+        neurons.forEach((neuron, i) => {
+          moveObject(neuron, directions[i], j);
+        });
+        if (level > motif_path_threshold) {
           let [pre_neuron, pre_neuron_number] = getNeuronListId(
             neurons,
             connection.pre
@@ -1032,20 +1040,15 @@ function Viewer() {
             connection.post
           );
 
-          let bound = 0.08;
-          let j = (level - motif_path_threshold) / bound;
-          j = Math.max(0.0, Math.min(j, 1.0)); // lamp between 0 and 1
-          neurons.forEach((neuron, i) => {
-            moveObject(neuron, directions[i], j);
-          });
-
           let pre_loc_transformed = transformPoints(
             connection.pre_loc,
-            directions[pre_neuron_number]
+            directions[pre_neuron_number],
+            j
           );
           let post_loc_transformed = transformPoints(
             connection.post_loc,
-            directions[post_neuron_number]
+            directions[post_neuron_number],
+            j
           );
 
           let lines = hierarchicalBundling(
@@ -1056,72 +1059,27 @@ function Viewer() {
             scene
           );
 
-          lines.forEach((line) => {
-            scene.add(line);
-          });
-        });
-      }
-
-      // if (level > motif_path_threshold) {
-      //   refreshEdges(scene, abstraction_boundary);
-      //   setSynapseVisibility(scene, false);
-      //   setLineVisibility(scene, true);
-      //   setEdgesEnabled(true);
-      // } else {
-      //   setSynapseVisibility(scene, true);
-      // }
-      // if (level < motif_path_threshold + bound) {
-      //   let prevClusters = scene.getObjectByName(syn_clusters_identifier);
-      //   if (prevClusters) {
-      //     prevClusters.visible = false;
-      //   }
-      // }
-      //
-      // console.log("scene", scene);
-      //
-
-      // let bound = 0.08;
-      // let j = (level - motif_path_threshold) / bound;
-      // j = Math.max(0.0, Math.min(j, 1.0)); // lamp between 0 and 1
-      // neurons.forEach((neuron, i) => {
-      //   moveObject(neuron, directions[i], j);
-      //   // let center = scene.getObjectByName("abstraction-center-" + neuron.name);
-      //   // if (center) moveObject(center, directions[i], j);
-      //   //setSynapseVisibility(scene, false);
-      // });
-      //
-      // let syn_clusters = scene.getObjectByName(syn_clusters_identifier);
-
-      // animate synapse
-      // if (syn_clusters) {
-      //   syn_clusters.children.forEach((child) => {
-      //     if (typeof child.name === "string" && child.name.startsWith("syn")) {
-      //       let [pre_neuron, pre_idx] = getNeuronListId(neurons, child.pre);
-      //       moveObject(child, directions[pre_idx], j);
-      //
-      //       if (level > motif_path_threshold) {
-      //         let [post_neuron, post_idx] = getNeuronListId(
-      //           neurons,
-      //           child.post
-      //         );
-      //
-      //         child.material = new THREE.MeshPhongMaterial({
-      //           color: context.neuronColors[post_idx],
-      //         });
-      //         child.material.needsUpdate = true;
-      //       } else {
-      //         child.material = new THREE.MeshPhongMaterial({
-      //           color: Color.orange,
-      //         });
-      //         child.material.needsUpdate = true;
-      //       }
-      //     }
-      //   });
-      // }
-
-      setPrevSliderValue(level);
+          // remove old lines
+          deleteChild(scene, line_clusters_identifier);
+          // add empty object to hold lines
+          let line_clusters = new THREE.Object3D();
+          line_clusters.name = line_clusters_identifier;
+          line_clusters.children = lines; // add new lines to scene
+          scene.add(line_clusters);
+        } else {
+          // remove old lines
+          deleteChild(scene, line_clusters_identifier);
+        }
+      });
     }
   }, [context.abstractionLevel]);
+
+  function deleteChild(parent, childName) {
+    let child = parent.getObjectByName(childName);
+    if (child) {
+      parent.remove(child);
+    }
+  }
 
   function moveObject(object, direction, relPos) {
     /**
