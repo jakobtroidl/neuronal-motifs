@@ -196,7 +196,7 @@ class MyMotif:
         from sklearn.cluster import AgglomerativeClustering
 
         locations = group[['x_pre', 'y_pre', 'z_pre']].to_numpy()
-        n_clusters = int(len(locations) / 3)
+        n_clusters = min(int(len(locations) / 3), 10)
 
         clusters_per_synapse = {int(idx): [] for idx in range(0, len(locations))}
         synapses_per_cluster = []
