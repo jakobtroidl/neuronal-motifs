@@ -68,31 +68,15 @@ export function hierarchicalBundling(
 
   for (const [i, clusters] of Object.entries(clusters_per_synapse)) {
     let control_samples = [];
-    // add location of postsynaptic site
-    clusters.forEach((cluster, hierarchy) => {
+    let cutoff = 2.0;
+
+    for (let hierarchy = cutoff; hierarchy < clusters.length; hierarchy++) {
+      let cluster = clusters[hierarchy];
       let points = control_points[hierarchy][cluster];
 
       control_samples.unshift(points.start);
       control_samples.push(points.end);
-
-      // if (i == 1) {
-      //   console.log("adding spheres");
-      //   let sphere1 = addSphere(
-      //     points.start.x,
-      //     points.start.y,
-      //     points.start.z,
-      //     0x000fff
-      //   );
-      //   let sphere2 = addSphere(
-      //     points.end.x,
-      //     points.end.y,
-      //     points.end.z,
-      //     0x888ccc
-      //   );
-      //   scene.add(sphere1);
-      //   scene.add(sphere2);
-      // }
-    });
+    }
 
     control_samples.unshift(getPointsByIndices(start_points, i)); // add location of presynaptic site
     control_samples.push(getPointsByIndices(end_points, i));
