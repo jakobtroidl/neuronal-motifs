@@ -210,6 +210,12 @@ function addNeurons(
     neuronObject.translateY(translate.y);
     neuronObject.translateZ(translate.z);
 
+    neuronObject.origin = new THREE.Vector3(
+      translate.x,
+      translate.y,
+      translate.z
+    );
+
     scene.add(neuronObject);
   });
 }
@@ -466,7 +472,7 @@ function Viewer() {
 
   const context = useContext(AppContext);
 
-  let factor = 20000;
+  let factor = 10000;
   let offset = 0.001;
   let syn_clusters_identifier = "clusters";
   let lines_identifier = "lines";
@@ -1025,6 +1031,13 @@ function Viewer() {
             neurons,
             connection.post
           );
+
+          let bound = 0.08;
+          let j = (level - motif_path_threshold) / bound;
+          j = Math.max(0.0, Math.min(j, 1.0)); // lamp between 0 and 1
+          neurons.forEach((neuron, i) => {
+            moveObject(neuron, directions[i], j);
+          });
 
           let pre_loc_transformed = transformPoints(
             connection.pre_loc,
