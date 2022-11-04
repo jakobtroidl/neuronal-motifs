@@ -38,6 +38,7 @@ const fragmentShader = [
   "uniform sampler2D sphereTexture; // Imposter image of sphere",
   "uniform mat4 projectionMatrix;",
   "uniform float abstraction_threshold;",
+  "uniform int grey_out;",
   "uniform vec3 color;",
   "varying vec4 mvPosition;",
   "varying float vRadius;",
@@ -55,7 +56,7 @@ const fragmentShader = [
   "// gl_FragColor = sqrt(gl_FragColor * texture2D(sphereTexture, uv)) + vec4(0.1, 0.1, 0.1, 0.0);",
   "// red channel contains colorizable sphere image",
   "vec3 myColor = color;",
-  "if(vLabel > 0.0) {",
+  "if(grey_out > 0 && vLabel > 0.0) {",
   "   myColor = vec3(0.75, 0.75, 0.75);",
   "}",
   "vec3 baseColor = myColor * sphereColors.r;",
@@ -154,6 +155,7 @@ const fragmentShaderCone = [
   "uniform mat4 projectionMatrix;",
   "uniform float abstraction_threshold;",
   "uniform vec3 color; // colors associated to vertices; assigned by vertex shader",
+  "uniform int grey_out;",
   "varying vec2 sphereUv;",
   "varying vec4 mvPosition;",
   "varying float depthScale;",
@@ -162,7 +164,7 @@ const fragmentShaderCone = [
   "{",
   "	vec4 sphereColors = texture2D(sphereTexture, sphereUv);",
   "vec3 myColor = color;",
-  "if(vLabel > 0.0) {",
+  "if(grey_out > 0 && vLabel > 0.0) {",
   "   myColor = vec3(0.75, 0.75, 0.75);",
   "}",
   "	if (sphereColors.a < 0.3 || vLabel > abstraction_threshold) discard;",
@@ -581,6 +583,25 @@ export default class SharkViewer {
     return this.minLabel + (1 - threshold) * (this.maxLabel - this.minLabel);
   }
 
+  greyNonMotifBranches(grey) {
+    this.scene.traverse(function (node) {
+      if (
+        typeof node.name === "string" &&
+        node.name.includes("skeleton-vertex")
+      ) {
+        // insert your code here, for example:
+        node.material.uniforms.grey_out.value = grey ? 1 : 0;
+      }
+      if (
+        typeof node.name === "string" &&
+        node.name.includes("skeleton-edge")
+      ) {
+        // insert your code here, for example:
+        node.material.uniforms.grey_out.value = grey ? 1 : 0;
+      }
+    });
+  }
+
   /**
    * Set neuron abstraction threshold
    * @param threshold value between 0 and 1. 0: nothing is abstracted, 1: everything is abstracted
@@ -671,6 +692,7 @@ export default class SharkViewer {
         particleScale: { type: "f", value: particleScale },
         sphereTexture: { type: "t", value: sphereImg },
         abstraction_threshold: { type: "f", value: threshold },
+        grey_out: { type: "i", value: 0 },
         color: { value: new THREE.Color(neuron.color) },
       };
 
@@ -775,6 +797,7 @@ export default class SharkViewer {
         const coneUniforms = {
           sphereTexture: { type: "t", value: sphereImg },
           abstraction_threshold: { type: "f", value: threshold },
+          grey_out: { type: "i", value: 0 },
           color: { value: new THREE.Color(neuron.color) },
         };
         const uvs = [
