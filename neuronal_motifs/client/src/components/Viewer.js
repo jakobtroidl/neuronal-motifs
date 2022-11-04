@@ -349,10 +349,6 @@ function addSynapse(
     return mesh;
   }
 }
-function getSynapseClusterLabels(syn_idx, labels) {
-  return [];
-}
-
 function addSynapses(
   motif,
   setDisplayTooltip,
@@ -361,34 +357,9 @@ function addSynapses(
   interactionManager,
   onClickHighlightEdgesAndSynapses
 ) {
-  console.log("motif: ", motif);
-  console.log("interactionManager: ", interactionManager);
-
-  let default_color = "#797979";
-
-  let cluster_colors = [
-    "#ff0000",
-    "#00fff6",
-    "#ce00ff",
-    "#18ff00",
-    "#5e206b",
-    "#37ec0f",
-    "#008000",
-    "#0000ff",
-    "#4b0082",
-    "#ee82ee",
-  ];
-
-  let level = 4;
-
   let synapses = motif.syn_clusters;
-
   synapses.forEach((connection, i) => {
     connection.pre_loc.forEach((pre_syn_location, j) => {
-      // let color = default_color;
-      // if (connection.labels.length > level) {
-      //   color = cluster_colors[connection.labels[level][j]];
-      // }
       addSynapse(
         scene,
         connection.pre_id,
@@ -404,19 +375,6 @@ function addSynapses(
       );
     });
   });
-
-  // synapses.forEach((syn) => {
-  //   let mesh = addSynapse(
-  //     scene,
-  //     syn,
-  //     Color.orange,
-  //     motif,
-  //     setDisplayTooltip,
-  //     setTooltipInfo,
-  //     interactionManager,
-  //     onClickHighlightEdgesAndSynapses
-  //   );
-  // });
 }
 
 function addLights(scene) {
@@ -948,8 +906,6 @@ function Viewer() {
       let [n, post_neuron_number] = getNeuronListId(neurons, group.end_id);
       let clusters = clusterSynapses(group.start, 0.001);
 
-      console.log("clusters", clusters);
-
       clusters.forEach((cluster, i) => {
         let synapses = cluster.map((i) => group.start[i]);
         let radius = 100 + synapses.length * 10;
@@ -1059,18 +1015,6 @@ function Viewer() {
 
       let directions = getTranslationVectors(neurons.length);
 
-      if (
-        level > motif_path_threshold &&
-        prevSliderValue < motif_path_threshold
-      ) {
-        // move neurons
-        neurons.forEach((neuron, i) => {
-          neuron.translateX(directions[i][0] * factor);
-          neuron.translateY(directions[i][1] * factor);
-          neuron.translateZ(directions[i][2] * factor);
-        });
-      }
-
       if (level > motif_path_threshold) {
         motif.syn_clusters.forEach((connection, i) => {
           let [pre_neuron, pre_neuron_number] = getNeuronListId(
@@ -1091,9 +1035,6 @@ function Viewer() {
             directions[post_neuron_number]
           );
 
-          console.log("pre_loc_transformed: ", pre_loc_transformed);
-          console.log("post_loc_transformed: ", post_loc_transformed);
-
           let lines = hierarchicalBundling(
             pre_loc_transformed,
             post_loc_transformed,
@@ -1102,17 +1043,11 @@ function Viewer() {
             scene
           );
 
-          console.log("lines", lines);
-
-          // scene.add(lines[0]);
-
           lines.forEach((line) => {
             scene.add(line);
           });
         });
       }
-
-      // let bound = 0.08;
 
       // if (level > motif_path_threshold) {
       //   refreshEdges(scene, abstraction_boundary);
@@ -1131,9 +1066,10 @@ function Viewer() {
       //
       // console.log("scene", scene);
       //
+
+      // let bound = 0.08;
       // let j = (level - motif_path_threshold) / bound;
       // j = Math.max(0.0, Math.min(j, 1.0)); // lamp between 0 and 1
-      //
       // neurons.forEach((neuron, i) => {
       //   moveObject(neuron, directions[i], j);
       //   // let center = scene.getObjectByName("abstraction-center-" + neuron.name);
