@@ -37,8 +37,7 @@ function SketchPanel() {
   let currentPath;
   let currentNode;
   let currentSelection;
-  const [canvasDimension, setCanvasDimension] = useState({})
-
+  const [canvasDimension, setCanvasDimension] = useState({});
 
   // We track the overall motif in the global context
   const context = useContext(AppContext);
@@ -49,10 +48,16 @@ function SketchPanel() {
     return (await axios.get(url)).data;
   };
 
+  const getRelativeMotifCount = async (motif) => {
+    // get request to backend to get motif count
+    let url = `http://${process.env.REACT_APP_API_URL}/rel_count/motif=${motif}`;
+    return (await axios.get(url)).data;
+  };
+
   const calculateNewPosition = (dimension, position) => {
-    let newX = canvasDimension.width / dimension.width * position[1]
-    let newY = canvasDimension.height / dimension.height * position[2]
-    return [Math.floor(newX), Math.floor(newY)]
+    let newX = (canvasDimension.width / dimension.width) * position[1];
+    let newY = (canvasDimension.height / dimension.height) * position[2];
+    return [Math.floor(newX), Math.floor(newY)];
   };
 
   const getPositionTransformedData = (data) => {
@@ -60,13 +65,13 @@ function SketchPanel() {
       let [newX, newY] = calculateNewPosition(data.dimension, node.position);
       return {
         ...node,
-        "position": ["Point", newX, newY]
-      }
+        position: ["Point", newX, newY],
+      };
     });
     let newData = {
       ...data,
-      "nodes": newNodes,
-      "dimension": canvasDimension
+      nodes: newNodes,
+      dimension: canvasDimension,
     };
     return newData;
   };
@@ -84,8 +89,8 @@ function SketchPanel() {
       reader.readAsText(file, "UTF-8");
       reader.onload = (e) => {
         let data = JSON.parse(e.target.result);
-        let newData = getPositionTransformedData(data)
-        setImportData(newData)
+        let newData = getPositionTransformedData(data);
+        setImportData(newData);
         setNodeImportUpdate(true);
       };
     };
@@ -233,7 +238,8 @@ function SketchPanel() {
             nodes[intersections].circle.position
           );
           currentPath.segments[1].point = nodes[
-            intersections].circle.getNearestPoint(currentNode.circle.position);
+            intersections
+          ].circle.getNearestPoint(currentNode.circle.position);
         } // Otherwise move the line glyph
         else {
           currentPath.segments[0].point = new paper.Point([
@@ -316,7 +322,7 @@ function SketchPanel() {
             );
             currentPath.segments[1].point = nodes[
               intersections
-              ].circle.getNearestPoint(currentNode.circle.position);
+            ].circle.getNearestPoint(currentNode.circle.position);
             let edge = currentPath.clone();
             edge.opacity = 1;
             addEdge(currentNode, nodes[intersections], edge);
@@ -399,7 +405,7 @@ function SketchPanel() {
             e.propertyLabel
           );
         });
-        console.log(newEdges)
+        console.log(newEdges);
 
         setEdges([...newEdges, ...filteredEdges]);
 
@@ -439,10 +445,10 @@ function SketchPanel() {
             }
             edges[i].edgeLine.segments[0].point = nodes[
               e.indices[0]
-              ].circle.getNearestPoint(nodes[e.indices[1]].circle.position);
+            ].circle.getNearestPoint(nodes[e.indices[1]].circle.position);
             edges[i].edgeLine.segments[1].point = nodes[
               e.indices[1]
-              ].circle.getNearestPoint(nodes[e.indices[0]].circle.position);
+            ].circle.getNearestPoint(nodes[e.indices[0]].circle.position);
           }
         });
       }
@@ -504,49 +510,49 @@ function SketchPanel() {
     // Checks from an edge going the opposite direction between the same two nodes
     let origToPoint = _.cloneDeep(edgeLine.segments[0].point);
     let circ = new paper.Path.Circle(origToPoint, 8);
-      let toPoint = (edgeLine.segments[0].point =
-          circ.getIntersections(edgeLine)[0].point);
-      circ.remove();
-      let origFromPoint = _.cloneDeep(edgeLine.segments[1].point);
-      circ = new paper.Path.Circle(origFromPoint, 8);
-      let fromPoint = (edgeLine.segments[1].point =
-          circ.getIntersections(edgeLine)[0].point);
-      const dy = toPoint.y - fromPoint.y;
-      const dx = toPoint.x - fromPoint.x;
-      const theta = Math.atan2(dy, dx); // range (-PI, PI]
-      const newY = 7 * Math.sin(theta) + fromPoint.y;
-      const newX = 7 * Math.cos(theta) + fromPoint.x;
-      let circle = new paper.Path.Circle([newX, newY], 7);
-      // Check where the arrow head points should be
-      let secondCircle = new paper.Path.Circle(
-          circle.getNearestPoint(toPoint),
-          7
-      );
-      let intersections = secondCircle
-          .getIntersections(circle)
-          .map((intersection) => intersection.point);
-      intersections.splice(1, 0, fromPoint);
-      let trianglePath = new paper.Path(intersections);
-      trianglePath.strokeColor = "black";
-      trianglePath.strokeWidth = 3;
-      trianglePath.strokeJoin = "round";
-      // Create a big group with line and arrow
-      edgeObj["toPoint"] = toPoint;
-      edgeObj["fromPoint"] = fromPoint;
-      edgeObj["lineGroup"] = new paper.Group([trianglePath, edgeObj.edgeLine]);
-      secondCircle?.remove();
-      circle?.remove();
-      edgeObj["type"] = "edge";
-      edgeObj["label"] = `${edgeObj.fromNode.label} -> ${edgeObj.toNode.label}`;
-      edgeObj["properties"] = properties;
-      if (tree !== null) {
-        edgeObj["tree"] = QbUtils.loadTree(tree);
-      } else {
-        edgeObj["tree"] = tree;
-      }
+    let toPoint = (edgeLine.segments[0].point =
+      circ.getIntersections(edgeLine)[0].point);
+    circ.remove();
+    let origFromPoint = _.cloneDeep(edgeLine.segments[1].point);
+    circ = new paper.Path.Circle(origFromPoint, 8);
+    let fromPoint = (edgeLine.segments[1].point =
+      circ.getIntersections(edgeLine)[0].point);
+    const dy = toPoint.y - fromPoint.y;
+    const dx = toPoint.x - fromPoint.x;
+    const theta = Math.atan2(dy, dx); // range (-PI, PI]
+    const newY = 7 * Math.sin(theta) + fromPoint.y;
+    const newX = 7 * Math.cos(theta) + fromPoint.x;
+    let circle = new paper.Path.Circle([newX, newY], 7);
+    // Check where the arrow head points should be
+    let secondCircle = new paper.Path.Circle(
+      circle.getNearestPoint(toPoint),
+      7
+    );
+    let intersections = secondCircle
+      .getIntersections(circle)
+      .map((intersection) => intersection.point);
+    intersections.splice(1, 0, fromPoint);
+    let trianglePath = new paper.Path(intersections);
+    trianglePath.strokeColor = "black";
+    trianglePath.strokeWidth = 3;
+    trianglePath.strokeJoin = "round";
+    // Create a big group with line and arrow
+    edgeObj["toPoint"] = toPoint;
+    edgeObj["fromPoint"] = fromPoint;
+    edgeObj["lineGroup"] = new paper.Group([trianglePath, edgeObj.edgeLine]);
+    secondCircle?.remove();
+    circle?.remove();
+    edgeObj["type"] = "edge";
+    edgeObj["label"] = `${edgeObj.fromNode.label} -> ${edgeObj.toNode.label}`;
+    edgeObj["properties"] = properties;
+    if (tree !== null) {
+      edgeObj["tree"] = QbUtils.loadTree(tree);
+    } else {
+      edgeObj["tree"] = tree;
+    }
 
-      if (propertyLabel) edgeObj = addEdgePropertyLabel(edgeObj);
-      return edgeObj;
+    if (propertyLabel) edgeObj = addEdgePropertyLabel(edgeObj);
+    return edgeObj;
   };
 
   const addEdgePropertyLabel = (e) => {
@@ -618,44 +624,49 @@ function SketchPanel() {
       try {
         importData.edges.forEach((edge) => {
           let myInputStartNode = importData.nodes.find(
-              (node) => node.index === edge.indices[0]
+            (node) => node.index === edge.indices[0]
           );
           let myInputEndNode = importData.nodes.find(
-              (node) => node.index === edge.indices[1]
+            (node) => node.index === edge.indices[1]
           );
 
           let path = new paper.Path();
           path.strokeColor = "#000000";
           path.strokeWidth = 3;
           path.opacity = 1.0;
-          path.add([myInputStartNode.position[1], myInputStartNode.position[2]]);
+          path.add([
+            myInputStartNode.position[1],
+            myInputStartNode.position[2],
+          ]);
           path.add([myInputEndNode.position[1], myInputEndNode.position[2]]);
 
           let startNode = nodes[edge.indices[0]];
           let endNode = nodes[edge.indices[1]];
           path.segments[0].point = startNode.circle.getNearestPoint(
-              endNode.circle.position
+            endNode.circle.position
           );
           path.segments[1].point = endNode.circle.getNearestPoint(
-              startNode.circle.position
+            startNode.circle.position
           );
           let tree = "tree" in edge ? edge.tree : null;
           let newEdge = addEdge(
-              startNode,
-              endNode,
-              path,
-              edge.properties,
-              tree,
-              false
+            startNode,
+            endNode,
+            path,
+            edge.properties,
+            tree,
+            false
           );
           newEdges.push(newEdge);
         });
         context.setErrorMessage(null);
         context.setLoadingMessage(null);
       } catch (TypeError) {
-          context.setErrorMessage("The motif can't import. Please try again in a larger window.");
-          context.setLoadingMessage(null);
-          clearSketch();
+        context.setErrorMessage(
+          "The motif can't import. Please try again in a larger window."
+        );
+        context.setLoadingMessage(null);
+        clearSketch();
       }
 
       // add new edges to edges
@@ -741,8 +752,12 @@ function SketchPanel() {
               e.properties = context.selectedSketchElement.properties;
               e = addEdgePropertyLabel(e);
             }
-            if (e.fromNode.label === context.selectedSketchElement.fromNode.label && e.toNode.label === context.selectedSketchElement.toNode.label) {
-              e.edgeLine.strokeColor = "red"
+            if (
+              e.fromNode.label ===
+                context.selectedSketchElement.fromNode.label &&
+              e.toNode.label === context.selectedSketchElement.toNode.label
+            ) {
+              e.edgeLine.strokeColor = "red";
               e.lineGroup.children[0].strokeColor = "red";
             } else {
               e.edgeLine.strokeColor = "#000000";
@@ -778,10 +793,10 @@ function SketchPanel() {
   // On init set up our paperjs
   useEffect(() => {
     paper.setup(sketchPanelId);
-    paper.view.onResize = function() {
-      setCanvasDimension(paper.view.size)
-    }
-    setCanvasDimension(paper.view.size)
+    paper.view.onResize = function () {
+      setCanvasDimension(paper.view.size);
+    };
+    setCanvasDimension(paper.view.size);
 
     let tempCircle = new paper.Path.Circle([0, 0], 6);
     tempCircle.fill = "none";
@@ -817,10 +832,14 @@ function SketchPanel() {
       };
     });
     let sketchPanelDim = {
-        width: canvasDimension.width,
-        height: canvasDimension.height
-    }
-    return { nodes: encodedNodes, edges: encodedEdges, dimension: sketchPanelDim };
+      width: canvasDimension.width,
+      height: canvasDimension.height,
+    };
+    return {
+      nodes: encodedNodes,
+      edges: encodedEdges,
+      dimension: sketchPanelDim,
+    };
   };
   // Encode the Nodes and Edges For Query
   useEffect(async () => {
@@ -833,6 +852,13 @@ function SketchPanel() {
 
     const count = await getMotifCount(JSON.stringify(encodedMotif));
     context.setAbsMotifCount(count);
+
+    // get relative count of motif in network
+    const relative_count = await getRelativeMotifCount(
+      JSON.stringify(encodedMotif)
+    );
+    context.setRelativeMotifCount(relative_count);
+
     context.setMotifQuery(encodedMotif);
   }, [nodes, edges]);
 
@@ -840,21 +866,30 @@ function SketchPanel() {
     if (!context.selectedCytoscapeEdge) {
       setEdges(
         edges.map((e) => {
-            e.edgeLine.strokeColor = "#000000";
-            e.lineGroup.children[0].strokeColor = "#000000";
+          e.edgeLine.strokeColor = "#000000";
+          e.lineGroup.children[0].strokeColor = "#000000";
           return e;
         })
       );
     }
     if (context.focusedMotif && context.selectedCytoscapeEdge) {
       try {
-        const sourceNodeKey = getNodeKeyFromId(context.selectedCytoscapeEdge.source, context)
-        const targetNodeKey = getNodeKeyFromId(context.selectedCytoscapeEdge.target, context)
+        const sourceNodeKey = getNodeKeyFromId(
+          context.selectedCytoscapeEdge.source,
+          context
+        );
+        const targetNodeKey = getNodeKeyFromId(
+          context.selectedCytoscapeEdge.target,
+          context
+        );
 
         setEdges(
           edges.map((e) => {
-            if (e.fromNode.label === sourceNodeKey && e.toNode.label === targetNodeKey) {
-              e.edgeLine.strokeColor = "red"
+            if (
+              e.fromNode.label === sourceNodeKey &&
+              e.toNode.label === targetNodeKey
+            ) {
+              e.edgeLine.strokeColor = "red";
               e.lineGroup.children[0].strokeColor = "red";
             } else {
               e.edgeLine.strokeColor = "#000000";
@@ -863,19 +898,18 @@ function SketchPanel() {
             return e;
           })
         );
-      }
-      catch (TypeError) {
+      } catch (TypeError) {
         // when selectedCytoscapeEdge's source and target are not the nodes from focusedMotif.
         setEdges(
           edges.map((e) => {
-              e.edgeLine.strokeColor = "#000000";
-              e.lineGroup.children[0].strokeColor = "#000000";
+            e.edgeLine.strokeColor = "#000000";
+            e.lineGroup.children[0].strokeColor = "#000000";
             return e;
           })
         );
       }
     }
-  }, [context.selectedCytoscapeEdge, context.focusedMotif])
+  }, [context.selectedCytoscapeEdge, context.focusedMotif]);
 
   return (
     <div className="sketch-panel-style">
@@ -883,7 +917,7 @@ function SketchPanel() {
         <Grid item xs={10.8} style={{ height: "inherit" }}>
           <div
             className="sketch-canvas"
-            id='sketch-canvas-container'
+            id="sketch-canvas-container"
             style={{ cursor: cursor || "crosshair" }}
           >
             <canvas id={sketchPanelId} resize="true"></canvas>
