@@ -1025,10 +1025,13 @@ function Viewer() {
 
       motif.syn_clusters.forEach((connection, i) => {
         let bound = 0.08;
-        let j = (level - motif_path_threshold) / bound;
-        j = Math.max(0.0, Math.min(j, 1.0)); // lamp between 0 and 1
+        let explosionProgression = (level - motif_path_threshold) / bound;
+        explosionProgression = Math.max(
+          0.0,
+          Math.min(explosionProgression, 1.0)
+        ); // lamp between 0 and 1
         neurons.forEach((neuron, i) => {
-          moveObject(neuron, directions[i], j);
+          moveObject(neuron, directions[i], explosionProgression);
         });
         if (level > motif_path_threshold) {
           let [pre_neuron, pre_neuron_number] = getNeuronListId(
@@ -1043,12 +1046,12 @@ function Viewer() {
           let pre_loc_transformed = transformPoints(
             connection.pre_loc,
             directions[pre_neuron_number],
-            j
+            explosionProgression
           );
           let post_loc_transformed = transformPoints(
             connection.post_loc,
             directions[post_neuron_number],
-            j
+            explosionProgression
           );
 
           let lines = hierarchicalBundling(
