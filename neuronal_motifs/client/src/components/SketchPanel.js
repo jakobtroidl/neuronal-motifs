@@ -119,6 +119,7 @@ function SketchPanel() {
   };
 
   const deleteSketchElement = () => {
+    // edges
     if (
       context.selectedSketchElement &&
       context.selectedSketchElement.type === "edge"
@@ -128,8 +129,90 @@ function SketchPanel() {
       );
       context.selectedSketchElement.edgeLine.remove();
       context.selectedSketchElement.lineGroup.remove();
+      context.selectedSketchElement.propertyLabel?.remove();
       context.setSelectedSketchElement(null);
       setEdges(newEdges);
+    }
+
+    // nodes
+    if (
+      context.selectedSketchElement &&
+      context.selectedSketchElement.type === "node"
+    ) {
+      // find adjacent edges
+      let nodeLabel = context.selectedSketchElement.label;
+      let adjacentEdges = edges.filter((edge) => {
+        if (
+          edge.fromNode.label === nodeLabel ||
+          edge.toNode.label === nodeLabel
+        ) {
+          return edge;
+        }
+      });
+      // delete adjacent edges
+      let newEdges = edges.filter((edge) => !adjacentEdges.includes(edge));
+
+      // delete edges from canvas
+      adjacentEdges.map((edge) => {
+        edge.edgeLine.remove();
+        edge.lineGroup.remove();
+        edge.propertyLabel?.remove();
+      });
+
+      // delete and rename
+      let newNodes = nodes
+        .filter((node) => node.label !== context.selectedSketchElement.label)
+        .map((node, i) =>
+          renameCircle(
+            node.circle,
+            i,
+            node.properties,
+            "tree" in node ? node.tree : null
+          )
+        );
+
+      // delete node from canvas
+      context.selectedSketchElement.circle.remove();
+      context.selectedSketchElement.circleGroup.remove();
+      context.setSelectedSketchElement(null);
+
+      // reset edges and nodes
+      setEdges(newEdges);
+      setNodes(newNodes);
+    }
+  };
+
+  const renameCircle = (circle, index, properties = null, tree = null) => {
+    circle.fillColor = context.neuronColors[index];
+    let textPoint = [circle.position.x, circle.position.y + 7];
+    let label = new paper.PointText({
+      point: textPoint,
+      justification: "center",
+      fillColor: "white",
+      font: "Roboto",
+      fontSize: 20,
+    });
+    let letter = String.fromCharCode(65 + index);
+    label.content = letter;
+    let circleGroup = new paper.Group([circle, label]);
+
+    if (tree !== null) {
+      return {
+        circle: circle,
+        label: letter,
+        properties: properties,
+        type: "node",
+        circleGroup: circleGroup,
+        tree: QbUtils.loadTree(tree),
+      };
+    } else {
+      return {
+        circle: circle,
+        label: letter,
+        properties: properties,
+        type: "node",
+        circleGroup: circleGroup,
+      };
     }
   };
 
