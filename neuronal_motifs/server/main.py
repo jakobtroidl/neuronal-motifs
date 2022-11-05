@@ -88,7 +88,12 @@ def get_nblast(node_id: int, top_n: Optional[int] = None):
 
 @app.get("/count/motif={motif}")
 def get_motif_count(motif: str):
-    return count.get(motif)
+    return count.get_absolute(motif)
+
+
+@app.get("/rel_count/motif={motif}")
+def get_relative_motif_count(motif: str):
+    return count.get_relative(motif)
 
 
 if __name__ == "__main__":
