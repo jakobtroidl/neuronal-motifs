@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { createTheme } from "@mui/material";
 
 export class Color {
   static orange = new THREE.Color("rgb(255,154,0)");
@@ -9,31 +8,6 @@ export class Color {
   static grey = new THREE.Color("rgb(229,229,229)");
   static pink = new THREE.Color("rgb(200,0,255)");
   static blue = new THREE.Color("rgb(62,62,231)");
-
-  static theme = createTheme({
-    palette: {
-      stronger: {
-        main: "#b94759",
-        contrastText: "#000000",
-      },
-      strong: {
-        main: "#f4a582",
-        contrastText: "#000000",
-      },
-      neutral: {
-        main: "#b2b2b2",
-        contrastText: "#000000",
-      },
-      weak: {
-        main: "#92c5de",
-        contrastText: "#000000",
-      },
-      weaker: {
-        main: "#0f73ad",
-        contrastText: "#000000",
-      },
-    },
-  });
 }
 
 export function hexToRgbA(hex, alpha = 1) {
