@@ -232,15 +232,23 @@ function getSynapseName(synapse, flipped = false) {
 }
 
 function getSynapseIds(synapse) {
-  return "syn-" + synapse.pre_id + "-" + synapse.post_id
+  return "syn-" + synapse.pre_id + "-" + synapse.post_id;
 }
 
-function addSynapse(scene, synapse, color, motif, setDisplayTooltip,
-  setTooltipInfo, interactionManager, onClickHighlightEdgesAndSynapses) {
+function addSynapse(
+  scene,
+  synapse,
+  color,
+  motif,
+  setDisplayTooltip,
+  setTooltipInfo,
+  interactionManager,
+  onClickHighlightEdgesAndSynapses
+) {
   // create a sphere shape
   let name_variant1 = getSynapseName(synapse, false);
   let name_variant2 = getSynapseName(synapse, true);
-  let neuron_ids = getSynapseIds(synapse)
+  let neuron_ids = getSynapseIds(synapse);
   if (
     !scene.getObjectByName(name_variant1) &&
     !scene.getObjectByName(name_variant2)
@@ -265,7 +273,7 @@ function addSynapse(scene, synapse, color, motif, setDisplayTooltip,
       });
       document.body.style.cursor = "pointer";
 
-      mesh.material = new THREE.MeshPhongMaterial({color: Color.pink});
+      mesh.material = new THREE.MeshPhongMaterial({ color: Color.pink });
       mesh.material.needsUpdate = true;
     });
 
@@ -273,20 +281,19 @@ function addSynapse(scene, synapse, color, motif, setDisplayTooltip,
       setDisplayTooltip(false);
       document.body.style.cursor = "default";
 
-      console.log("mouseout: ", mesh.highlighted)
+      console.log("mouseout: ", mesh.highlighted);
       if (mesh.highlighted) {
-        mesh.material = new THREE.MeshPhongMaterial({color: Color.red});
+        mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
         mesh.material.needsUpdate = true;
         mesh.highlighted = true;
       } else {
-        mesh.material = new THREE.MeshPhongMaterial({color: Color.orange});
+        mesh.material = new THREE.MeshPhongMaterial({ color: Color.orange });
         mesh.material.needsUpdate = true;
         mesh.highlighted = false;
       }
     });
 
     mesh.addEventListener("click", (event) => {
-      console.log("clickkkk")
       onClickHighlightEdgesAndSynapses(mesh);
     });
 
@@ -310,11 +317,19 @@ function addSynapses(
   scene,
   interactionManager,
   motif,
-  onClickHighlightEdgesAndSynapses,
+  onClickHighlightEdgesAndSynapses
 ) {
   synapses.forEach((syn) => {
-    let mesh = addSynapse(scene, syn, Color.orange, motif, setDisplayTooltip,
-  setTooltipInfo, interactionManager, onClickHighlightEdgesAndSynapses);
+    let mesh = addSynapse(
+      scene,
+      syn,
+      Color.orange,
+      motif,
+      setDisplayTooltip,
+      setTooltipInfo,
+      interactionManager,
+      onClickHighlightEdgesAndSynapses
+    );
   });
 }
 
@@ -388,8 +403,12 @@ function restoreColors(sharkViewerInstance) {
 function resetSynapsesColor(sharkViewerInstance) {
   let scene = sharkViewerInstance.scene;
   scene.traverse((child) => {
-    if (typeof child.name === "string" && child.name.startsWith("syn-") && child.neuron_ids.startsWith("syn-")) {
-      child.material = new THREE.MeshPhongMaterial({color: Color.orange});
+    if (
+      typeof child.name === "string" &&
+      child.name.startsWith("syn-") &&
+      child.neuron_ids.startsWith("syn-")
+    ) {
+      child.material = new THREE.MeshPhongMaterial({ color: Color.orange });
       child.material.needsUpdate = true;
       child.highlighted = false;
     }
@@ -444,8 +463,8 @@ function Viewer() {
       restoreColors(sharkViewerInstance);
       removeSynapseSuggestions();
       context.setNeighborhoodQuery(null);
-    } else if (event.key === 'c') {
-      console.log('c was pressed');
+    } else if (event.key === "c") {
+      console.log("c was pressed");
       resetSynapsesColor(sharkViewerInstance);
       unselectEdges();
     }
@@ -844,6 +863,13 @@ function Viewer() {
     return sharkViewerInstance.getAbstractionBoundary(level);
   }
 
+  useEffect(() => {
+    if (sharkViewerInstance) {
+      let grey = context.greyOutNonMotifBranches;
+      sharkViewerInstance.greyNonMotifBranches(grey);
+    }
+  }, [context.greyOutNonMotifBranches]);
+
   // Updates the motifs, runs when data, viewer, or abstraction state change
   useEffect(() => {
     if (motif && sharkViewerInstance) {
@@ -1017,7 +1043,7 @@ function Viewer() {
       addLights(scene);
 
       addAbstractionCenters(motif, context, scene, interactionManager);
-      console.log("addSynapses")
+      console.log("addSynapses");
       addSynapses(
         motif.synapses,
         setDisplayTooltip,
@@ -1025,10 +1051,7 @@ function Viewer() {
         scene,
         interactionManager,
         motif,
-        // highlightEdgesAndSynapses,
-        onClickHighlightEdgesAndSynapses,
-        // onMouseoverHighlightSynapses,
-        // onMouseoutHighlightSynapses
+        onClickHighlightEdgesAndSynapses
       );
 
       let level = getAbstractionLevel();
@@ -1096,81 +1119,109 @@ function Viewer() {
 
   useEffect(() => {
     if (sharkViewerInstance) {
-      let sourceId = '';
-      let targetId = '';
+      let sourceId = "";
+      let targetId = "";
       if (context.selectedSketchElement) {
-        if (context.selectedSketchElement.type === 'edge') {
-          sourceId = getIdFromNodeKey(context.selectedSketchElement.fromNode.label, context)
-          targetId = getIdFromNodeKey(context.selectedSketchElement.toNode.label, context)
+        if (context.selectedSketchElement.type === "edge") {
+          sourceId = getIdFromNodeKey(
+            context.selectedSketchElement.fromNode.label,
+            context
+          );
+          targetId = getIdFromNodeKey(
+            context.selectedSketchElement.toNode.label,
+            context
+          );
         }
       } else if (context.selectedCytoscapeEdge) {
-        sourceId = context.selectedCytoscapeEdge.source
-        targetId = context.selectedCytoscapeEdge.target
+        sourceId = context.selectedCytoscapeEdge.source;
+        targetId = context.selectedCytoscapeEdge.target;
       } else {
         return;
       }
 
-      if (sourceId !== '' && targetId !== '' && context.focusedMotif) {
-        highlightSynapses(sourceId, targetId)
+      if (sourceId !== "" && targetId !== "" && context.focusedMotif) {
+        highlightSynapses(sourceId, targetId);
       }
     }
-  }, [context.selectedSketchElement, context.selectedCytoscapeEdge])
+  }, [context.selectedSketchElement, context.selectedCytoscapeEdge]);
 
   function onClickHighlightEdgesAndSynapses(mesh) {
-    if (typeof mesh.name === "string" && mesh.name.startsWith("syn-") && mesh.neuron_ids.startsWith("syn-")) {
+    if (
+      typeof mesh.name === "string" &&
+      mesh.name.startsWith("syn-") &&
+      mesh.neuron_ids.startsWith("syn-")
+    ) {
       let hover_neuron_ids = mesh.neuron_ids.split("-");
       let hover_neuron_pre_id = String(hover_neuron_ids[1]);
       let hover_neuron_post_id = String(hover_neuron_ids[2]);
 
       if (context.focusedMotif) {
         // highlight synapses
-        highlightSynapses(hover_neuron_pre_id, hover_neuron_post_id)
+        highlightSynapses(hover_neuron_pre_id, hover_neuron_post_id);
         // highlight sketch and summary edge
-        highlightEdges(hover_neuron_pre_id, hover_neuron_post_id)
+        highlightEdges(hover_neuron_pre_id, hover_neuron_post_id);
       }
     }
   }
 
   function highlightEdges(sourceId, targetId) {
-    let isEdgeFromFocusedMotif = context.focusedMotif.edges.some((e) => String(e.start_neuron_id) === sourceId && String(e.end_neuron_id) === targetId)
+    let isEdgeFromFocusedMotif = context.focusedMotif.edges.some(
+      (e) =>
+        String(e.start_neuron_id) === sourceId &&
+        String(e.end_neuron_id) === targetId
+    );
     if (isEdgeFromFocusedMotif) {
-      context.setSelectedSketchElement(null)
-      context.setSelectedCytoscapeEdge({source: sourceId, target: targetId, label: ""})
+      context.setSelectedSketchElement(null);
+      context.setSelectedCytoscapeEdge({
+        source: sourceId,
+        target: targetId,
+        label: "",
+      });
     }
   }
 
   function highlightSynapses(sourceId, targetId) {
     let scene = sharkViewerInstance.scene;
-    let isEdgeFromFocusedMotif = context.focusedMotif.edges.some((e) => String(e.start_neuron_id) === sourceId && String(e.end_neuron_id) === targetId)
+    let isEdgeFromFocusedMotif = context.focusedMotif.edges.some(
+      (e) =>
+        String(e.start_neuron_id) === sourceId &&
+        String(e.end_neuron_id) === targetId
+    );
     if (isEdgeFromFocusedMotif) {
       scene.traverse((child) => {
         if (
           typeof child.name === "string" &&
-          child.name.startsWith("syn-") && child.neuron_ids.startsWith("syn-")
+          child.name.startsWith("syn-") &&
+          child.neuron_ids.startsWith("syn-")
         ) {
           let neuron_ids = child.neuron_ids.split("-");
           let pre_id = String(neuron_ids[1]);
           let post_id = String(neuron_ids[2]);
 
           if (sourceId === pre_id && targetId === post_id) {
-              child.material = new THREE.MeshPhongMaterial({color: Color.red});
-              child.material.needsUpdate = true;
-              child.highlighted = true;
+            child.material = new THREE.MeshPhongMaterial({ color: Color.red });
+            child.material.needsUpdate = true;
+            child.highlighted = true;
           } else {
-            child.material = new THREE.MeshPhongMaterial({color: Color.orange});
+            child.material = new THREE.MeshPhongMaterial({
+              color: Color.orange,
+            });
             child.material.needsUpdate = true;
             child.highlighted = false;
           }
         }
       });
     } else {
-       scene.traverse((child) => {
-         if (typeof child.name === "string" && child.name.startsWith("syn-") && child.neuron_ids.startsWith("syn-")
+      scene.traverse((child) => {
+        if (
+          typeof child.name === "string" &&
+          child.name.startsWith("syn-") &&
+          child.neuron_ids.startsWith("syn-")
         ) {
-           child.material = new THREE.MeshPhongMaterial({color: Color.orange});
-           child.highlighted = false;
-         }
-       });
+          child.material = new THREE.MeshPhongMaterial({ color: Color.orange });
+          child.highlighted = false;
+        }
+      });
     }
   }
 
@@ -1181,7 +1232,7 @@ function Viewer() {
       }
     }
     if (context.selectedCytoscapeEdge) {
-      context.setSelectedCytoscapeEdge(null)
+      context.setSelectedCytoscapeEdge(null);
     }
   }
 

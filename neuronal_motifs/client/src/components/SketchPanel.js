@@ -9,7 +9,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import paper from "paper";
 import { AppContext } from "../contexts/GlobalContext";
 import _ from "lodash";
-import { Grid, IconButton, Popover, Tooltip } from "@mui/material";
+import { Grid, IconButton, Popover, Tooltip, Button } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFileExport,
@@ -18,6 +18,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Utils as QbUtils } from "react-awesome-query-builder";
 import axios from "axios";
+import { getNodeKeyFromId } from "../utils/edge";
 
 function SketchPanel() {
   const sketchPanelId = "sketch-panel";
@@ -49,6 +50,12 @@ function SketchPanel() {
   const getMotifCount = async (motif) => {
     // get request to backend to get motif count
     let url = `http://${process.env.REACT_APP_API_URL}/count/motif=${motif}`;
+    return (await axios.get(url)).data;
+  };
+
+  const getRelativeMotifCount = async (motif) => {
+    // get request to backend to get motif count
+    let url = `http://${process.env.REACT_APP_API_URL}/rel_count/motif=${motif}`;
     return (await axios.get(url)).data;
   };
 
@@ -120,6 +127,149 @@ function SketchPanel() {
     // Remove all edges and nodes
     setNodes([]);
     setEdges([]);
+  };
+
+  const deleteSketchElement = () => {
+    // edges
+    if (
+      context.selectedSketchElement &&
+      context.selectedSketchElement.type === "edge"
+    ) {
+      let newEdges = edges.filter(
+        (edge) => edge.label !== context.selectedSketchElement.label
+      );
+      context.selectedSketchElement.edgeLine.remove();
+      context.selectedSketchElement.lineGroup.remove();
+      context.selectedSketchElement.propertyLabel?.remove();
+      context.setSelectedSketchElement(null);
+      setEdges(newEdges);
+    }
+
+    // nodes
+    if (
+      context.selectedSketchElement &&
+      context.selectedSketchElement.type === "node"
+    ) {
+      // find adjacent edges
+      let nodeLabel = context.selectedSketchElement.label;
+      let adjacentEdges = edges.filter((edge) => {
+        if (
+          edge.fromNode.label === nodeLabel ||
+          edge.toNode.label === nodeLabel
+        ) {
+          return edge;
+        }
+      });
+
+      // delete edges from canvas
+      adjacentEdges.map((edge) => {
+        edge.edgeLine.remove();
+        edge.lineGroup.remove();
+        edge.propertyLabel?.remove();
+      });
+
+      // delete node from canvas
+      const selectedNodeLabel = context.selectedSketchElement.label;
+      context.selectedSketchElement.circle.remove();
+      context.selectedSketchElement.circleGroup.remove();
+      context.setSelectedSketchElement(null);
+
+      // delete node and rename remaining nodes
+      let newNodes = nodes
+        .filter((node) => node.label !== selectedNodeLabel)
+        .map((node, i) =>
+          renameCircle(
+            node.circle,
+            i,
+            node.properties,
+            "tree" in node ? node.tree : null,
+            node.label
+          )
+        );
+
+      const getNewNode = (previousLabel) =>
+        newNodes.find((node) => node.previousLabel === previousLabel);
+
+      // delete adjacent edges
+      let newEdges = edges
+        .filter((edge) => !adjacentEdges.includes(edge))
+        .map((edge) => {
+          let newFromNode = getNewNode(edge.fromNode.label);
+          let newToNode = getNewNode(edge.toNode.label);
+          let newNodeIndices = [
+            _.findLastIndex(newNodes, newFromNode),
+            _.findLastIndex(newNodes, newToNode),
+          ];
+
+          return renameEdge(newFromNode, newToNode, newNodeIndices, edge);
+        });
+
+      console.log(newEdges, newNodes);
+
+      // reset edges and nodes
+      setEdges(newEdges);
+      setNodes(newNodes);
+    }
+  };
+
+  const renameEdge = (fromNode, toNode, nodeIndices, edge) => {
+    let tree = "tree" in edge ? edge.tree : null;
+    let edgeObj = {
+      ...edge,
+    };
+    edgeObj["fromNode"] = fromNode;
+    edgeObj["toNode"] = toNode;
+    edgeObj["indices"] = nodeIndices;
+    edgeObj["label"] = `${fromNode.label} -> ${toNode.label}`;
+    if (tree !== null) {
+      edgeObj["tree"] = QbUtils.loadTree(tree);
+    } else {
+      edgeObj["tree"] = tree;
+    }
+
+    return edgeObj;
+  };
+
+  const renameCircle = (
+    circle,
+    index,
+    properties = null,
+    tree = null,
+    previousLabel
+  ) => {
+    circle.fillColor = context.neuronColors[index];
+    let textPoint = [circle.position.x, circle.position.y + 7];
+    let label = new paper.PointText({
+      point: textPoint,
+      justification: "center",
+      fillColor: "white",
+      font: "Roboto",
+      fontSize: 20,
+    });
+    let letter = String.fromCharCode(65 + index);
+    label.content = letter;
+    let circleGroup = new paper.Group([circle, label]);
+
+    if (tree !== null) {
+      return {
+        circle: circle,
+        label: letter,
+        previousLabel: previousLabel,
+        properties: properties,
+        type: "node",
+        circleGroup: circleGroup,
+        tree: QbUtils.loadTree(tree),
+      };
+    } else {
+      return {
+        circle: circle,
+        label: letter,
+        previousLabel: previousLabel,
+        properties: properties,
+        type: "node",
+        circleGroup: circleGroup,
+      };
+    }
   };
 
   const addCircle = (point, node) => {
@@ -715,6 +865,7 @@ function SketchPanel() {
       bindPencilEvents();
     }
   }, [pencil, mouseState, nodes, edges]);
+
   useEffect(() => {
     currentPath?.remove();
     setPopperLocation(null);
@@ -727,7 +878,9 @@ function SketchPanel() {
       });
     }
   }, [mouseState]);
+
   useEffect(() => {
+    // if context.selectedSketchElement is not null
     if (context.selectedSketchElement) {
       let paperElement =
         context.selectedSketchElement?.circle ||
@@ -750,6 +903,17 @@ function SketchPanel() {
               e.properties = context.selectedSketchElement.properties;
               e = addEdgePropertyLabel(e);
             }
+            if (
+              e.fromNode.label ===
+                context.selectedSketchElement.fromNode.label &&
+              e.toNode.label === context.selectedSketchElement.toNode.label
+            ) {
+              e.edgeLine.strokeColor = "red";
+              e.lineGroup.children[0].strokeColor = "red";
+            } else {
+              e.edgeLine.strokeColor = "#000000";
+              e.lineGroup.children[0].strokeColor = "#000000";
+            }
             return e;
           })
         );
@@ -767,8 +931,16 @@ function SketchPanel() {
       }
     } else {
       setPopperLocation(null);
+      setEdges(
+        edges.map((e) => {
+          e.edgeLine.strokeColor = "#000000";
+          e.lineGroup.children[0].strokeColor = "#000000";
+          return e;
+        })
+      );
     }
   }, [context.selectedSketchElement]);
+
   // On init set up our paperjs
   useEffect(() => {
     paper.setup(sketchPanelId);
@@ -785,11 +957,11 @@ function SketchPanel() {
   }, []);
 
   // Update global motif tracker
-  useEffect(() => {
-    if (edges) {
-      console.log("Edges", edges);
-    }
-  }, [edges]);
+  // useEffect(() => {
+  //   if (edges) {
+  //     console.log("Edges", edges);
+  //   }
+  // }, [edges]);
 
   const getEncodedMotif = (nodes, edges) => {
     let encodedNodes = nodes.map((n, i) => {
@@ -831,8 +1003,64 @@ function SketchPanel() {
 
     const count = await getMotifCount(JSON.stringify(encodedMotif));
     context.setAbsMotifCount(count);
+
+    // get relative count of motif in network
+    const relative_count = await getRelativeMotifCount(
+      JSON.stringify(encodedMotif)
+    );
+    context.setRelativeMotifCount(relative_count);
+
     context.setMotifQuery(encodedMotif);
   }, [nodes, edges]);
+
+  useEffect(() => {
+    if (!context.selectedCytoscapeEdge) {
+      setEdges(
+        edges.map((e) => {
+          e.edgeLine.strokeColor = "#000000";
+          e.lineGroup.children[0].strokeColor = "#000000";
+          return e;
+        })
+      );
+    }
+    if (context.focusedMotif && context.selectedCytoscapeEdge) {
+      try {
+        const sourceNodeKey = getNodeKeyFromId(
+          context.selectedCytoscapeEdge.source,
+          context
+        );
+        const targetNodeKey = getNodeKeyFromId(
+          context.selectedCytoscapeEdge.target,
+          context
+        );
+
+        setEdges(
+          edges.map((e) => {
+            if (
+              e.fromNode.label === sourceNodeKey &&
+              e.toNode.label === targetNodeKey
+            ) {
+              e.edgeLine.strokeColor = "red";
+              e.lineGroup.children[0].strokeColor = "red";
+            } else {
+              e.edgeLine.strokeColor = "#000000";
+              e.lineGroup.children[0].strokeColor = "#000000";
+            }
+            return e;
+          })
+        );
+      } catch (TypeError) {
+        // when selectedCytoscapeEdge's source and target are not the nodes from focusedMotif.
+        setEdges(
+          edges.map((e) => {
+            e.edgeLine.strokeColor = "#000000";
+            e.lineGroup.children[0].strokeColor = "#000000";
+            return e;
+          })
+        );
+      }
+    }
+  }, [context.selectedCytoscapeEdge, context.focusedMotif]);
 
   useEffect(() => {
     if (!nodes) return;
@@ -866,7 +1094,7 @@ function SketchPanel() {
   return (
     <div className="sketch-panel-style">
       <Grid container className="canvas-wrapper" spacing={0}>
-        <Grid item xs={1}>
+        <Grid item xs={1.4}>
           <Grid container direction="column" justifyContent="center">
             <Tooltip title="Draw Node" placement="right">
               <IconButton
@@ -932,7 +1160,7 @@ function SketchPanel() {
             </Tooltip>
           </Grid>
         </Grid>
-        <Grid item xs={10} style={{ height: "inherit" }}>
+        <Grid item xs={9.2} style={{ height: "inherit" }}>
           <div
             className="sketch-canvas"
             id="sketch-canvas-container"
@@ -976,14 +1204,36 @@ function SketchPanel() {
                   </span>
                 </Grid>
 
+                <Grid
+                  container
+                  className={"popover-grid"}
+                  direction="column"
+                  justifyContent="center"
+                  alignItems="flex-end"
+                  style={{
+                    position: "absolute",
+                    height: "40.75px",
+                    right: "110px",
+                  }}
+                  zIndex={3}
+                >
+                  <Button
+                    size="small"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => deleteSketchElement()}
+                  >
+                    Delete
+                  </Button>
+                </Grid>
+
                 <QueryBuilder />
               </Popover>
             )}
           </div>
         </Grid>
-        <Grid item xs={1}>
+        <Grid item xs={1.4}>
           <Grid container direction="column" justifyContent="center">
-            <Tooltip title="Clear Sketch" placement="right">
+            <Tooltip title="Clear Sketch" placement="left">
               <IconButton
                 color="default"
                 onClick={() => {
@@ -994,7 +1244,7 @@ function SketchPanel() {
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Import Motif" placement="right">
+            <Tooltip title="Import Motif" placement="left">
               <IconButton
                 value="edit"
                 color="default"
@@ -1003,7 +1253,7 @@ function SketchPanel() {
                 <FontAwesomeIcon size={"sm"} icon={faFileImport} />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Export Motif" placement="right">
+            <Tooltip title="Export Motif" placement="left">
               <IconButton
                 value="edit"
                 color="default"
