@@ -399,6 +399,41 @@ function Viewer() {
     motif: null,
   });
 
+  function setSynapseColorToConnectingNeuron(scene) {
+    scene.children.forEach((child) => {
+      if (typeof child.name === "string" && child.name.startsWith("syn-")) {
+        let color;
+        if (child.pre === child.snapToNeuron) {
+          let [neuron, idx] = getNeuronListId(neurons, child.post);
+          color = context.neuronColors[idx];
+        } else if (child.post === child.snapToNeuron) {
+          let [neuron, idx] = getNeuronListId(neurons, child.pre);
+          color = context.neuronColors[idx];
+        } else {
+          color = Color.orange;
+        }
+
+        child.material = new THREE.MeshPhongMaterial({
+          color: color,
+        });
+        child.material.needsUpdate = true;
+        child.highlighted = false;
+      }
+    });
+  }
+
+  function setSynapseColorToBaseColor(scene) {
+    scene.children.forEach((child) => {
+      if (typeof child.name === "string" && child.name.startsWith("syn-")) {
+        child.material = new THREE.MeshPhongMaterial({
+          color: Color.orange,
+        });
+        child.material.needsUpdate = true;
+        child.highlighted = false;
+      }
+    });
+  }
+
   function setDuplicateSynapsesToVisible(scene) {
     scene.children.forEach((child) => {
       if (typeof child.name === "string" && child.name.startsWith("syn-")) {
@@ -503,6 +538,8 @@ function Viewer() {
       });
       document.body.style.cursor = "pointer";
 
+      mesh.oldMaterial = mesh.material.clone();
+
       mesh.material = new THREE.MeshPhongMaterial({ color: Color.pink });
       mesh.material.needsUpdate = true;
     });
@@ -515,7 +552,7 @@ function Viewer() {
         mesh.material.needsUpdate = true;
         mesh.highlighted = true;
       } else {
-        mesh.material = new THREE.MeshPhongMaterial({ color: Color.orange });
+        mesh.material = mesh.oldMaterial;
         mesh.material.needsUpdate = true;
         mesh.highlighted = false;
       }
@@ -1068,18 +1105,18 @@ function Viewer() {
         prevSliderValue < motif_path_threshold
       ) {
         setDuplicateSynapsesToVisible(scene);
+        setSynapseColorToConnectingNeuron(scene);
       } else if (
         level < motif_path_threshold &&
         prevSliderValue >= motif_path_threshold
       ) {
         removeSynapseDuplicates(scene);
+        setSynapseColorToBaseColor(scene);
       }
 
       let bound = 0.08;
       let explosionProgression = (level - motif_path_threshold) / bound;
       explosionProgression = Math.max(0.0, Math.min(explosionProgression, 1.0)); // lamp between 0 and 1
-
-      console.log("scene: ", scene);
 
       // animate synapse movement
       scene.children.forEach((child) => {
