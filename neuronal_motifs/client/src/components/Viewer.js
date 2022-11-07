@@ -286,29 +286,26 @@ function addSynapse(
   onClickHighlightEdgesAndSynapses
 ) {
   // create a sphere shape
-  let name_variant1 = getSynapseNameFromLocations(
+  let name = getSynapseNameFromLocations(
     pre_syn_location,
     post_syn_location,
     false
   );
-  let name_variant2 = getSynapseNameFromLocations(
-    pre_syn_location,
-    post_syn_location,
-    true
-  );
   let neuron_ids = getSynapseIds(pre_id, post_id);
-  if (
-    !scene.getObjectByName(name_variant1) &&
-    !scene.getObjectByName(name_variant2)
-  ) {
+  if (!scene.getObjectByName(name)) {
     let geometry = new THREE.SphereGeometry(100, 16, 16);
     let material = new THREE.MeshPhongMaterial({ color: color });
     let mesh = new THREE.Mesh(geometry, material);
     mesh.neuron_ids = neuron_ids;
-    mesh.name = name_variant1;
+    mesh.name = name;
     mesh.position.x = (post_syn_location[0] + pre_syn_location[0]) / 2.0;
     mesh.position.y = (post_syn_location[1] + pre_syn_location[1]) / 2.0;
     mesh.position.z = (post_syn_location[2] + pre_syn_location[2]) / 2.0;
+
+    mesh.origin = new THREE.Vector3().copy(mesh.position);
+
+    mesh.snapToNeuron = pre_id;
+
     mesh.motifs = [motif];
     mesh.highlighted = false;
 
@@ -347,10 +344,7 @@ function addSynapse(
     scene.add(mesh);
     return mesh;
   } else {
-    let mesh = scene.getObjectByName(name_variant1);
-    if (!mesh) {
-      mesh = scene.getObjectByName(name_variant2);
-    }
+    let mesh = scene.getObjectByName(name);
     mesh.motifs.push(motif);
     return mesh;
   }
@@ -472,7 +466,7 @@ function Viewer() {
 
   const context = useContext(AppContext);
 
-  let factor = 10000;
+  let factor = 15000;
   let offset = 0.001;
   let syn_clusters_identifier = "clusters";
   let lines_identifier = "lines";
