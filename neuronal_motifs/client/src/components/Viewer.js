@@ -1023,6 +1023,7 @@ function Viewer() {
 
       let directions = getTranslationVectors(neurons.length);
 
+      let allLines = [];
       motif.syn_clusters.forEach((connection, i) => {
         let bound = 0.08;
         let explosionProgression = (level - motif_path_threshold) / bound;
@@ -1062,18 +1063,23 @@ function Viewer() {
             scene
           );
 
-          // remove old lines
-          deleteChild(scene, line_clusters_identifier);
-          // add empty object to hold lines
-          let line_clusters = new THREE.Object3D();
-          line_clusters.name = line_clusters_identifier;
-          line_clusters.children = lines; // add new lines to scene
-          scene.add(line_clusters);
-        } else {
-          // remove old lines
-          deleteChild(scene, line_clusters_identifier);
+          allLines = allLines.concat(lines);
         }
       });
+
+      // remove old lines
+      if (level > motif_path_threshold) {
+        // remove old lines
+        deleteChild(scene, line_clusters_identifier);
+        // add empty object to hold lines
+        let line_clusters = new THREE.Object3D();
+        line_clusters.name = line_clusters_identifier;
+        line_clusters.children = allLines; // add new lines to scene
+        scene.add(line_clusters);
+      } else {
+        // remove old lines
+        deleteChild(scene, line_clusters_identifier);
+      }
     }
   }, [context.abstractionLevel]);
 
