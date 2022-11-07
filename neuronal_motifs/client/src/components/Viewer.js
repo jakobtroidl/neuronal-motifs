@@ -294,7 +294,6 @@ function addSynapse(
     });
 
     mesh.addEventListener("click", (event) => {
-      console.log("clickkkk");
       onClickHighlightEdgesAndSynapses(mesh);
     });
 
@@ -1052,10 +1051,7 @@ function Viewer() {
         scene,
         interactionManager,
         motif,
-        // highlightEdgesAndSynapses,
         onClickHighlightEdgesAndSynapses
-        // onMouseoverHighlightSynapses,
-        // onMouseoutHighlightSynapses
       );
 
       let level = getAbstractionLevel();

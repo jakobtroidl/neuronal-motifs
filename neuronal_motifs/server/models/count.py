@@ -28,7 +28,6 @@ def get_random(motif):
 
 def get_relative(motif):
     """
-
     @param motif:
     @return:
     """
@@ -42,7 +41,6 @@ def get_relative(motif):
     if random_count <= 1:
         return 2
     return 2 * (absolute_count / random_count) - 2
-
 
 def get_absolute(motif):
     """

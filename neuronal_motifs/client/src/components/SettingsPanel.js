@@ -22,6 +22,7 @@ export default function SettingsPanel(props) {
         size={"small"}
         defaultValue={getAuthToken()}
         onChange={setAuthToken}
+        style={{ marginTop: "15px" }}
       />
       <FormGroup>
         <FormControlLabel

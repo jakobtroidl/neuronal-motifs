@@ -193,7 +193,7 @@ function MotifPanel() {
                 }}
                 size="small"
                 margin="normal"
-                style={{ marginTop: 0 }}
+                style={{ marginTop: 0, marginLeft: "8px" }}
                 defaultValue={1}
                 onChange={(event) => setNumber(_.toNumber(event.target.value))}
               />
