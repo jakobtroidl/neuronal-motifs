@@ -272,108 +272,15 @@ function getSynapseIds(pre_id, post_id) {
   return "syn-" + pre_id + "-" + post_id;
 }
 
-function addSynapse(
-  scene,
-  pre_id,
-  post_id,
-  pre_syn_location,
-  post_syn_location,
-  color,
-  motif,
-  setDisplayTooltip,
-  setTooltipInfo,
-  interactionManager,
-  onClickHighlightEdgesAndSynapses
-) {
-  // create a sphere shape
-  let name = getSynapseNameFromLocations(
-    pre_syn_location,
-    post_syn_location,
-    false
-  );
-  let neuron_ids = getSynapseIds(pre_id, post_id);
-  if (!scene.getObjectByName(name)) {
-    let geometry = new THREE.SphereGeometry(100, 16, 16);
-    let material = new THREE.MeshPhongMaterial({ color: color });
-    let mesh = new THREE.Mesh(geometry, material);
-    mesh.neuron_ids = neuron_ids;
-    mesh.name = name;
-    mesh.position.x = (post_syn_location[0] + pre_syn_location[0]) / 2.0;
-    mesh.position.y = (post_syn_location[1] + pre_syn_location[1]) / 2.0;
-    mesh.position.z = (post_syn_location[2] + pre_syn_location[2]) / 2.0;
-
-    mesh.origin = new THREE.Vector3().copy(mesh.position);
-
-    mesh.snapToNeuron = pre_id;
-
-    mesh.motifs = [motif];
-    mesh.highlighted = false;
-
-    mesh.addEventListener("mouseover", (event) => {
-      setDisplayTooltip(true);
-      setTooltipInfo({
-        pre_soma_dist: 0.0,
-        post_soma_dist: 0.0, // TODO fix this
-        event: event,
-      });
-      document.body.style.cursor = "pointer";
-
-      mesh.material = new THREE.MeshPhongMaterial({ color: Color.pink });
-      mesh.material.needsUpdate = true;
-    });
-
-    mesh.addEventListener("mouseout", (event) => {
-      setDisplayTooltip(false);
-      document.body.style.cursor = "default";
-      if (mesh.highlighted) {
-        mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
-        mesh.material.needsUpdate = true;
-        mesh.highlighted = true;
-      } else {
-        mesh.material = new THREE.MeshPhongMaterial({ color: Color.orange });
-        mesh.material.needsUpdate = true;
-        mesh.highlighted = false;
-      }
-    });
-
-    mesh.addEventListener("click", (event) => {
-      onClickHighlightEdgesAndSynapses(mesh);
-    });
-
-    interactionManager.add(mesh);
-    scene.add(mesh);
-    return mesh;
-  } else {
-    let mesh = scene.getObjectByName(name);
-    mesh.motifs.push(motif);
-    return mesh;
-  }
-}
-function addSynapses(
-  motif,
-  setDisplayTooltip,
-  setTooltipInfo,
-  scene,
-  interactionManager,
-  onClickHighlightEdgesAndSynapses
-) {
-  let synapses = motif.syn_clusters;
-  synapses.forEach((connection, i) => {
-    connection.pre_loc.forEach((pre_syn_location, j) => {
-      addSynapse(
-        scene,
-        connection.pre_id,
-        connection.post_id,
-        pre_syn_location,
-        connection.post_loc[j],
-        Color.orange,
-        motif,
-        setDisplayTooltip,
-        setTooltipInfo,
-        interactionManager,
-        onClickHighlightEdgesAndSynapses
-      );
-    });
+function removeSynapseDuplicates(scene) {
+  scene.children.forEach((child) => {
+    if (
+      typeof child.name === "string" &&
+      child.name.startsWith("syn-") &&
+      child.snapToNeuron === child.post
+    ) {
+      child.visible = false;
+    }
   });
 }
 
@@ -483,6 +390,7 @@ function Viewer() {
     post_id: null,
   });
   const [neurons, setNeurons] = useState([]);
+  const [synapses, setSynapses] = useState([]);
 
   const [displayContextMenu, setDisplayContextMenu] = useState({
     display: false,
@@ -490,6 +398,144 @@ function Viewer() {
     neuron: null,
     motif: null,
   });
+
+  function setDuplicateSynapsesToVisible(scene) {
+    scene.children.forEach((child) => {
+      if (typeof child.name === "string" && child.name.startsWith("syn-")) {
+        child.visible = true;
+      }
+    });
+  }
+
+  function addSynapses(
+    motif,
+    setDisplayTooltip,
+    setTooltipInfo,
+    scene,
+    interactionManager,
+    onClickHighlightEdgesAndSynapses
+  ) {
+    let synapses = motif.syn_clusters;
+    synapses.forEach((connection, i) => {
+      connection.pre_loc.forEach((pre_syn_location, j) => {
+        addSynapse(
+          scene,
+          connection.pre,
+          connection.post,
+          pre_syn_location,
+          connection.post_loc[j],
+          Color.orange,
+          motif,
+          setDisplayTooltip,
+          setTooltipInfo,
+          interactionManager,
+          onClickHighlightEdgesAndSynapses,
+          connection.pre,
+          true
+        );
+        addSynapse(
+          scene,
+          connection.pre,
+          connection.post,
+          pre_syn_location,
+          connection.post_loc[j],
+          Color.orange,
+          motif,
+          setDisplayTooltip,
+          setTooltipInfo,
+          interactionManager,
+          onClickHighlightEdgesAndSynapses,
+          connection.post,
+          false
+        );
+      });
+    });
+  }
+
+  function addSynapse(
+    scene,
+    pre_id,
+    post_id,
+    pre_syn_location,
+    post_syn_location,
+    color,
+    motif,
+    setDisplayTooltip,
+    setTooltipInfo,
+    interactionManager,
+    onClickHighlightEdgesAndSynapses,
+    snapToNeuron,
+    visible
+  ) {
+    // create a sphere shape
+    let name = getSynapseNameFromLocations(
+      pre_syn_location,
+      post_syn_location,
+      false
+    );
+    let neuron_ids = getSynapseIds(pre_id, post_id);
+    //if (!scene.getObjectByName(name)) {
+    let geometry = new THREE.SphereGeometry(100, 16, 16);
+    let material = new THREE.MeshPhongMaterial({ color: color });
+    let mesh = new THREE.Mesh(geometry, material);
+    mesh.neuron_ids = neuron_ids;
+    mesh.name = name;
+    mesh.position.x = (post_syn_location[0] + pre_syn_location[0]) / 2.0;
+    mesh.position.y = (post_syn_location[1] + pre_syn_location[1]) / 2.0;
+    mesh.position.z = (post_syn_location[2] + pre_syn_location[2]) / 2.0;
+
+    mesh.origin = new THREE.Vector3().copy(mesh.position);
+    mesh.pre = pre_id;
+    mesh.post = post_id;
+
+    mesh.snapToNeuron = snapToNeuron;
+
+    mesh.motifs = [motif];
+    mesh.highlighted = false;
+    mesh.visible = visible;
+
+    mesh.addEventListener("mouseover", (event) => {
+      setDisplayTooltip(true);
+      setTooltipInfo({
+        pre_soma_dist: 0.0,
+        post_soma_dist: 0.0, // TODO fix this
+        event: event,
+      });
+      document.body.style.cursor = "pointer";
+
+      mesh.material = new THREE.MeshPhongMaterial({ color: Color.pink });
+      mesh.material.needsUpdate = true;
+    });
+
+    mesh.addEventListener("mouseout", (event) => {
+      setDisplayTooltip(false);
+      document.body.style.cursor = "default";
+      if (mesh.highlighted) {
+        mesh.material = new THREE.MeshPhongMaterial({ color: Color.red });
+        mesh.material.needsUpdate = true;
+        mesh.highlighted = true;
+      } else {
+        mesh.material = new THREE.MeshPhongMaterial({ color: Color.orange });
+        mesh.material.needsUpdate = true;
+        mesh.highlighted = false;
+      }
+    });
+
+    mesh.addEventListener("click", (event) => {
+      onClickHighlightEdgesAndSynapses(mesh);
+    });
+
+    interactionManager.add(mesh);
+
+    setSynapses([...synapses, mesh]);
+    scene.add(mesh);
+    return mesh;
+    // } else {
+    //   let mesh = scene.getObjectByName(name);
+    //   mesh.motifs.push(motif);
+    //   return mesh;
+    // }
+  }
 
   function removeSynapseSuggestions() {
     if (sharkViewerInstance) {
@@ -1017,17 +1063,38 @@ function Viewer() {
 
       let directions = getTranslationVectors(neurons.length);
 
+      if (
+        level >= motif_path_threshold &&
+        prevSliderValue < motif_path_threshold
+      ) {
+        setDuplicateSynapsesToVisible(scene);
+      } else if (
+        level < motif_path_threshold &&
+        prevSliderValue >= motif_path_threshold
+      ) {
+        removeSynapseDuplicates(scene);
+      }
+
+      let bound = 0.08;
+      let explosionProgression = (level - motif_path_threshold) / bound;
+      explosionProgression = Math.max(0.0, Math.min(explosionProgression, 1.0)); // lamp between 0 and 1
+
+      console.log("scene: ", scene);
+
+      // animate synapse movement
+      scene.children.forEach((child) => {
+        if (typeof child.name === "string" && child.name.startsWith("syn-")) {
+          let [neuron, idx] = getNeuronListId(neurons, child.snapToNeuron);
+          moveObject(child, directions[idx], explosionProgression);
+        }
+      });
+
       let allLines = [];
       motif.syn_clusters.forEach((connection, i) => {
-        let bound = 0.08;
-        let explosionProgression = (level - motif_path_threshold) / bound;
-        explosionProgression = Math.max(
-          0.0,
-          Math.min(explosionProgression, 1.0)
-        ); // lamp between 0 and 1
         neurons.forEach((neuron, i) => {
           moveObject(neuron, directions[i], explosionProgression);
         });
+
         if (level > motif_path_threshold) {
           let [pre_neuron, pre_neuron_number] = getNeuronListId(
             neurons,
@@ -1074,6 +1141,8 @@ function Viewer() {
         // remove old lines
         deleteChild(scene, line_clusters_identifier);
       }
+
+      setPrevSliderValue(level);
     }
   }, [context.abstractionLevel]);
 
