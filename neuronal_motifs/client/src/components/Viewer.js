@@ -400,19 +400,26 @@ function restoreColors(sharkViewerInstance) {
   });
 }
 
-function resetSynapsesColor(sharkViewerInstance) {
+function resetSynapsesColor(sharkViewerInstance, motif) {
   let scene = sharkViewerInstance.scene;
-  scene.traverse((child) => {
-    if (
-      typeof child.name === "string" &&
-      child.name.startsWith("syn-") &&
-      child.neuron_ids.startsWith("syn-")
-    ) {
-      child.material = new THREE.MeshPhongMaterial({ color: Color.orange });
-      child.material.needsUpdate = true;
-      child.highlighted = false;
-    }
-  });
+  console.log(motif);
+  if (motif) {
+    motif.synapses.forEach((synapse, i) => {
+      let synapseName = [
+        "syn",
+        Object.values(synapse.pre).join("-"),
+        Object.values(synapse.post).join("-"),
+      ].join("-");
+      let synapseObject = scene.getObjectByName(synapseName);
+      if (synapseObject && synapseObject.neuron_ids.startsWith("syn-")) {
+        synapseObject.material = new THREE.MeshPhongMaterial({
+          color: Color.orange,
+        });
+        synapseObject.material.needsUpdate = true;
+        synapseObject.highlighted = false;
+      }
+    });
+  }
 }
 
 function Viewer() {
@@ -465,7 +472,7 @@ function Viewer() {
       context.setNeighborhoodQuery(null);
     } else if (event.key === "c") {
       console.log("c was pressed");
-      resetSynapsesColor(sharkViewerInstance);
+      resetSynapsesColor(sharkViewerInstance, context.focusedMotif);
       unselectEdges();
     }
   }
@@ -523,6 +530,7 @@ function Viewer() {
       let scene = sharkViewerInstance.scene;
       let abstractionBoundary = getAbstractionBoundary(sharkViewerInstance);
       refreshEdges(scene, abstractionBoundary);
+      resetSynapsesColor(sharkViewerInstance, context.focusedMotif);
       console.log("recolored focused motif");
     }
   }, [context.focusedMotif]);
@@ -795,10 +803,11 @@ function Viewer() {
             tmp_labels[neuron.id] = neuron.labels;
             context.setCurrentNeuronLabels(tmp_labels);
           });
-          context.setFocusedMotif(motif);
+          // context.setFocusedMotif(motif); // move to after setSelectedMotifs to color all neurons correctly
           setMotif(motif);
           context.setSelectedMotifs([...context.selectedMotifs, motif]);
           context.setLoadingMessage(null);
+          context.setFocusedMotif(motif);
         } else {
           context.setLoadingMessage(data?.message || "Error");
         }
