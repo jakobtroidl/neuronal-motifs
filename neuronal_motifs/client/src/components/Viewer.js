@@ -359,7 +359,8 @@ function resetSynapsesColor(sharkViewerInstance) {
       child.name.startsWith("syn-") &&
       child.neuron_ids.startsWith("syn-")
     ) {
-      child.material = new THREE.MeshPhongMaterial({ color: Color.orange });
+      //child.material = new THREE.MeshPhongMaterial({ color: Color.orange });
+      child.material = child.oldMaterial;
       child.material.needsUpdate = true;
       child.highlighted = false;
     }
@@ -416,6 +417,7 @@ function Viewer() {
         child.material = new THREE.MeshPhongMaterial({
           color: color,
         });
+        child.oldMaterial = child.material.clone();
         child.material.needsUpdate = true;
         child.highlighted = false;
       }
@@ -428,6 +430,7 @@ function Viewer() {
         child.material = new THREE.MeshPhongMaterial({
           color: Color.orange,
         });
+        child.oldMaterial = child.material.clone();
         child.material.needsUpdate = true;
         child.highlighted = false;
       }
@@ -520,6 +523,7 @@ function Viewer() {
     mesh.position.z = (post_syn_location[2] + pre_syn_location[2]) / 2.0;
 
     mesh.origin = new THREE.Vector3().copy(mesh.position);
+    mesh.oldMaterial = material.clone();
     mesh.pre = pre_id;
     mesh.post = post_id;
 
@@ -1468,9 +1472,10 @@ function Viewer() {
             child.material.needsUpdate = true;
             child.highlighted = true;
           } else {
-            child.material = new THREE.MeshPhongMaterial({
-              color: Color.orange,
-            });
+            // child.material = new THREE.MeshPhongMaterial({
+            //   color: Color.orange,
+            // });
+            child.material = child.oldMaterial;
             child.material.needsUpdate = true;
             child.highlighted = false;
           }
@@ -1483,7 +1488,8 @@ function Viewer() {
           child.name.startsWith("syn-") &&
           child.neuron_ids.startsWith("syn-")
         ) {
-          child.material = new THREE.MeshPhongMaterial({ color: Color.orange });
+          //child.material = new THREE.MeshPhongMaterial({ color: Color.orange });
+          child.material = child.oldMaterial;
           child.highlighted = false;
         }
       });
