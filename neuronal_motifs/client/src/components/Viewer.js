@@ -402,7 +402,6 @@ function restoreColors(sharkViewerInstance) {
 
 function resetSynapsesColor(sharkViewerInstance, motif) {
   let scene = sharkViewerInstance.scene;
-  console.log(motif);
   if (motif) {
     motif.synapses.forEach((synapse, i) => {
       let synapseName = [

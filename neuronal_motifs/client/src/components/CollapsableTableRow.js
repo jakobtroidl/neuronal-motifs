@@ -11,6 +11,7 @@ import PropTypes from "prop-types";
 import { AppContext } from "../contexts/GlobalContext";
 import { hexToRgbA } from "../utils/rendering";
 import CloseIcon from "@mui/icons-material/Close";
+import _ from "lodash";
 
 export function CollapsableTableRow(props) {
   const { row, columns, handleDelete } = props;
@@ -46,6 +47,7 @@ export function CollapsableTableRow(props) {
   };
 
   const handleClick = (row) => {
+    context.setErrorMessage(null);
     console.log("Clicked on motif");
     let selectedMotifs_copy = [...context.selectedMotifs];
     const idx = selectedMotifs_copy.indexOf(row);
@@ -55,9 +57,23 @@ export function CollapsableTableRow(props) {
       context.setFocusedMotif(motif);
     } else {
       // motif is not selected yet
-      let selectedMotif = { ...row, index: context.globalMotifIndex };
-      context.setGlobalMotifIndex(context.globalMotifIndex + 1);
-      context.setMotifToAdd(selectedMotif);
+
+      // Check if new motif is already in context.selectedMotifs
+      // Index is increased when the motif appends to the array. Enforce the same index value to check the motif exists or not.
+      let copyOfMotif = {
+        ...row,
+        index: "omit",
+      };
+      let copyOfSelectedMotifs = context.selectedMotifs.map((obj) => {
+        return { ...obj, index: "omit" };
+      });
+      if (!_.some(copyOfSelectedMotifs, copyOfMotif)) {
+        let selectedMotif = { ...row, index: context.globalMotifIndex };
+        context.setGlobalMotifIndex(context.globalMotifIndex + 1);
+        context.setMotifToAdd(selectedMotif);
+      } else {
+        context.setErrorMessage("This motif instance is already selected.");
+      }
     }
   };
 
