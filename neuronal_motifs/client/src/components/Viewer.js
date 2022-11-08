@@ -367,7 +367,6 @@ function Viewer() {
   const context = useContext(AppContext);
 
   let factor = 10000;
-  let offset = 0.001;
   let syn_clusters_identifier = "clusters";
   let lines_identifier = "lines";
   let line_clusters_identifier = "line_clusters";
@@ -1268,33 +1267,57 @@ function Viewer() {
     }
   }
 
-  function deleteSynapse(scene, synapse) {
-    let mesh = scene.getObjectByName(getSynapseName(synapse, false));
-    if (!mesh) {
-      mesh = scene.getObjectByName(getSynapseName(synapse, true));
-    }
-    if (mesh && context.motifToDelete) {
-      let match = mesh.motifs.find(
-        (m) => m.index === context.motifToDelete.index
-      );
-      if (match) {
-        let idx = mesh.motifs.indexOf(match);
-        mesh.motifs.splice(idx, 1);
+  function deleteSynapse(scene, pre_id, post_id) {
+    pre_id = parseInt(pre_id);
+    post_id = parseInt(post_id);
+    let syn_to_delete = [];
+    scene.children.forEach((child) => {
+      if (
+        typeof child.name === "string" &&
+        child.name.startsWith("syn-") &&
+        child.pre === pre_id &&
+        child.post === post_id
+      ) {
+        // let match = child.motifs.find(
+        //   (m) => m.index === context.motifToDelete.index
+        // );
+        // if (match) {
+        //   let idx = child.motifs.indexOf(match);
+        //   child.motifs.splice(idx, 1);
+        // }
+        // if (child.motifs.length === 0) {
+        //   scene.remove(child);
+        // }
+        syn_to_delete.push(child);
       }
-      if (mesh.motifs.length === 0) {
-        scene.remove(mesh);
-      }
-    }
+    });
+
+    scene.remove(...syn_to_delete);
   }
 
   function deleteLine(scene, start_id, end_id) {
-    let lines = scene.getObjectByName("lines");
+    start_id = parseInt(start_id);
+    end_id = parseInt(end_id);
+    let lines = scene.getObjectByName(line_clusters_identifier);
+    let lines_to_delete = [];
     if (lines) {
-      let line = lines.getObjectByName(getLineName(start_id, end_id));
-      if (line) {
-        lines.remove(line);
-      }
+      lines.children.forEach((line) => {
+        if (line.pre === start_id && line.post === end_id) {
+          lines_to_delete.push(line);
+        }
+      });
+
+      lines.remove(...lines_to_delete);
     }
+
+    //
+    // let lines = scene.getObjectByName("lines");
+    // if (lines) {
+    //   let line = lines.getObjectByName(getLineName(start_id, end_id));
+    //   if (line) {
+    //     lines.remove(line);
+    //   }
+    // }
   }
 
   useEffect(() => {
@@ -1304,8 +1327,9 @@ function Viewer() {
       context.motifToDelete.neurons.forEach((neuron) => {
         deleteNeuron(scene, neuron);
       });
-      context.motifToDelete.synapses.forEach((synapse) => {
-        deleteSynapse(scene, synapse);
+
+      context.motifToDelete.graph.links.forEach((link) => {
+        deleteSynapse(scene, link.source, link.target);
       });
 
       context.motifToDelete.graph.links.forEach((link) => {
