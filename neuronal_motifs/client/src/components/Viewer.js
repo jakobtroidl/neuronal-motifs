@@ -18,14 +18,6 @@ import axios from "axios";
 import { getAuthToken } from "../utils/authentication";
 import { getIdFromNodeKey } from "../utils/edge";
 
-const setLineVisibility = (scene, visible) => {
-  scene.children.forEach((child) => {
-    if (typeof child.name == "string" && child.name.includes("lines")) {
-      child.visible = visible;
-    }
-  });
-};
-
 const groupFocused = (group, focusedMotif) => {
   let containsStart =
     focusedMotif.neurons.filter((n) => n.bodyId === group.start_id).length > 0;
@@ -378,6 +370,7 @@ function Viewer() {
   let offset = 0.001;
   let syn_clusters_identifier = "clusters";
   let lines_identifier = "lines";
+  let line_clusters_identifier = "line_clusters";
 
   const [motif, setMotif] = React.useState();
   const [sharkViewerInstance, setSharkViewerInstance] = useState();
@@ -606,11 +599,12 @@ function Viewer() {
       console.log("c was pressed");
       resetSynapsesColor(sharkViewerInstance);
       unselectEdges();
+      setLineVisibility(sharkViewerInstance.scene, 0.0, false);
     }
-    if (event.key === "c") {
-      console.log("c was pressed");
-      removeLines();
-    }
+    // if (event.key === "c") {
+    //   console.log("c was pressed");
+    //   removeLines();
+    // }
   }
 
   function onLineClick(event, line) {
@@ -1092,6 +1086,27 @@ function Viewer() {
     return sharkViewerInstance.getAbstractionBoundary(level);
   }
 
+  const setLineVisibility = (
+    scene,
+    level,
+    visible,
+    pre_id = "all",
+    post_id = "all"
+  ) => {
+    let lines = scene.getObjectByName(line_clusters_identifier);
+    if (lines) {
+      lines.children.forEach((line) => {
+        if (
+          typeof line.name == "string" &&
+          (pre_id === "all" || line.pre === pre_id) &&
+          (post_id === "all" || line.post === post_id)
+        ) {
+          line.visible = visible;
+        }
+      });
+    }
+  };
+
   // Updates the motifs, runs when data, viewer, or abstraction state change
   useEffect(() => {
     if (motif && sharkViewerInstance) {
@@ -1099,8 +1114,6 @@ function Viewer() {
       let level = getAbstractionLevel();
       let abstraction_boundary = getAbstractionBoundary(sharkViewerInstance);
       let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
-
-      let line_clusters_identifier = "line_clusters";
 
       let directions = getTranslationVectors(neurons.length);
 
@@ -1162,7 +1175,8 @@ function Viewer() {
             post_loc_transformed,
             connection.clusters_per_synapse,
             connection.synapses_per_cluster,
-            scene
+            connection.pre,
+            connection.post
           );
 
           allLines = allLines.concat(lines);
@@ -1408,8 +1422,17 @@ function Viewer() {
         return;
       }
 
+      setLineVisibility(sharkViewerInstance.scene, 0, false);
+
       if (sourceId !== "" && targetId !== "" && context.focusedMotif) {
         highlightSynapses(sourceId, targetId);
+        setLineVisibility(
+          sharkViewerInstance.scene,
+          0,
+          true,
+          parseInt(sourceId),
+          parseInt(targetId)
+        );
       }
     }
   }, [context.selectedSketchElement, context.selectedCytoscapeEdge]);

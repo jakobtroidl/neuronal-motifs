@@ -33,7 +33,8 @@ export function hierarchicalBundling(
   end_points,
   clusters_per_synapse,
   synapses_per_cluster,
-  scene
+  pre_id,
+  post_id
 ) {
   let num_clusters = synapses_per_cluster.length;
   let control_points = [];
@@ -99,8 +100,11 @@ export function hierarchicalBundling(
 
     // Create the final object to add to the scene
     let spline = new THREE.Line(geometry, material);
-    spline.visible = true;
-    spline.name = "test-line";
+    spline.visible = false;
+    spline.name = "spline";
+    spline.pre = pre_id;
+    spline.post = post_id;
+    spline.clusters = clusters;
     lines.push(spline);
   }
 
