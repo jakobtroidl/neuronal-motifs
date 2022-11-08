@@ -366,7 +366,7 @@ function Viewer() {
 
   const context = useContext(AppContext);
 
-  let factor = 15000;
+  let factor = 10000;
   let offset = 0.001;
   let syn_clusters_identifier = "clusters";
   let lines_identifier = "lines";
