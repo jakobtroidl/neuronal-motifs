@@ -1137,13 +1137,13 @@ function Viewer() {
         setSynapseColorToBaseColor(scene);
       }
 
-      let bound = 0.08;
-      let explosionProgression = (level - motif_path_threshold) / bound;
+      let explosionProgression =
+        (level - motif_path_threshold) / context.explosionRange;
       explosionProgression = Math.max(0.0, Math.min(explosionProgression, 1.0)); // lamp between 0 and 1
 
       let lineBundlingStrength =
-        (1.0 / (1.0 - motif_path_threshold - bound)) *
-        (level - motif_path_threshold - bound);
+        (1.0 / (1.0 - motif_path_threshold - context.explosionRange)) *
+        (level - motif_path_threshold - context.explosionRange);
       lineBundlingStrength = Math.max(0.0, Math.min(lineBundlingStrength, 1.0)); // lamp between 0 and 1
 
       // animate synapse movement
