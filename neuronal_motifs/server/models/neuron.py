@@ -245,8 +245,10 @@ class Neuron:
         self.skeleton.nodes['abstraction_label'] = labels
         labels = self.compute_labels_to_abstraction_center_optimized(self.skeleton_nk_graph, labels, motif_nodes)
 
-        max_negative = np.amax(labels[labels < 0])  # get max negative value
-        labels[labels < 0] = labels[labels < 0] + abs(max_negative)  # normalize
+        negative_labels = labels[labels < 0]
+        if len(negative_labels) > 0:
+            max_negative = np.amax(negative_labels)  # get max negative value
+            labels[labels < 0] = labels[labels < 0] + abs(max_negative)  # normalize
 
         if prev_labels is not None:
             minimum = np.minimum(prev_labels, labels)
