@@ -518,18 +518,17 @@ function Viewer() {
     }
   }
 
+  function colorFocusedMotif(sharkViewerInstance) {
+    colorMotif(sharkViewerInstance, context.focusedMotif, context.neuronColors);
+    let abstractionBoundary = getAbstractionBoundary(sharkViewerInstance);
+    refreshEdges(sharkViewerInstance.scene, abstractionBoundary);
+    resetSynapsesColor(sharkViewerInstance, context.focusedMotif);
+  }
+
   useEffect(() => {
     if (sharkViewerInstance && context.focusedMotif) {
       greyOutObjects(sharkViewerInstance);
-      colorMotif(
-        sharkViewerInstance,
-        context.focusedMotif,
-        context.neuronColors
-      );
-      let scene = sharkViewerInstance.scene;
-      let abstractionBoundary = getAbstractionBoundary(sharkViewerInstance);
-      refreshEdges(scene, abstractionBoundary);
-      resetSynapsesColor(sharkViewerInstance, context.focusedMotif);
+      colorFocusedMotif(sharkViewerInstance);
       console.log("recolored focused motif");
     }
   }, [context.focusedMotif]);
@@ -802,11 +801,10 @@ function Viewer() {
             tmp_labels[neuron.id] = neuron.labels;
             context.setCurrentNeuronLabels(tmp_labels);
           });
-          // context.setFocusedMotif(motif); // move to after setSelectedMotifs to color all neurons correctly
+          context.setFocusedMotif(motif);
           setMotif(motif);
           context.setSelectedMotifs([...context.selectedMotifs, motif]);
           context.setLoadingMessage(null);
-          context.setFocusedMotif(motif);
         } else {
           context.setLoadingMessage(data?.message || "Error");
         }
@@ -1118,6 +1116,8 @@ function Viewer() {
         updateCamera,
         neuron_translate
       );
+
+      colorFocusedMotif(sharkViewerInstance);
 
       // todo set abstraction threshold
 
