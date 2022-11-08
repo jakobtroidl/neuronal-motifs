@@ -11,14 +11,20 @@ export const ContextWrapper = (props) => {
   const [motifQuery, setMotifQuery] = useState();
   const [abstractionLevel, setAbstractionLevel] = useState();
   const [neuronColors, setNeuronColors] = useState([
-    "#7e2fd0",
-    "#81D02F",
-    "#34AFCB",
-    "#CB5034",
-    "#B3A94C",
-    "#4C56B3",
-    "#D9C226",
-    "#263DD9",
+    // "#7e2fd0",
+    // "#81D02F",
+    // "#34AFCB",
+    // "#B3A94C",
+    // "#4C56B3",
+    // "#D9C226",
+    // "#263DD9",
+    // "#CB5034",
+    "#a6cee3",
+    "#fb9a99",
+    "#1fcc14",
+    "#1f78b4",
+    "#b2df8a",
+    "#e31a1c",
   ]);
   const [synapseColors, setSynapseColors] = useState([
     "#FF6347",
