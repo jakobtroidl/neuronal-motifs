@@ -829,7 +829,6 @@ function SketchPanel() {
   // Checks for edges going opposite to each other and offsets them so they are distinguishable
   useEffect(() => {
     if (!edges) return;
-    console.log("Edges");
     edges.forEach((e, i) => {
       let oppositeEdge = _.findIndex(edges, (oppE) => {
         return _.isEqual(oppE.indices, [e.indices[1], e.indices[0]]);

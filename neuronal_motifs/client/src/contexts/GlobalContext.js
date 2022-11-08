@@ -50,6 +50,8 @@ export const ContextWrapper = (props) => {
   const [currentNeuronLabels, setCurrentNeuronLabels] = useState({});
   const [motifPathPosition, setMotifPathPosition] = useState(0.5);
 
+  const [explosionRange, setExplosionRange] = useState(0.08);
+
   // highlight synapses
   const [selectedCytoscapeEdge, setSelectedCytoscapeEdge] = useState(null);
   const [greyOutNonMotifBranches, setGreyOutNonMotifBranches] = useState(false);
@@ -98,6 +100,8 @@ export const ContextWrapper = (props) => {
         setErrorMessage,
         selectedCytoscapeEdge,
         setSelectedCytoscapeEdge,
+        explosionRange,
+        setExplosionRange,
         greyOutNonMotifBranches,
         setGreyOutNonMotifBranches,
       }}

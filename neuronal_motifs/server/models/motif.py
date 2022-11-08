@@ -2,9 +2,10 @@ import time
 
 import navis
 import pandas as pd
+import numpy as np
 from networkx.readwrite import json_graph
 
-from models.edge import NodeLink3DEdge
+from models.edge import NodeLink3DEdge, compute_line_abstractions
 from utils.data_conversion import synapse_array_to_object, edges_to_json
 
 
@@ -15,6 +16,7 @@ class MyMotif:
         self.synapses = synapses
         self.nodeLinkEdges = edges
         self.compute_motif_synapses()
+        self.syn_clusters = None
 
     def as_json(self):
         """
@@ -33,7 +35,8 @@ class MyMotif:
             'graph': json_graph.node_link_data(self.graph),
             'neurons': neuron_json,
             'synapses': syn_export,
-            'edges': edges_export
+            'edges': edges_export,
+            'syn_clusters': self.syn_clusters
         }
 
         return motif
@@ -64,12 +67,12 @@ class MyMotif:
                 edge = NodeLink3DEdge(pre_neuron.id, pre_neuron.skeleton_nk_graph, [pre_x, pre_y, pre_z],
                                       post_neuron.id, post_neuron.skeleton_nk_graph, [post_x, post_y, post_z])
 
-                start_abs = edge.compute_line_abstractions(edge.start_skel_graph, pre_neuron.skeleton.nodes, pre_node,
-                                                           pre_neuron.abstraction_center)
+                start_abs = compute_line_abstractions(edge.start_skel_graph, pre_neuron.skeleton.nodes, pre_node,
+                                                      pre_neuron.abstraction_center)
                 edge.set_start_abstraction(start_abs)
 
-                end_abs = edge.compute_line_abstractions(edge.end_skel_graph, post_neuron.skeleton.nodes, post_node,
-                                                         post_neuron.abstraction_center)
+                end_abs = compute_line_abstractions(edge.end_skel_graph, post_neuron.skeleton.nodes, post_node,
+                                                    post_neuron.abstraction_center)
                 edge.set_end_abstraction(end_abs)
 
                 edges.append(edge)
@@ -184,3 +187,51 @@ class MyMotif:
         self.synapses['soma_distance_pre'] = pre_synaptic_soma_distances
         self.synapses['soma_distance_post'] = post_synaptic_soma_distances
         print('Done. Took {} sec'.format(time.time() - t))
+
+    def cluster_synapse_group(self, group):
+        """
+        Hierarchical clustering of synapses. @n_clusters is the number of clusters to be generated
+        @return: list of cluster labels for each cluster hierarchy
+        """
+        from sklearn.cluster import AgglomerativeClustering
+
+        locations = group[['x_pre', 'y_pre', 'z_pre']].to_numpy()
+        n_clusters = min(int(len(locations) / 3), 10)
+
+        clusters_per_synapse = {int(idx): [] for idx in range(0, len(locations))}
+        synapses_per_cluster = []
+
+        for i in range(1, n_clusters):
+            model = AgglomerativeClustering(n_clusters=i)
+            y = model.fit_predict(locations)
+
+            # determine which clusters each synapse belongs to
+            for j in range(0, y.size):
+                clusters_per_synapse[j].append(int(y[j]))
+
+            # for each cluster, which synapses belong to it
+            cluster_indices = {}
+            for j in np.unique(y):
+                indices = np.where(y == j)[0]
+                cluster_indices[int(j)] = indices.tolist()
+            synapses_per_cluster.append(cluster_indices)
+
+        return synapses_per_cluster, clusters_per_synapse
+
+    def cluster_synapses(self):
+        """
+        Clusters synapses for each motif neuron based on their spatial location
+        @return: hierarchy of synapse clusters per group
+        """
+        # group synapses based on their pre and post synaptic neurons
+        groups = self.synapses.groupby(['bodyId_pre', 'bodyId_post'])
+        results = []
+        for ((pre_id, post_id), data) in groups:
+            pre_loc = data[['x_pre', 'y_pre', 'z_pre']].to_numpy()
+            post_loc = data[['x_post', 'y_post', 'z_post']].to_numpy()
+            synapses_per_cluster, clusters_per_synapse = self.cluster_synapse_group(data)
+
+            results.append({"pre": int(pre_id), "post": int(post_id), "synapses_per_cluster": synapses_per_cluster,
+                            "clusters_per_synapse": clusters_per_synapse, "pre_loc": pre_loc.tolist(),
+                            "post_loc": post_loc.tolist()})
+        self.syn_clusters = results
