@@ -23,8 +23,8 @@ def get_motif(ids, motif, token, prev_labels):
     path.mkdir(parents=True, exist_ok=True)  # create directory if it doesn't exist
 
     filepath = path / (filename + ".pkl")
-    if filepath.is_file() is False:
-    # if True:
+    # if filepath.is_file() is False:
+    if True:
         yield {'status': 202, 'message': 'Downloading Motif'}
         try:
             motif_data_generator = compute_motif_data(ids, motif, token, prev_labels)
@@ -49,6 +49,8 @@ def compute_motif_data(body_ids, motif, token, prev_labels):
     data_access = DataAccess(token)
     neurons = data_access.get_neurons(body_ids)
     motif = MyMotif(neurons, motif_graph)
+    yield 'Compute Synapse Clusters'
+    motif.cluster_synapses()
     yield 'Computing Motif Path'
     motif.compute_motif_paths(prev_labels)
     yield 'Compute Synapse Trajectory'

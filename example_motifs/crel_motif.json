@@ -1,0 +1,137 @@
+{
+  "nodes": [
+    {
+      "label": "A",
+      "properties": {
+        "CRE(L)": true
+      },
+      "index": 0,
+      "position": [
+        "Point",
+        62.20313,
+        302.55469
+      ],
+      "tree": {
+        "id": "b9b8a8ba-89ab-4cde-b012-3184160e6e91",
+        "type": "group",
+        "path": [
+          "b9b8a8ba-89ab-4cde-b012-3184160e6e91"
+        ],
+        "children1": {
+          "9a99a8aa-0123-4456-b89a-b184160e731c": {
+            "type": "rule",
+            "id": "9a99a8aa-0123-4456-b89a-b184160e731c",
+            "properties": {
+              "field": "CRE(L)",
+              "operator": "equal",
+              "value": [
+                true
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "boolean"
+              ]
+            },
+            "path": [
+              "b9b8a8ba-89ab-4cde-b012-3184160e6e91",
+              "9a99a8aa-0123-4456-b89a-b184160e731c"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "B",
+      "properties": null,
+      "index": 1,
+      "position": [
+        "Point",
+        141.20313,
+        59.55469
+      ]
+    },
+    {
+      "label": "C",
+      "properties": null,
+      "index": 2,
+      "position": [
+        "Point",
+        248.20313,
+        308.55469
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "label": "A -> C",
+      "properties": {
+        "weight": {
+          "$gt": 20
+        }
+      },
+      "index": 0,
+      "indices": [
+        0,
+        2
+      ],
+      "tree": {
+        "id": "8aa9ab99-4567-489a-bcde-f184160e8a9f",
+        "type": "group",
+        "path": [
+          "8aa9ab99-4567-489a-bcde-f184160e8a9f"
+        ],
+        "children1": {
+          "8b899b9a-4567-489a-bcde-f184160e8ec4": {
+            "type": "rule",
+            "id": "8b899b9a-4567-489a-bcde-f184160e8ec4",
+            "properties": {
+              "field": "weight",
+              "operator": "greater",
+              "value": [
+                20
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "number"
+              ]
+            },
+            "path": [
+              "8aa9ab99-4567-489a-bcde-f184160e8a9f",
+              "8b899b9a-4567-489a-bcde-f184160e8ec4"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "A -> B",
+      "properties": null,
+      "index": 1,
+      "indices": [
+        0,
+        1
+      ],
+      "tree": null
+    },
+    {
+      "label": "B -> C",
+      "properties": null,
+      "index": 2,
+      "indices": [
+        1,
+        2
+      ],
+      "tree": null
+    }
+  ],
+  "dimension": {
+    "width": 298.0703125,
+    "height": 367.5
+  }
+}

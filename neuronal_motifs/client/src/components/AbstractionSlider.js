@@ -17,7 +17,7 @@ function AbstractionSlider() {
   function getMarks() {
     const marks = [
       {
-        value: 0.02,
+        value: 0.01,
         label: "Full Motif",
       },
       {
@@ -25,7 +25,11 @@ function AbstractionSlider() {
         label: "Motif Path",
       },
       {
-        value: 0.98,
+        value: context.motifPathPosition + context.explosionRange,
+        label: "Exploded View",
+      },
+      {
+        value: 0.99,
         label: "Node-Link",
       },
     ];
