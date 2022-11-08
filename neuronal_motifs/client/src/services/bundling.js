@@ -36,7 +36,8 @@ export function hierarchicalBundling(
   synapses_per_cluster,
   pre_id,
   post_id,
-  visible
+  visible,
+  strength
 ) {
   let num_clusters = synapses_per_cluster.length;
   let control_points = [];
@@ -72,7 +73,7 @@ export function hierarchicalBundling(
 
   for (const [i, clusters] of Object.entries(clusters_per_synapse)) {
     let control_samples = [];
-    let cutoff = 2.0;
+    let cutoff = clusters.length - Math.round(strength * clusters.length);
 
     for (let hierarchy = cutoff; hierarchy < clusters.length; hierarchy++) {
       let cluster = clusters[hierarchy];

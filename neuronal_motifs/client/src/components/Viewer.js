@@ -1142,6 +1142,11 @@ function Viewer() {
       let explosionProgression = (level - motif_path_threshold) / bound;
       explosionProgression = Math.max(0.0, Math.min(explosionProgression, 1.0)); // lamp between 0 and 1
 
+      let lineBundlingStrength =
+        (1.0 / (1.0 - motif_path_threshold - bound)) *
+        (level - motif_path_threshold - bound);
+      lineBundlingStrength = Math.max(0.0, Math.min(lineBundlingStrength, 1.0)); // lamp between 0 and 1
+
       // animate synapse movement
       scene.children.forEach((child) => {
         if (typeof child.name === "string" && child.name.startsWith("syn-")) {
@@ -1192,7 +1197,8 @@ function Viewer() {
             connection.synapses_per_cluster,
             connection.pre,
             connection.post,
-            isVisible
+            isVisible,
+            lineBundlingStrength
           );
 
           allLines = allLines.concat(lines);
