@@ -383,6 +383,12 @@ function Viewer() {
     pre_id: null,
     post_id: null,
   });
+
+  const [highlightedConnection, setHighlightedConnection] = useState({
+    pre: null,
+    post: null,
+  });
+
   const [neurons, setNeurons] = useState([]);
   const [synapses, setSynapses] = useState([]);
 
@@ -600,6 +606,7 @@ function Viewer() {
       resetSynapsesColor(sharkViewerInstance);
       unselectEdges();
       setLineVisibility(sharkViewerInstance.scene, 0.0, false);
+      setHighlightedConnection({ pre: null, post: null });
     }
     // if (event.key === "c") {
     //   console.log("c was pressed");
@@ -1170,13 +1177,22 @@ function Viewer() {
             explosionProgression
           );
 
+          let isVisible = false;
+          if (
+            highlightedConnection.pre === connection.pre &&
+            highlightedConnection.post === connection.post
+          ) {
+            isVisible = true;
+          }
+
           let lines = hierarchicalBundling(
             pre_loc_transformed,
             post_loc_transformed,
             connection.clusters_per_synapse,
             connection.synapses_per_cluster,
             connection.pre,
-            connection.post
+            connection.post,
+            isVisible
           );
 
           allLines = allLines.concat(lines);
@@ -1425,6 +1441,10 @@ function Viewer() {
       setLineVisibility(sharkViewerInstance.scene, 0, false);
 
       if (sourceId !== "" && targetId !== "" && context.focusedMotif) {
+        setHighlightedConnection({
+          pre: parseInt(sourceId),
+          post: parseInt(targetId),
+        });
         highlightSynapses(sourceId, targetId);
         setLineVisibility(
           sharkViewerInstance.scene,

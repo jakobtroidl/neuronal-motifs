@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { Color } from "paper";
+import { isVisible } from "@testing-library/user-event/dist/utils";
 
 function getPointsByIndices(points, indices) {
   if (indices.constructor === Array) {
@@ -34,7 +35,8 @@ export function hierarchicalBundling(
   clusters_per_synapse,
   synapses_per_cluster,
   pre_id,
-  post_id
+  post_id,
+  visible
 ) {
   let num_clusters = synapses_per_cluster.length;
   let control_points = [];
@@ -100,7 +102,7 @@ export function hierarchicalBundling(
 
     // Create the final object to add to the scene
     let spline = new THREE.Line(geometry, material);
-    spline.visible = false;
+    spline.visible = visible;
     spline.name = "spline";
     spline.pre = pre_id;
     spline.post = post_id;
