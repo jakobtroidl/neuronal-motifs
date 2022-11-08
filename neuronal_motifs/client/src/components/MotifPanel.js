@@ -7,7 +7,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import DragHandleIcon from "@mui/icons-material/DragHandle";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import Button from "@mui/material/Button";
-import { Badge, FormControl, TextField } from "@mui/material";
+import { Badge, FormControl, TextField, ThemeProvider } from "@mui/material";
 import _ from "lodash";
 import InfoButton from "./InfoButton";
 import { queryMotifs } from "../services/data";
@@ -19,8 +19,10 @@ import Typography from "@mui/material/Typography";
 import PropTypes from "prop-types";
 import SelectionTable from "./SelectionTable";
 import SettingsPanel from "./SettingsPanel";
-import { getAuthToken } from "../utils/authentication";
 import { mapQueryResult } from "../utils/rendering";
+import { getAuthToken } from "../utils/authentication";
+import { Color } from "../utils/rendering";
+import Tooltip from "@mui/material/Tooltip";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -57,6 +59,7 @@ function MotifPanel() {
   const [resultRows, setResultRows] = useState([]);
   const [enableAbsMotifCountInfo, setEnableAbsMotifCountInfo] = useState(false);
   const [selectedTab, setSelectedTab] = React.useState(0);
+  const [countButtonColor, setCountButtonColor] = useState("neutral");
 
   const motifPanelId = "motif-panel-div";
   const context = useContext(AppContext);
@@ -89,6 +92,47 @@ function MotifPanel() {
     }
   };
 
+  const getMotifCountAsString = () => {
+    if (context.absMotifCount) {
+      return context.absMotifCount.toLocaleString();
+    } else {
+      return "N/A";
+    }
+  };
+
+  const parseButtonTooltip = () => {
+    let exp = "";
+    if (countButtonColor === "neutral") {
+      exp = "Expressed as in random network";
+    } else if (countButtonColor === "weak") {
+      exp = "Under expressed";
+    } else if (countButtonColor === "strong") {
+      exp = "Over expressed";
+    } else if (countButtonColor === "stronger") {
+      exp = "Strongly over expressed";
+    } else if (countButtonColor === "weaker") {
+      exp = "Strongly under expressed";
+    }
+    return `${exp} in hemibrain`;
+  };
+
+  useEffect(() => {
+    let relCount = context.relativeMotifCount;
+    if (relCount >= 2.0) {
+      setCountButtonColor("stronger");
+    } else if (relCount > 0.5 && relCount < 2.0) {
+      setCountButtonColor("strong");
+    } else if (relCount >= -0.5 && relCount <= 0.5) {
+      setCountButtonColor("neutral");
+    } else if (relCount < -0.5 && relCount > -2.0) {
+      setCountButtonColor("weak");
+    } else if (relCount <= -2.0) {
+      setCountButtonColor("weaker");
+    } else {
+      setCountButtonColor("neutral");
+    }
+  }, [context.relativeMotifCount]);
+
   useEffect(() => {
     if (searchedMotifs && searchedMotifs?.length > 0) {
       let rows = searchedMotifs.map((motif, j) => {
@@ -115,15 +159,18 @@ function MotifPanel() {
       <div className="form">
         <div className="handle">
           <DragHandleIcon />
-          <InfoButton
-            text={context.absMotifCount}
-            disabled={!enableAbsMotifCountInfo}
-            color="primary"
-            icon={<SearchIcon />}
-          />
-          {enableAbsMotifCountInfo ? (
-            <InfoButton text="Medium" color="secondary" />
-          ) : null}
+          <ThemeProvider theme={Color.theme}>
+            <Tooltip title={parseButtonTooltip()} arrow placement="right">
+              <span>
+                <InfoButton
+                  text={getMotifCountAsString()}
+                  disabled={!enableAbsMotifCountInfo}
+                  color={countButtonColor}
+                  icon={<SearchIcon />}
+                />
+              </span>
+            </Tooltip>
+          </ThemeProvider>
           {context.showWarning ? (
             <InfoButton color="error" icon={<PriorityHighIcon />} />
           ) : null}
@@ -141,7 +188,7 @@ function MotifPanel() {
                 }}
                 size="small"
                 margin="normal"
-                style={{ marginTop: 0 }}
+                style={{ marginTop: 0, marginLeft: "8px" }}
                 defaultValue={1}
                 onChange={(event) => setNumber(_.toNumber(event.target.value))}
               />
@@ -160,26 +207,27 @@ function MotifPanel() {
           </div>
         </div>
 
-        <Box sx={{ width: "100%" }}>
-          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-            <Tabs
-              value={selectedTab}
-              onChange={handleTabChange}
-              aria-label="basic tabs example"
-            >
-              <Tab label="Results" {...a11yProps(0)} />
-              <Tab label="Selection" {...a11yProps(1)} />
-              <Tab
-                label={
-                  <Badge color="primary" variant="dot" invisible={!showBadge()}>
-                    {" "}
-                    Settings{" "}
-                  </Badge>
-                }
-                {...a11yProps(2)}
-              />
-            </Tabs>
-          </Box>
+        <Box sx={{ width: "100%", borderBottom: 1, borderColor: "divider" }}>
+          <Tabs
+            value={selectedTab}
+            onChange={handleTabChange}
+            aria-label="basic tabs example"
+            flexContainer
+          >
+            <Tab label="Results" {...a11yProps(0)} />
+            <Tab label="Selection" {...a11yProps(1)} />
+            <Tab
+              label={
+                <Badge color="primary" variant="dot" invisible={!showBadge()}>
+                  {" "}
+                  Settings{" "}
+                </Badge>
+              }
+              {...a11yProps(2)}
+            />
+          </Tabs>
+        </Box>
+        <div className="result-section">
           <TabPanel value={selectedTab} index={0}>
             {resultRows.length > 0 ? (
               <ResultsTable results={resultRows} />
@@ -198,7 +246,7 @@ function MotifPanel() {
             <SettingsPanel />
             {/*<span className="hint">This is where the settings will go </span>*/}
           </TabPanel>
-        </Box>
+        </div>
       </div>
     </div>
   );

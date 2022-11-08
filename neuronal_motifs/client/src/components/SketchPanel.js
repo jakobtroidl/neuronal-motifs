@@ -1,31 +1,36 @@
-import React, { useContext, useEffect, useState, useRef } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./SketchPanel.css";
 import QueryBuilder from "./QueryBuilder";
 import CircleTwoToneIcon from "@mui/icons-material/CircleTwoTone";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import InfoIcon from "@mui/icons-material/Info";
 import paper from "paper";
 import { AppContext } from "../contexts/GlobalContext";
 import _ from "lodash";
-import { Grid, IconButton, Popover, Tooltip } from "@mui/material";
+import { Grid, IconButton, Popover, Tooltip, Button } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHand } from "@fortawesome/free-solid-svg-icons";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import { Builder, Query, Utils as QbUtils } from "react-awesome-query-builder";
+import {
+  faFileExport,
+  faFileImport,
+  faHand,
+} from "@fortawesome/free-solid-svg-icons";
+import { Utils as QbUtils } from "react-awesome-query-builder";
 import axios from "axios";
 import { getNodeKeyFromId } from "../utils/edge";
 
 function SketchPanel() {
   const sketchPanelId = "sketch-panel";
   let [nodes, setNodes] = useState([]);
+  let [nodeLabels, setNodeLabels] = useState([]);
   let [edges, setEdges] = useState([]);
   let [importData, setImportData] = useState(null);
   let [nodeImportUpdate, setNodeImportUpdate] = useState(false);
   let [edgeImportUpdate, setEdgeImportUpdate] = useState(false);
   // States are node (add nodes), edge (add edges), edit(change node/edge properties)
   let [mouseState, setMouseState] = useState("node");
+  let [showInfo, setShowInfo] = useState(false);
   let [cursor, setCursor] = useState("crosshair");
   let [pencil, setPencil] = useState();
   // Checks for mouse intersections
@@ -45,6 +50,12 @@ function SketchPanel() {
   const getMotifCount = async (motif) => {
     // get request to backend to get motif count
     let url = `http://${process.env.REACT_APP_API_URL}/count/motif=${motif}`;
+    return (await axios.get(url)).data;
+  };
+
+  const getRelativeMotifCount = async (motif) => {
+    // get request to backend to get motif count
+    let url = `http://${process.env.REACT_APP_API_URL}/rel_count/motif=${motif}`;
     return (await axios.get(url)).data;
   };
 
@@ -116,6 +127,149 @@ function SketchPanel() {
     // Remove all edges and nodes
     setNodes([]);
     setEdges([]);
+  };
+
+  const deleteSketchElement = () => {
+    // edges
+    if (
+      context.selectedSketchElement &&
+      context.selectedSketchElement.type === "edge"
+    ) {
+      let newEdges = edges.filter(
+        (edge) => edge.label !== context.selectedSketchElement.label
+      );
+      context.selectedSketchElement.edgeLine.remove();
+      context.selectedSketchElement.lineGroup.remove();
+      context.selectedSketchElement.propertyLabel?.remove();
+      context.setSelectedSketchElement(null);
+      setEdges(newEdges);
+    }
+
+    // nodes
+    if (
+      context.selectedSketchElement &&
+      context.selectedSketchElement.type === "node"
+    ) {
+      // find adjacent edges
+      let nodeLabel = context.selectedSketchElement.label;
+      let adjacentEdges = edges.filter((edge) => {
+        if (
+          edge.fromNode.label === nodeLabel ||
+          edge.toNode.label === nodeLabel
+        ) {
+          return edge;
+        }
+      });
+
+      // delete edges from canvas
+      adjacentEdges.map((edge) => {
+        edge.edgeLine.remove();
+        edge.lineGroup.remove();
+        edge.propertyLabel?.remove();
+      });
+
+      // delete node from canvas
+      const selectedNodeLabel = context.selectedSketchElement.label;
+      context.selectedSketchElement.circle.remove();
+      context.selectedSketchElement.circleGroup.remove();
+      context.setSelectedSketchElement(null);
+
+      // delete node and rename remaining nodes
+      let newNodes = nodes
+        .filter((node) => node.label !== selectedNodeLabel)
+        .map((node, i) =>
+          renameCircle(
+            node.circle,
+            i,
+            node.properties,
+            "tree" in node ? node.tree : null,
+            node.label
+          )
+        );
+
+      const getNewNode = (previousLabel) =>
+        newNodes.find((node) => node.previousLabel === previousLabel);
+
+      // delete adjacent edges
+      let newEdges = edges
+        .filter((edge) => !adjacentEdges.includes(edge))
+        .map((edge) => {
+          let newFromNode = getNewNode(edge.fromNode.label);
+          let newToNode = getNewNode(edge.toNode.label);
+          let newNodeIndices = [
+            _.findLastIndex(newNodes, newFromNode),
+            _.findLastIndex(newNodes, newToNode),
+          ];
+
+          return renameEdge(newFromNode, newToNode, newNodeIndices, edge);
+        });
+
+      console.log(newEdges, newNodes);
+
+      // reset edges and nodes
+      setEdges(newEdges);
+      setNodes(newNodes);
+    }
+  };
+
+  const renameEdge = (fromNode, toNode, nodeIndices, edge) => {
+    let tree = "tree" in edge ? edge.tree : null;
+    let edgeObj = {
+      ...edge,
+    };
+    edgeObj["fromNode"] = fromNode;
+    edgeObj["toNode"] = toNode;
+    edgeObj["indices"] = nodeIndices;
+    edgeObj["label"] = `${fromNode.label} -> ${toNode.label}`;
+    if (tree !== null) {
+      edgeObj["tree"] = QbUtils.loadTree(tree);
+    } else {
+      edgeObj["tree"] = tree;
+    }
+
+    return edgeObj;
+  };
+
+  const renameCircle = (
+    circle,
+    index,
+    properties = null,
+    tree = null,
+    previousLabel
+  ) => {
+    circle.fillColor = context.neuronColors[index];
+    let textPoint = [circle.position.x, circle.position.y + 7];
+    let label = new paper.PointText({
+      point: textPoint,
+      justification: "center",
+      fillColor: "white",
+      font: "Roboto",
+      fontSize: 20,
+    });
+    let letter = String.fromCharCode(65 + index);
+    label.content = letter;
+    let circleGroup = new paper.Group([circle, label]);
+
+    if (tree !== null) {
+      return {
+        circle: circle,
+        label: letter,
+        previousLabel: previousLabel,
+        properties: properties,
+        type: "node",
+        circleGroup: circleGroup,
+        tree: QbUtils.loadTree(tree),
+      };
+    } else {
+      return {
+        circle: circle,
+        label: letter,
+        previousLabel: previousLabel,
+        properties: properties,
+        type: "node",
+        circleGroup: circleGroup,
+      };
+    }
   };
 
   const addCircle = (point, node) => {
@@ -341,7 +495,6 @@ function SketchPanel() {
         );
         // select the clicked on element and show the popper
         if (nodeIntersections !== -1 || edgeIntersections !== -1) {
-          context.setSelectedCytoscapeEdge(null);
           context.setSelectedSketchElement(currentSelection);
           let selectedElement =
             currentSelection?.lineGroup || currentSelection?.circle;
@@ -408,6 +561,9 @@ function SketchPanel() {
     };
     pencil.onMouseDrag = function (event) {
       if (mouseState === "move") {
+        nodeLabels.forEach((label) => {
+          label?.remove();
+        });
         let intersections = _.findLastIndex(
           nodes.map((n) => {
             return n.circle.contains(event.point);
@@ -708,6 +864,7 @@ function SketchPanel() {
       bindPencilEvents();
     }
   }, [pencil, mouseState, nodes, edges]);
+
   useEffect(() => {
     currentPath?.remove();
     setPopperLocation(null);
@@ -800,9 +957,9 @@ function SketchPanel() {
 
   // Update global motif tracker
   // useEffect(() => {
-  //     if (edges) {
-  //         console.log("Edges", edges);
-  //     }
+  //   if (edges) {
+  //     console.log("Edges", edges);
+  //   }
   // }, [edges]);
 
   const getEncodedMotif = (nodes, edges) => {
@@ -845,6 +1002,13 @@ function SketchPanel() {
 
     const count = await getMotifCount(JSON.stringify(encodedMotif));
     context.setAbsMotifCount(count);
+
+    // get relative count of motif in network
+    const relative_count = await getRelativeMotifCount(
+      JSON.stringify(encodedMotif)
+    );
+    context.setRelativeMotifCount(relative_count);
+
     context.setMotifQuery(encodedMotif);
   }, [nodes, edges]);
 
@@ -897,10 +1061,105 @@ function SketchPanel() {
     }
   }, [context.selectedCytoscapeEdge, context.focusedMotif]);
 
+  useEffect(() => {
+    if (!nodes) return;
+    nodeLabels.forEach((label) => {
+      label?.remove();
+    });
+    setNodeLabels(
+      nodes.map((n) => {
+        if (!showInfo) return null;
+        console.log("nodes", n, "show", showInfo);
+        let propertiesText = _.entries(n?.properties).map((p) => {
+          return `${p[0]}: ${p[1]}\n`;
+        });
+        let labelPoint = [
+          n.circle.position.x,
+          n.circle.position.y - circleRadius - 10 * propertiesText.length,
+        ];
+        let label = new paper.PointText({
+          point: labelPoint,
+          justification: "center",
+          fillColor: "black",
+          font: "Roboto",
+          fontSize: 10,
+        });
+        label.content = propertiesText.join("");
+        return label;
+      })
+    );
+  }, [nodes, showInfo, edges]);
+
   return (
     <div className="sketch-panel-style">
       <Grid container className="canvas-wrapper" spacing={0}>
-        <Grid item xs={10.8} style={{ height: "inherit" }}>
+        <Grid item xs={1.4}>
+          <Grid container direction="column" justifyContent="center">
+            <Tooltip title="Draw Node" placement="right">
+              <IconButton
+                value="node"
+                color={mouseState === "node" ? "primary" : "default"}
+                onClick={() => {
+                  currentPath?.remove();
+                  setCursor("crosshair");
+                  setMouseState("node");
+                }}
+              >
+                <CircleTwoToneIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Draw Edge" placement="right">
+              <IconButton
+                color={mouseState === "edge" ? "primary" : "default"}
+                onClick={() => {
+                  currentPath?.remove();
+                  setCursor("crosshair");
+                  setMouseState("edge");
+                }}
+              >
+                <ArrowRightAltIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Edit Properties" placement="right">
+              <IconButton
+                value="edit"
+                color={mouseState === "edit" ? "primary" : "default"}
+                onClick={() => {
+                  setCursor("pointer");
+                  currentPath?.remove();
+                  setMouseState("edit");
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Move" placement="right">
+              <IconButton
+                value="edit"
+                color={mouseState === "move" ? "primary" : "default"}
+                onClick={() => {
+                  setCursor("grab");
+                  currentPath?.remove();
+                  setMouseState("move");
+                }}
+              >
+                <FontAwesomeIcon size={"sm"} icon={faHand} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Node Info" placement="right">
+              <IconButton
+                value="node"
+                color={showInfo ? "primary" : "default"}
+                onClick={() => {
+                  setShowInfo(!showInfo);
+                }}
+              >
+                <InfoIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Grid>
+        </Grid>
+        <Grid item xs={9.2} style={{ height: "inherit" }}>
           <div
             className="sketch-canvas"
             id="sketch-canvas-container"
@@ -944,43 +1203,36 @@ function SketchPanel() {
                   </span>
                 </Grid>
 
+                <Grid
+                  container
+                  className={"popover-grid"}
+                  direction="column"
+                  justifyContent="center"
+                  alignItems="flex-end"
+                  style={{
+                    position: "absolute",
+                    height: "40.75px",
+                    right: "110px",
+                  }}
+                  zIndex={3}
+                >
+                  <Button
+                    size="small"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => deleteSketchElement()}
+                  >
+                    Delete
+                  </Button>
+                </Grid>
+
                 <QueryBuilder />
               </Popover>
             )}
           </div>
         </Grid>
-        <Grid item xs={1.2}>
-          <Grid
-            container
-            direction="column"
-            //style={{ height: "auto", width: "auto" }}
-          >
-            <Tooltip title="Draw Node" placement="right">
-              <IconButton
-                value="node"
-                color={mouseState === "node" ? "primary" : "default"}
-                onClick={() => {
-                  currentPath?.remove();
-                  setCursor("crosshair");
-                  setMouseState("node");
-                }}
-              >
-                <CircleTwoToneIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Draw Edge" placement="right">
-              <IconButton
-                color={mouseState === "edge" ? "primary" : "default"}
-                onClick={() => {
-                  currentPath?.remove();
-                  setCursor("crosshair");
-                  setMouseState("edge");
-                }}
-              >
-                <ArrowRightAltIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Clear Sketch" placement="right">
+        <Grid item xs={1.4}>
+          <Grid container direction="column" justifyContent="center">
+            <Tooltip title="Clear Sketch" placement="left">
               <IconButton
                 color="default"
                 onClick={() => {
@@ -991,52 +1243,22 @@ function SketchPanel() {
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-
-            <Tooltip title="Edit Properties" placement="right">
+            <Tooltip title="Import Motif" placement="left">
               <IconButton
                 value="edit"
-                color={mouseState === "edit" ? "primary" : "default"}
-                onClick={() => {
-                  setCursor("pointer");
-                  currentPath?.remove();
-                  setMouseState("edit");
-                }}
-              >
-                <EditIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Move" placement="right">
-              <IconButton
-                value="edit"
-                color={mouseState === "move" ? "primary" : "default"}
-                onClick={() => {
-                  setCursor("grab");
-                  currentPath?.remove();
-                  setMouseState("move");
-                }}
-              >
-                <FontAwesomeIcon
-                  style={{ height: "0.95em", width: "0.95em" }}
-                  icon={faHand}
-                />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Import Motif" placement="right">
-              <IconButton
-                value="edit"
-                color={mouseState === "move" ? "primary" : "default"}
+                color="default"
                 onClick={() => importMotif()}
               >
-                <ArrowBackIosNewIcon fontSize="small" />
+                <FontAwesomeIcon size={"sm"} icon={faFileImport} />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Export Motif" placement="right">
+            <Tooltip title="Export Motif" placement="left">
               <IconButton
                 value="edit"
-                color={mouseState === "move" ? "primary" : "default"}
+                color="default"
                 onClick={() => exportMotif()}
               >
-                <ArrowForwardIosIcon fontSize="small" />
+                <FontAwesomeIcon size={"sm"} icon={faFileExport} />
               </IconButton>
             </Tooltip>
           </Grid>

@@ -1113,6 +1113,13 @@ function Viewer() {
     }
   };
 
+  useEffect(() => {
+    if (sharkViewerInstance) {
+      let grey = context.greyOutNonMotifBranches;
+      sharkViewerInstance.greyNonMotifBranches(grey);
+    }
+  }, [context.greyOutNonMotifBranches]);
+
   // Updates the motifs, runs when data, viewer, or abstraction state change
   useEffect(() => {
     if (motif && sharkViewerInstance) {
