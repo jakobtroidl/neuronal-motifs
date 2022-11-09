@@ -139,6 +139,8 @@ function MotifPanel() {
         return mapQueryResult(motif, j);
       });
       setResultRows(rows);
+    } else {
+      setResultRows([]);
     }
   }, [searchedMotifs]);
 
@@ -232,7 +234,13 @@ function MotifPanel() {
             {resultRows.length > 0 ? (
               <ResultsTable results={resultRows} />
             ) : (
-              <span className="hint">Please search for motifs first </span>
+              <>
+                {_.isEmpty(searchedMotifs) ? (
+                  <span className="hint">The motif instance is not found </span>
+                ) : (
+                  <span className="hint">Please search for motifs first </span>
+                )}
+              </>
             )}
           </TabPanel>
           <TabPanel value={selectedTab} index={1}>
