@@ -60,6 +60,7 @@ function MotifPanel() {
   const [enableAbsMotifCountInfo, setEnableAbsMotifCountInfo] = useState(false);
   const [selectedTab, setSelectedTab] = React.useState(0);
   const [countButtonColor, setCountButtonColor] = useState("neutral");
+  const [searched, setSearched] = useState(false);
 
   const motifPanelId = "motif-panel-div";
   const context = useContext(AppContext);
@@ -85,6 +86,7 @@ function MotifPanel() {
       const motifs = await queryMotifs(context.motifQuery, number);
       context.setLoadingMessage(null);
       setSearchedMotifs(motifs);
+      setSearched(true);
     } catch (e) {
       console.log(e);
       context.setErrorMessage(e.message);
@@ -139,6 +141,8 @@ function MotifPanel() {
         return mapQueryResult(motif, j);
       });
       setResultRows(rows);
+    } else {
+      setResultRows([]);
     }
   }, [searchedMotifs]);
 
@@ -212,7 +216,7 @@ function MotifPanel() {
             value={selectedTab}
             onChange={handleTabChange}
             aria-label="basic tabs example"
-            flexContainer
+            flexcontainer="true"
           >
             <Tab label="Results" {...a11yProps(0)} />
             <Tab label="Selection" {...a11yProps(1)} />
@@ -232,7 +236,13 @@ function MotifPanel() {
             {resultRows.length > 0 ? (
               <ResultsTable results={resultRows} />
             ) : (
-              <span className="hint">Please search for motifs first </span>
+              <>
+                {searched ? (
+                  <span className="hint">The motif instance is not found</span>
+                ) : (
+                  <span className="hint">Please search for motifs first</span>
+                )}
+              </>
             )}
           </TabPanel>
           <TabPanel value={selectedTab} index={1}>
