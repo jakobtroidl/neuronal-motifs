@@ -11,6 +11,7 @@ import PropTypes from "prop-types";
 import { AppContext } from "../contexts/GlobalContext";
 import { hexToRgbA } from "../utils/rendering";
 import CloseIcon from "@mui/icons-material/Close";
+import ResultTableRowContextMenu from "./ResultTableRowContextMenu";
 
 export function CollapsableTableRow(props) {
   const { row, columns, handleDelete } = props;
@@ -127,15 +128,13 @@ export function CollapsableTableRow(props) {
             padding: 0,
           }}
           colSpan={6}
-          onClick={() => {
-            handleClick(row);
-          }}
         >
           <Collapse in={open}>
             <Box overflow={"auto"}>
               <Table size="small" aria-label="motifs">
                 <TableHead>
                   <TableRow>
+                    <TableCell key="menu"></TableCell>
                     {columns
                       .filter((e) => e[1])
                       .map((col) => {
@@ -151,13 +150,26 @@ export function CollapsableTableRow(props) {
                         background: hexToRgbA(context.neuronColors[index], 0.4),
                       }}
                     >
-                      {columns
-                        .filter((e) => e[1])
-                        .map((col) => {
-                          return (
-                            <TableCell key={col[0]}>{neuron[col[0]]}</TableCell>
-                          );
-                        })}
+                      <>
+                        <ResultTableRowContextMenu
+                          neuron={neuron}
+                          index={index}
+                        />
+                        {columns
+                          .filter((e) => e[1])
+                          .map((col) => {
+                            return (
+                              <TableCell
+                                key={col[0]}
+                                onClick={() => {
+                                  handleClick(row);
+                                }}
+                              >
+                                {neuron[col[0]]}
+                              </TableCell>
+                            );
+                          })}
+                      </>
                     </TableRow>
                   ))}
                 </TableBody>
