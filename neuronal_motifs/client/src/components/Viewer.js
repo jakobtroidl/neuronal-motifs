@@ -343,8 +343,26 @@ function restoreColors(sharkViewerInstance) {
   });
 }
 
-function resetSynapsesColor(sharkViewerInstance) {
+function resetSynapsesColor(sharkViewerInstance, motif) {
   let scene = sharkViewerInstance.scene;
+  // if (motif) {
+  //   motif.synapses.forEach((synapse, i) => {
+  //     let synapseName = [
+  //       "syn",
+  //       Object.values(synapse.pre).join("-"),
+  //       Object.values(synapse.post).join("-"),
+  //     ].join("-");
+  //     let synapseObject = scene.getObjectByName(synapseName);
+  //     if (synapseObject && synapseObject.neuron_ids.startsWith("syn-")) {
+  //       // synapseObject.material = new THREE.MeshPhongMaterial({
+  //       //   color: Color.orange,
+  //       // });
+  //       synapseObject.material = synapseObject.oldMaterial;
+  //       synapseObject.material.needsUpdate = true;
+  //       synapseObject.highlighted = false;
+  //     }
+  //   });
+  // }
   scene.traverse((child) => {
     if (
       typeof child.name === "string" &&
@@ -602,7 +620,7 @@ function Viewer() {
       context.setNeighborhoodQuery(null);
     } else if (event.key === "c") {
       console.log("c was pressed");
-      resetSynapsesColor(sharkViewerInstance);
+      resetSynapsesColor(sharkViewerInstance, context.focusedMotif);
       unselectEdges();
       setLineVisibility(sharkViewerInstance.scene, 0.0, false);
       setHighlightedConnection({ pre: null, post: null });
@@ -655,17 +673,17 @@ function Viewer() {
     }
   }
 
+  function colorFocusedMotif(sharkViewerInstance) {
+    colorMotif(sharkViewerInstance, context.focusedMotif, context.neuronColors);
+    let abstractionBoundary = getAbstractionBoundary(sharkViewerInstance);
+    refreshEdges(sharkViewerInstance.scene, abstractionBoundary);
+    resetSynapsesColor(sharkViewerInstance, context.focusedMotif);
+  }
+
   useEffect(() => {
     if (sharkViewerInstance && context.focusedMotif) {
       greyOutObjects(sharkViewerInstance);
-      colorMotif(
-        sharkViewerInstance,
-        context.focusedMotif,
-        context.neuronColors
-      );
-      let scene = sharkViewerInstance.scene;
-      let abstractionBoundary = getAbstractionBoundary(sharkViewerInstance);
-      refreshEdges(scene, abstractionBoundary);
+      colorFocusedMotif(sharkViewerInstance);
       console.log("recolored focused motif");
     }
   }, [context.focusedMotif]);
@@ -1446,6 +1464,8 @@ function Viewer() {
         updateCamera,
         neuron_translate
       );
+
+      colorFocusedMotif(sharkViewerInstance);
 
       // todo set abstraction threshold
 
