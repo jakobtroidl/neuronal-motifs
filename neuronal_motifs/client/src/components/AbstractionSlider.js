@@ -22,11 +22,11 @@ function AbstractionSlider() {
       },
       {
         value: context.motifPathPosition,
-        label: "Motif Path",
+        label: "Motif",
       },
       {
         value: context.motifPathPosition + context.explosionRange,
-        label: "Exploded View",
+        label: "Exploded",
       },
       {
         value: 0.99,
