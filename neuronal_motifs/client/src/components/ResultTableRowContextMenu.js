@@ -25,7 +25,7 @@ export default function ResultTableRowContextMenu({ neuron, index }) {
   };
 
   return (
-    <div>
+    <>
       <IconButton onClick={handleClick}>
         <MoreVertIcon />
       </IconButton>
@@ -43,6 +43,6 @@ export default function ResultTableRowContextMenu({ neuron, index }) {
         <Divider />
         {/*<MenuItem onClick={handleShowDetails}>Search </MenuItem>*/}
       </Menu>
-    </div>
+    </>
   );
 }

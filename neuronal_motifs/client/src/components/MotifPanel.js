@@ -216,7 +216,7 @@ function MotifPanel() {
             value={selectedTab}
             onChange={handleTabChange}
             aria-label="basic tabs example"
-            flexContainer
+            flexcontainer="true"
           >
             <Tab label="Results" {...a11yProps(0)} />
             <Tab label="Selection" {...a11yProps(1)} />
