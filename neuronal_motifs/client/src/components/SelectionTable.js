@@ -19,7 +19,7 @@ export default function SelectionTable(props) {
     columns["bodyId"] = true;
     columns["type"] = true;
 
-    columns["instance"] = true;
+    // columns["instance"] = true;
     columns["status"] = true;
     return columns;
   }
@@ -32,8 +32,8 @@ export default function SelectionTable(props) {
       if (b[0] === "bodyId") return 1;
       if (a[0] === "type") return -1;
       if (b[0] === "type") return 1;
-      if (a[0] === "instance") return -1;
-      if (b[0] === "instance") return 1;
+      // if (a[0] === "instance") return -1;
+      // if (b[0] === "instance") return 1;
       if (a[0] === "status") return -1;
       if (b[0] === "status") return 1;
       return a[1] === b[1] ? 0 : a[1] ? -1 : 1;
