@@ -177,3 +177,25 @@ class DataAccess:
         """
 
         return neu.fetch_synapse_connections(from_neurons, to_neighbors)
+
+    @staticmethod
+    def get_rois(names):
+        """
+        Returns a list of roi meshes
+        @param names: list of roi names
+        @return: list of roi meshes
+        """
+        rois = []
+        for name in names:
+            roi = neu.fetch_roi(name)
+            rois.append(roi.to_dict())
+        return rois
+
+    @staticmethod
+    def get_all_roi_names():
+        """
+        Returns a list of all roi names
+        @return: list of roi names
+        """
+        return neu.fetch_all_rois()
+

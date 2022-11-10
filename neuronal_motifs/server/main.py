@@ -86,6 +86,20 @@ def get_nblast(node_id: int, top_n: Optional[int] = None):
     return nblast.get_nblast_scores(node_id, top_n)
 
 
+@app.get("/roi/names={names}&&token={token}")
+def get_roi(names: str, token: str):
+    access = data_access.DataAccess(token)
+    names = json.loads(names)
+    return access.get_rois(names)
+
+
+@app.get("/all_rois/token={token}")
+def get_all_roi_names(token: str):
+    access = data_access.DataAccess(token)
+    return access.get_all_roi_names()
+
+
+
 @app.get("/count/motif={motif}")
 def get_motif_count(motif: str):
     return count.get_absolute(motif)
