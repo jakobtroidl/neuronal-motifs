@@ -285,7 +285,7 @@ function addLights(scene) {
   }
   let directionalName = "directional-light";
   if (!scene.getObjectByName(directionalName)) {
-    const directionalLight = new THREE.DirectionalLight(Color.white, 0.7);
+    const directionalLight = new THREE.DirectionalLight(Color.grey, 0.4);
     directionalLight.name = directionalName;
     scene.add(directionalLight);
   }
@@ -388,6 +388,7 @@ function Viewer() {
   let syn_clusters_identifier = "clusters";
   let lines_identifier = "lines";
   let line_clusters_identifier = "line_clusters";
+  let roi_identifier = "rois";
 
   const [motif, setMotif] = React.useState();
   const [sharkViewerInstance, setSharkViewerInstance] = useState();
@@ -804,6 +805,63 @@ function Viewer() {
     }
   }
 
+  function deleteAllROIs(scene) {
+    let rois = scene.getObjectByName(roi_identifier);
+    if (rois) {
+      scene.remove(rois);
+    }
+  }
+
+  function addROI(scene, roi) {
+    let roiObject = scene.getObjectByName(roi_identifier);
+    if (!roiObject) {
+      roiObject = new THREE.Object3D();
+      roiObject.name = roi_identifier;
+      roiObject.transparent = true;
+      scene.add(roiObject);
+    }
+
+    const geometry = new THREE.BufferGeometry();
+
+    geometry.setIndex(roi.faces.flat());
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(roi.vertices.flat(), 3)
+    );
+
+    geometry.computeVertexNormals();
+    let material = new THREE.MeshStandardMaterial({
+      color: Color.black,
+      transparent: true,
+      opacity: 0.3,
+      side: THREE.FrontSide,
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.name = roi.name;
+    roiObject.add(mesh);
+  }
+
+  useEffect(async () => {
+    if (sharkViewerInstance) {
+      let scene = sharkViewerInstance.scene;
+      let roisJSON = JSON.stringify(context.displayedROIs);
+      let token = getAuthToken();
+      let rois = (
+        await axios.get(
+          `http://${process.env.REACT_APP_API_URL}/roi/names=${roisJSON}&&token=${token}`,
+          {
+            withCredentials: true,
+          }
+        )
+      ).data;
+
+      deleteAllROIs(scene);
+      rois.forEach((roi, i) => {
+        addROI(scene, roi);
+      });
+    }
+  }, [context.displayedROIs]);
+
   useEffect(async () => {
     if (
       context.neighborhoodQuery &&
@@ -1131,6 +1189,16 @@ function Viewer() {
     }
   };
 
+  function setROIOpacity(scene, opacity) {
+    let roi = scene.getObjectByName(roi_identifier);
+    if (roi) {
+      roi.children.forEach((roi) => {
+        roi.material.opacity = opacity;
+        roi.material.needsUpdate = true;
+      });
+    }
+  }
+
   useEffect(() => {
     if (sharkViewerInstance) {
       let grey = context.greyOutNonMotifBranches;
@@ -1147,6 +1215,14 @@ function Viewer() {
       let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
 
       let directions = getTranslationVectors(neurons.length);
+
+      if (level <= motif_path_threshold - 0.1) {
+        setROIOpacity(scene, 0.3);
+      } else if (level <= motif_path_threshold) {
+        setROIOpacity(scene, 0.1);
+      } else {
+        setROIOpacity(scene, 0.0);
+      }
 
       if (
         level >= motif_path_threshold &&
