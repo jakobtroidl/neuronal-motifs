@@ -823,14 +823,12 @@ function Viewer() {
 
     const geometry = new THREE.BufferGeometry();
 
-    let points = [];
-    roi.faces.forEach((face) => {
-      points.push(roi.vertices[face[0]]);
-      points.push(roi.vertices[face[1]]);
-      points.push(roi.vertices[face[2]]);
-    });
-    let vertices = new Float32Array(points.flat());
-    geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
+    geometry.setIndex(roi.faces.flat());
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(roi.vertices.flat(), 3)
+    );
+
     geometry.computeVertexNormals();
     let material = new THREE.MeshStandardMaterial({
       color: Color.black,
