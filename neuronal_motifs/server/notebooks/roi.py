@@ -6,6 +6,9 @@ MY_NEUPRINT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Imp0cm9pZG
 
 client = neu.Client('https://neuprint.janelia.org/', dataset='hemibrain:v1.1', token=MY_NEUPRINT_TOKEN)
 
-mb = neu.fetch_roi('MB(R)')
+mb = neu.fetch_roi('PB')
+
+
+print(neu.fetch_all_rois())
 
 print(mb)
