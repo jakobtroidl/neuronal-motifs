@@ -1189,6 +1189,16 @@ function Viewer() {
     }
   };
 
+  function setROIOpacity(scene, opacity) {
+    let roi = scene.getObjectByName(roi_identifier);
+    if (roi) {
+      roi.children.forEach((roi) => {
+        roi.material.opacity = opacity;
+        roi.material.needsUpdate = true;
+      });
+    }
+  }
+
   useEffect(() => {
     if (sharkViewerInstance) {
       let grey = context.greyOutNonMotifBranches;
@@ -1205,6 +1215,14 @@ function Viewer() {
       let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
 
       let directions = getTranslationVectors(neurons.length);
+
+      if (level <= motif_path_threshold - 0.1) {
+        setROIOpacity(scene, 0.3);
+      } else if (level <= motif_path_threshold) {
+        setROIOpacity(scene, 0.1);
+      } else {
+        setROIOpacity(scene, 0.0);
+      }
 
       if (
         level >= motif_path_threshold &&
