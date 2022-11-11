@@ -63,6 +63,10 @@ export const ContextWrapper = (props) => {
   // highlight synapses
   const [selectedCytoscapeEdge, setSelectedCytoscapeEdge] = useState(null);
   const [greyOutNonMotifBranches, setGreyOutNonMotifBranches] = useState(false);
+
+  // search constraints
+  const [constraintsToAddToSketch, setConstraintsToAddToSketch] = useState();
+
   return (
     <AppContext.Provider
       value={{
@@ -112,6 +116,8 @@ export const ContextWrapper = (props) => {
         setExplosionRange,
         greyOutNonMotifBranches,
         setGreyOutNonMotifBranches,
+        constraintsToAddToSketch,
+        setConstraintsToAddToSketch,
       }}
     >
       {props.children}

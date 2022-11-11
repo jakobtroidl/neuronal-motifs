@@ -169,7 +169,7 @@ export function CollapsableTableRow(props) {
                       <>
                         <ResultTableRowContextMenu
                           neuron={neuron}
-                          index={index}
+                          neurons={row.neurons}
                         />
                         {columns
                           .filter((e) => e[1])
