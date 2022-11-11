@@ -5,16 +5,40 @@ import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import { AppContext } from "../contexts/GlobalContext";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
+import CustomizedHook from "./ROIAutocomplete";
+import axios from "axios";
 
 export default function SettingsPanel(props) {
   let context = useContext(AppContext);
+  const [roiNames, setRoiNames] = React.useState([]);
+
   function handleGreyOutCheckBoxChanged(event) {
     console.log("handleGreyOutCheckBoxChanged");
     context.setGreyOutNonMotifBranches(event.target.checked);
   }
+
+  useEffect(async () => {
+    if (roiNames.length === 0) {
+      let token = getAuthToken();
+      let rois = (
+        await axios.get(
+          `http://${process.env.REACT_APP_API_URL}/all_rois/token=${token}`,
+          {
+            withCredentials: true,
+          }
+        )
+      ).data;
+
+      console.log("rois: ", rois);
+
+      setRoiNames(rois);
+    }
+  }, []);
+
   return (
     <div>
+      <CustomizedHook options={roiNames}></CustomizedHook>
       <TextField
         id="outlined-basic"
         label="Auth Token"

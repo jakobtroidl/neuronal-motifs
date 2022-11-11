@@ -67,6 +67,8 @@ export const ContextWrapper = (props) => {
   // search constraints
   const [constraintsToAddToSketch, setConstraintsToAddToSketch] = useState();
 
+  const [displayedROIs, setDisplayedROIs] = useState([]);
+
   return (
     <AppContext.Provider
       value={{
@@ -118,6 +120,8 @@ export const ContextWrapper = (props) => {
         setGreyOutNonMotifBranches,
         constraintsToAddToSketch,
         setConstraintsToAddToSketch,
+        displayedROIs,
+        setDisplayedROIs,
       }}
     >
       {props.children}
