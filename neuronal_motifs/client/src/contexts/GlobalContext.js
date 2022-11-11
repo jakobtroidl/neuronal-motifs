@@ -64,6 +64,9 @@ export const ContextWrapper = (props) => {
   const [selectedCytoscapeEdge, setSelectedCytoscapeEdge] = useState(null);
   const [greyOutNonMotifBranches, setGreyOutNonMotifBranches] = useState(false);
 
+  // search constraints
+  const [constraintsToAddToSketch, setConstraintsToAddToSketch] = useState();
+
   const [displayedROIs, setDisplayedROIs] = useState([]);
 
   return (
@@ -115,6 +118,8 @@ export const ContextWrapper = (props) => {
         setExplosionRange,
         greyOutNonMotifBranches,
         setGreyOutNonMotifBranches,
+        constraintsToAddToSketch,
+        setConstraintsToAddToSketch,
         displayedROIs,
         setDisplayedROIs,
       }}
