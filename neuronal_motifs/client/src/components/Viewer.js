@@ -1055,8 +1055,6 @@ function Viewer() {
     syn_clusters.name = syn_clusters_identifier;
     syn_clusters.visible = true;
 
-    console.log("groups", groups);
-
     for (const [id, group] of Object.entries(groups)) {
       // let groupColor = groupFocused(group, context.focusedMotif)
       //   ? "#696969"
