@@ -91,7 +91,9 @@ export default function ResultTableRowContextMenu({ neuron, neurons }) {
                   onKeyDown={handleListKeyDown}
                   dense
                 >
-                  <MenuItem onClick={handleShowDetails}>Show details</MenuItem>
+                  <MenuItem onClick={handleShowDetails}>
+                    Show details in Neuprint
+                  </MenuItem>
                   <Divider />
                   {neurons.map((node) => {
                     return (
