@@ -24,6 +24,7 @@ function GraphSummary() {
   let layout = {
     name: layoutName,
     randomize: randomize,
+    avoidOverlap: true,
   };
 
   // let elements = getGraphElements();
@@ -111,10 +112,14 @@ function GraphSummary() {
       context.setSelectedCytoscapeEdge(edgeData);
       context.setSelectedSketchElement(null);
     });
-    cy.on("add", (e) => {
-      cy.layout(layout).run();
-    });
   });
+
+  useEffect(() => {
+    if (cyRef.current) {
+      cyRef.current.layout(layout).run();
+      cyRef.current.resize();
+    }
+  }, [elements]);
 
   function getGraphElements() {
     let selectedMotifs = context.selectedMotifs;
