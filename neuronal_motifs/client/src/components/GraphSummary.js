@@ -14,31 +14,49 @@ import { AppContext } from "../contexts/GlobalContext";
 import { getIdFromNodeKey } from "../utils/edge";
 
 function GraphSummary() {
-  const [randomize, setRandomize] = React.useState(true);
   const id = "graph-summary-div";
   let layoutName = "cose-bilkent";
 
   let context = useContext(AppContext);
   Cytoscape.use(COSEBilkent);
 
-  let layout = {
+  const [layout, setLayout] = useState({
     name: layoutName,
-    randomize: randomize,
-  };
+    randomize: true,
+    avoidOverlap: true,
+  });
 
-  // let elements = getGraphElements();
   const [elements, setElements] = useState(null);
   useEffect(() => {
     setElements(getGraphElements());
   }, [context.selectedMotifs, context.focusedMotif]);
 
-  if (
-    // hack but don't know how to do it better
-    randomize &&
-    (context.abstractionLevel > 0.0 || context.globalMotifIndex > 1)
-  ) {
-    setRandomize(false);
-  }
+  useEffect(() => {
+    if (
+      // hack but don't know how to do it better
+      layout.randomize &&
+      elements &&
+      elements.length > 0 &&
+      (context.abstractionLevel > 0.0 || context.globalMotifIndex > 1)
+    ) {
+      setLayout({
+        ...layout,
+        randomize: false,
+      });
+    } else if (
+      context.selectedMotifs.length === 0 ||
+      context.globalMotifIndex < 1
+    ) {
+      setLayout({
+        ...layout,
+        randomize: true,
+      });
+    }
+  }, [
+    context.abstractionLevel,
+    context.globalMotifIndex,
+    context.selectedMotifs,
+  ]);
 
   // checks if neuron is in focused motif
   function isFocused(neuronId) {
@@ -111,10 +129,14 @@ function GraphSummary() {
       context.setSelectedCytoscapeEdge(edgeData);
       context.setSelectedSketchElement(null);
     });
-    cy.on("add", (e) => {
-      cy.layout(layout).run();
-    });
   });
+
+  useEffect(() => {
+    if (cyRef.current) {
+      cyRef.current.layout(layout).run();
+      cyRef.current.resize();
+    }
+  }, [elements]);
 
   function getGraphElements() {
     let selectedMotifs = context.selectedMotifs;
