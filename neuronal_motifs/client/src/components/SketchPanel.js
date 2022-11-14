@@ -1071,6 +1071,26 @@ function SketchPanel() {
     }
   }, [context.selectedCytoscapeEdge, context.focusedMotif]);
 
+  const isObject = (obj) => {
+    return Object.prototype.toString.call(obj) === "[object Object]";
+  };
+
+  const parsePropertyText = (key, value) => {
+    let parsedValue = "";
+    if (isObject(value)) {
+      if (value["$ne"]) {
+        parsedValue = `Not ${value["$ne"]}`;
+      } else if (value["$lt"]) {
+        parsedValue = "< " + value["$lt"];
+      } else if (value["$gt"]) {
+        parsedValue = "> " + value["$gt"];
+      }
+    } else {
+      parsedValue = value;
+    }
+    return `${key}: ${parsedValue}\n`;
+  };
+
   useEffect(() => {
     if (!nodes) return;
     nodeLabels.forEach((label) => {
@@ -1081,7 +1101,7 @@ function SketchPanel() {
         if (!showInfo) return null;
         console.log("nodes", n, "show", showInfo);
         let propertiesText = _.entries(n?.properties).map((p) => {
-          return `${p[0]}: ${p[1]}\n`;
+          return parsePropertyText(p[0], p[1]);
         });
         let labelPoint = [
           n.circle.position.x,
