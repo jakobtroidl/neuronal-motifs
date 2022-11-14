@@ -35,6 +35,7 @@ function GraphSummary() {
     if (
       // hack but don't know how to do it better
       layout.randomize &&
+      elements &&
       elements.length > 0 &&
       (context.abstractionLevel > 0.0 || context.globalMotifIndex > 1)
     ) {
