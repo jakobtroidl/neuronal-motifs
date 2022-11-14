@@ -1,0 +1,431 @@
+{
+  "nodes": [
+    {
+      "label": "A",
+      "properties": {
+        "EB": true,
+        "type": "ExR*"
+      },
+      "index": 0,
+      "position": [
+        "Point",
+        201.05469,
+        55.35156
+      ],
+      "tree": {
+        "id": "8bb9bb8b-cdef-4012-b456-718477b6dbff",
+        "type": "group",
+        "path": [
+          "8bb9bb8b-cdef-4012-b456-718477b6dbff"
+        ],
+        "children1": {
+          "9889bab8-cdef-4012-b456-718477b6e23b": {
+            "type": "rule",
+            "id": "9889bab8-cdef-4012-b456-718477b6e23b",
+            "properties": {
+              "field": "EB",
+              "operator": "equal",
+              "value": [
+                true
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "boolean"
+              ]
+            },
+            "path": [
+              "8bb9bb8b-cdef-4012-b456-718477b6dbff",
+              "9889bab8-cdef-4012-b456-718477b6e23b"
+            ]
+          },
+          "b898bbb8-0123-4456-b89a-b18477bb4abb": {
+            "type": "rule",
+            "id": "b898bbb8-0123-4456-b89a-b18477bb4abb",
+            "properties": {
+              "field": "type",
+              "operator": "select_equals",
+              "value": [
+                "ExR*"
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "select"
+              ],
+              "asyncListValues": [
+                {
+                  "title": "ExR*",
+                  "value": "ExR*"
+                }
+              ]
+            },
+            "path": [
+              "8bb9bb8b-cdef-4012-b456-718477b6dbff",
+              "b898bbb8-0123-4456-b89a-b18477bb4abb"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "B",
+      "properties": {
+        "EB": true,
+        "type": {
+          "$ne": "ExR*"
+        }
+      },
+      "index": 1,
+      "position": [
+        "Point",
+        72.05469,
+        112.35156
+      ],
+      "tree": {
+        "id": "88baaa98-89ab-4cde-b012-318477b6889a",
+        "type": "group",
+        "path": [
+          "88baaa98-89ab-4cde-b012-318477b6889a"
+        ],
+        "children1": {
+          "8abb8abb-89ab-4cde-b012-318477b68e78": {
+            "type": "rule",
+            "id": "8abb8abb-89ab-4cde-b012-318477b68e78",
+            "properties": {
+              "field": "EB",
+              "operator": "equal",
+              "value": [
+                true
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "boolean"
+              ]
+            },
+            "path": [
+              "88baaa98-89ab-4cde-b012-318477b6889a",
+              "8abb8abb-89ab-4cde-b012-318477b68e78"
+            ]
+          },
+          "9b8a9898-0123-4456-b89a-b18477bbc433": {
+            "type": "rule",
+            "id": "9b8a9898-0123-4456-b89a-b18477bbc433",
+            "properties": {
+              "field": "type",
+              "operator": "select_not_equals",
+              "value": [
+                "ExR*"
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "select"
+              ],
+              "asyncListValues": [
+                {
+                  "title": "ExR*",
+                  "value": "ExR*"
+                }
+              ]
+            },
+            "path": [
+              "88baaa98-89ab-4cde-b012-318477b6889a",
+              "9b8a9898-0123-4456-b89a-b18477bbc433"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "C",
+      "properties": {
+        "EB": true,
+        "type": {
+          "$ne": "ExR*"
+        }
+      },
+      "index": 2,
+      "position": [
+        "Point",
+        183.05469,
+        175.35156
+      ],
+      "tree": {
+        "id": "88b99989-89ab-4cde-b012-318477b9c2f3",
+        "type": "group",
+        "path": [
+          "88b99989-89ab-4cde-b012-318477b9c2f3"
+        ],
+        "children1": {
+          "a8a98aa9-0123-4456-b89a-b18477b9d8c9": {
+            "type": "rule",
+            "id": "a8a98aa9-0123-4456-b89a-b18477b9d8c9",
+            "properties": {
+              "field": "EB",
+              "operator": "equal",
+              "value": [
+                true
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "boolean"
+              ]
+            },
+            "path": [
+              "88b99989-89ab-4cde-b012-318477b9c2f3",
+              "a8a98aa9-0123-4456-b89a-b18477b9d8c9"
+            ]
+          },
+          "8abbbaba-4567-489a-bcde-f18477bb90d6": {
+            "type": "rule",
+            "id": "8abbbaba-4567-489a-bcde-f18477bb90d6",
+            "properties": {
+              "field": "type",
+              "operator": "select_not_equals",
+              "value": [
+                "ExR*"
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "select"
+              ],
+              "asyncListValues": [
+                {
+                  "title": "ExR*",
+                  "value": "ExR*"
+                }
+              ]
+            },
+            "path": [
+              "88b99989-89ab-4cde-b012-318477b9c2f3",
+              "8abbbaba-4567-489a-bcde-f18477bb90d6"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "label": "A -> B",
+      "properties": {
+        "weight": {
+          "$gt": 20
+        }
+      },
+      "index": 0,
+      "indices": [
+        0,
+        1
+      ],
+      "tree": {
+        "id": "99aa899b-89ab-4cde-b012-318477b5101f",
+        "type": "group",
+        "path": [
+          "99aa899b-89ab-4cde-b012-318477b5101f"
+        ],
+        "children1": {
+          "baa9ab88-0123-4456-b89a-b18477b51764": {
+            "type": "rule",
+            "id": "baa9ab88-0123-4456-b89a-b18477b51764",
+            "properties": {
+              "field": "weight",
+              "operator": "greater",
+              "value": [
+                20
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "number"
+              ]
+            },
+            "path": [
+              "99aa899b-89ab-4cde-b012-318477b5101f",
+              "baa9ab88-0123-4456-b89a-b18477b51764"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "A -> C",
+      "properties": {
+        "EB": {
+          "$lt": 20
+        },
+        "weight": {
+          "$gt": 30
+        }
+      },
+      "index": 1,
+      "indices": [
+        0,
+        2
+      ],
+      "tree": {
+        "id": "99a9b8ba-cdef-4012-b456-718477b9f468",
+        "type": "group",
+        "path": [
+          "99a9b8ba-cdef-4012-b456-718477b9f468"
+        ],
+        "children1": {
+          "9899aaa9-4567-489a-bcde-f18477b9faab": {
+            "type": "rule",
+            "id": "9899aaa9-4567-489a-bcde-f18477b9faab",
+            "properties": {
+              "field": "EB",
+              "operator": "less",
+              "value": [
+                20
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "number"
+              ]
+            },
+            "path": [
+              "99a9b8ba-cdef-4012-b456-718477b9f468",
+              "9899aaa9-4567-489a-bcde-f18477b9faab"
+            ]
+          },
+          "a999aa9a-89ab-4cde-b012-318477ba6829": {
+            "type": "rule",
+            "id": "a999aa9a-89ab-4cde-b012-318477ba6829",
+            "properties": {
+              "field": "weight",
+              "operator": "greater",
+              "value": [
+                30
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "number"
+              ]
+            },
+            "path": [
+              "99a9b8ba-cdef-4012-b456-718477b9f468",
+              "a999aa9a-89ab-4cde-b012-318477ba6829"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "C -> B",
+      "properties": {
+        "weight": {
+          "$gt": 20
+        }
+      },
+      "index": 2,
+      "indices": [
+        2,
+        1
+      ],
+      "tree": {
+        "id": "8bab9889-4567-489a-bcde-f18477babcf1",
+        "type": "group",
+        "path": [
+          "8bab9889-4567-489a-bcde-f18477babcf1"
+        ],
+        "children1": {
+          "8a88aa8a-cdef-4012-b456-718477bac676": {
+            "type": "rule",
+            "id": "8a88aa8a-cdef-4012-b456-718477bac676",
+            "properties": {
+              "field": "weight",
+              "operator": "greater",
+              "value": [
+                20
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "number"
+              ]
+            },
+            "path": [
+              "8bab9889-4567-489a-bcde-f18477babcf1",
+              "8a88aa8a-cdef-4012-b456-718477bac676"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "B -> A",
+      "properties": {
+        "EB": {
+          "$gt": 20
+        }
+      },
+      "index": 3,
+      "indices": [
+        1,
+        0
+      ],
+      "tree": {
+        "id": "89899898-cdef-4012-b456-718477b82e70",
+        "type": "group",
+        "path": [
+          "89899898-cdef-4012-b456-718477b82e70"
+        ],
+        "children1": {
+          "8889a999-4567-489a-bcde-f18477b83476": {
+            "type": "rule",
+            "id": "8889a999-4567-489a-bcde-f18477b83476",
+            "properties": {
+              "field": "EB",
+              "operator": "greater",
+              "value": [
+                20
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "number"
+              ]
+            },
+            "path": [
+              "89899898-cdef-4012-b456-718477b82e70",
+              "8889a999-4567-489a-bcde-f18477b83476"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "dimension": {
+    "width": 312.484375,
+    "height": 194.6953125
+  }
+}

@@ -1,0 +1,201 @@
+{
+  "nodes": [
+    {
+      "label": "A",
+      "properties": {
+        "type": "PFL*"
+      },
+      "index": 0,
+      "position": [
+        "Point",
+        63.05469,
+        76.5
+      ],
+      "tree": {
+        "id": "98a9baa8-89ab-4cde-b012-318477a9766c",
+        "type": "group",
+        "path": [
+          "98a9baa8-89ab-4cde-b012-318477a9766c"
+        ],
+        "children1": {
+          "ab9aaaab-0123-4456-b89a-b18477a97e9a": {
+            "type": "rule",
+            "id": "ab9aaaab-0123-4456-b89a-b18477a97e9a",
+            "properties": {
+              "field": "type",
+              "operator": "select_equals",
+              "value": [
+                "PFL*"
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "select"
+              ],
+              "asyncListValues": [
+                {
+                  "title": "PFL*",
+                  "value": "PFL*"
+                }
+              ]
+            },
+            "path": [
+              "98a9baa8-89ab-4cde-b012-318477a9766c",
+              "ab9aaaab-0123-4456-b89a-b18477a97e9a"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "B",
+      "properties": {
+        "LAL(R)": true
+      },
+      "index": 1,
+      "position": [
+        "Point",
+        181.05469,
+        40.5
+      ],
+      "tree": {
+        "id": "b9b9889b-4567-489a-bcde-f18477aa5d75",
+        "type": "group",
+        "path": [
+          "b9b9889b-4567-489a-bcde-f18477aa5d75"
+        ],
+        "children1": {
+          "ab9b98b9-cdef-4012-b456-718477aa6754": {
+            "type": "rule",
+            "id": "ab9b98b9-cdef-4012-b456-718477aa6754",
+            "properties": {
+              "field": "LAL(R)",
+              "operator": "equal",
+              "value": [
+                true
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "boolean"
+              ]
+            },
+            "path": [
+              "b9b9889b-4567-489a-bcde-f18477aa5d75",
+              "ab9b98b9-cdef-4012-b456-718477aa6754"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "C",
+      "properties": {
+        "type": "PFL*"
+      },
+      "index": 2,
+      "position": [
+        "Point",
+        189.05469,
+        173.5
+      ],
+      "tree": {
+        "id": "88aab98a-89ab-4cde-b012-318477aadf20",
+        "type": "group",
+        "path": [
+          "88aab98a-89ab-4cde-b012-318477aadf20"
+        ],
+        "children1": {
+          "b9888ab8-0123-4456-b89a-b18477aae4a8": {
+            "type": "rule",
+            "id": "b9888ab8-0123-4456-b89a-b18477aae4a8",
+            "properties": {
+              "field": "type",
+              "operator": "select_equals",
+              "value": [
+                "PFL*"
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "select"
+              ],
+              "asyncListValues": [
+                {
+                  "title": "PFL*",
+                  "value": "PFL*"
+                }
+              ]
+            },
+            "path": [
+              "88aab98a-89ab-4cde-b012-318477aadf20",
+              "b9888ab8-0123-4456-b89a-b18477aae4a8"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "label": "A -> C",
+      "properties": null,
+      "index": 0,
+      "indices": [
+        0,
+        2
+      ],
+      "tree": null
+    },
+    {
+      "label": "B -> C",
+      "properties": null,
+      "index": 1,
+      "indices": [
+        1,
+        2
+      ],
+      "tree": null
+    },
+    {
+      "label": "C -> B",
+      "properties": null,
+      "index": 2,
+      "indices": [
+        2,
+        1
+      ],
+      "tree": null
+    },
+    {
+      "label": "C -> A",
+      "properties": null,
+      "index": 3,
+      "indices": [
+        2,
+        0
+      ],
+      "tree": null
+    },
+    {
+      "label": "A -> B",
+      "properties": null,
+      "index": 4,
+      "indices": [
+        0,
+        1
+      ],
+      "tree": null
+    }
+  ],
+  "dimension": {
+    "width": 312.484375,
+    "height": 211.796875
+  }
+}
