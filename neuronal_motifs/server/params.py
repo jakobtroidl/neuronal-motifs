@@ -8,4 +8,4 @@ class Params:
     storage_server = 'https://storage.googleapis.com/'
     bucket_name = 'motifs-cache'
     storage_root = Path('')
-    load_cache_from_gcloud = False
+    load_cache_from_gcloud = True
