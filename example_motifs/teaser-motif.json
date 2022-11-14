@@ -1,0 +1,170 @@
+{
+  "nodes": [
+    {
+      "label": "A",
+      "properties": {
+        "CX": true
+      },
+      "index": 0,
+      "position": [
+        "Point",
+        58.05469,
+        168.20313
+      ],
+      "tree": {
+        "id": "899a9b98-89ab-4cde-b012-318473091962",
+        "type": "group",
+        "path": [
+          "899a9b98-89ab-4cde-b012-318473091962"
+        ],
+        "children1": {
+          "9a9abbaa-0123-4456-b89a-b18473091d5e": {
+            "type": "rule",
+            "id": "9a9abbaa-0123-4456-b89a-b18473091d5e",
+            "properties": {
+              "field": "CX",
+              "operator": "equal",
+              "value": [
+                true
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "boolean"
+              ]
+            },
+            "path": [
+              "899a9b98-89ab-4cde-b012-318473091962",
+              "9a9abbaa-0123-4456-b89a-b18473091d5e"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "B",
+      "properties": {
+        "CRE(L)": true
+      },
+      "index": 1,
+      "position": [
+        "Point",
+        146.05469,
+        32.20313
+      ],
+      "tree": {
+        "id": "a99899b8-0123-4456-b89a-b184730958ee",
+        "type": "group",
+        "path": [
+          "a99899b8-0123-4456-b89a-b184730958ee"
+        ],
+        "children1": {
+          "aa999bbb-89ab-4cde-b012-318473095d3b": {
+            "type": "rule",
+            "id": "aa999bbb-89ab-4cde-b012-318473095d3b",
+            "properties": {
+              "field": "CRE(L)",
+              "operator": "equal",
+              "value": [
+                true
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "boolean"
+              ]
+            },
+            "path": [
+              "a99899b8-0123-4456-b89a-b184730958ee",
+              "aa999bbb-89ab-4cde-b012-318473095d3b"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "C",
+      "properties": null,
+      "index": 2,
+      "position": [
+        "Point",
+        269.05469,
+        97.20313
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "label": "A -> C",
+      "properties": {
+        "weight": {
+          "$gt": 20
+        }
+      },
+      "index": 0,
+      "indices": [
+        0,
+        2
+      ],
+      "tree": {
+        "id": "98b9abba-4567-489a-bcde-f1847309359d",
+        "type": "group",
+        "path": [
+          "98b9abba-4567-489a-bcde-f1847309359d"
+        ],
+        "children1": {
+          "9abaa89a-4567-489a-bcde-f1847309391a": {
+            "type": "rule",
+            "id": "9abaa89a-4567-489a-bcde-f1847309391a",
+            "properties": {
+              "field": "weight",
+              "operator": "greater",
+              "value": [
+                20
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "number"
+              ]
+            },
+            "path": [
+              "98b9abba-4567-489a-bcde-f1847309359d",
+              "9abaa89a-4567-489a-bcde-f1847309391a"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "C -> B",
+      "properties": null,
+      "index": 1,
+      "indices": [
+        2,
+        1
+      ],
+      "tree": null
+    },
+    {
+      "label": "B -> A",
+      "properties": null,
+      "index": 2,
+      "indices": [
+        1,
+        0
+      ],
+      "tree": null
+    }
+  ],
+  "dimension": {
+    "width": 312.484375,
+    "height": 219.59375
+  }
+}

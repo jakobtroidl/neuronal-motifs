@@ -29,9 +29,6 @@ export default function SettingsPanel(props) {
           }
         )
       ).data;
-
-      console.log("rois: ", rois);
-
       setRoiNames(rois);
     }
   }, []);
