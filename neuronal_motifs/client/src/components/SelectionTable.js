@@ -61,6 +61,7 @@ export default function SelectionTable(props) {
       setSelection(selection.filter((r) => r !== row));
       selectedMotifs_copy.splice(idx, 1);
       context.setSelectedMotifs(selectedMotifs_copy);
+      context.setGlobalMotifIndex(context.globalMotifIndex - 1);
       if (selectedMotifs_copy.length > 0) {
         let focusedMotif = selectedMotifs_copy.at(-1);
         context.setFocusedMotif(focusedMotif);
