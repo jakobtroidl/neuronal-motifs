@@ -59,9 +59,12 @@ function GraphSummary() {
   ]);
 
   // checks if neuron is in focused motif
-  function isFocused(neuronId) {
+  function isFocused(neuronId, motifIndex) {
     if (context.focusedMotif) {
-      return context.focusedMotif.neurons.some((n) => n.bodyId === neuronId);
+      return (
+        context.focusedMotif.index === motifIndex &&
+        context.focusedMotif.neurons.some((n) => n.bodyId === neuronId)
+      );
     }
     return false;
   }
@@ -145,16 +148,31 @@ function GraphSummary() {
     let nodes = [];
     let edges = [];
 
+    let allNodes = selectedMotifs
+      .map((motif) => motif.graph.nodes.map((n) => n.id))
+      .flat();
+
     selectedMotifs.forEach((motif) => {
       // add nodes
       motif.graph.nodes.forEach((node, idx) => {
-        nodes.push({
-          data: {
-            id: node.id.toString(),
-            label: isFocused(node.id) ? String.fromCharCode(65 + idx) : "",
-            color: isFocused(node.id) ? neuronColors[idx] : "#ccc",
-          },
-        });
+        if (
+          allNodes.filter((n) => n === node.id).length > 1 &&
+          !isFocused(node.id, motif.index)
+        ) {
+          // console.log(node);
+        } else {
+          nodes.push({
+            data: {
+              id: node.id.toString(),
+              label: isFocused(node.id, motif.index)
+                ? String.fromCharCode(65 + idx)
+                : "",
+              color: isFocused(node.id, motif.index)
+                ? neuronColors[idx]
+                : "#ccc",
+            },
+          });
+        }
       });
       // add edges
       motif.graph.links.forEach((edge) => {

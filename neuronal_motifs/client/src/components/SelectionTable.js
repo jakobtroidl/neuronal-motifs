@@ -78,7 +78,7 @@ export default function SelectionTable(props) {
           <TableBody>
             {selection.map((row) => (
               <CollapsableTableRow
-                key={row.name}
+                key={row.name + row.index}
                 row={row}
                 columns={columns}
                 //handleClick={handleClick}
