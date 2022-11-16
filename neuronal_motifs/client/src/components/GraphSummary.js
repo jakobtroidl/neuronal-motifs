@@ -12,6 +12,7 @@ import Cytoscape from "cytoscape";
 import COSEBilkent from "cytoscape-cose-bilkent";
 import { AppContext } from "../contexts/GlobalContext";
 import { getIdFromNodeKey } from "../utils/edge";
+import _ from "lodash";
 
 function GraphSummary() {
   const id = "graph-summary-div";
@@ -59,9 +60,12 @@ function GraphSummary() {
   ]);
 
   // checks if neuron is in focused motif
-  function isFocused(neuronId) {
+  function isFocused(neuronId, motifIndex) {
     if (context.focusedMotif) {
-      return context.focusedMotif.neurons.some((n) => n.bodyId === neuronId);
+      return (
+        motifIndex.includes(context.focusedMotif.index) &&
+        context.focusedMotif.neurons.some((n) => n.bodyId === neuronId)
+      );
     }
     return false;
   }
@@ -138,45 +142,94 @@ function GraphSummary() {
     }
   }, [elements]);
 
-  function getGraphElements() {
-    let selectedMotifs = context.selectedMotifs;
-    let neuronColors = context.neuronColors;
-
+  function getNodesForGraphElements(selectedMotifs, neuronColors) {
     let nodes = [];
-    let edges = [];
-
-    selectedMotifs.forEach((motif) => {
-      // add nodes
+    // First, get all nodes of selected motif instances
+    selectedMotifs.forEach((motif, i) => {
       motif.graph.nodes.forEach((node, idx) => {
         nodes.push({
           data: {
             id: node.id.toString(),
-            label: isFocused(node.id) ? String.fromCharCode(65 + idx) : "",
-            color: isFocused(node.id) ? neuronColors[idx] : "#ccc",
+            label: isFocused(node.id, [i]) ? String.fromCharCode(65 + idx) : "",
+            color: isFocused(node.id, [i]) ? neuronColors[idx] : "#ccc",
           },
         });
       });
+    });
+    // Get all node ids
+    let allNodes = _.uniq(
+      selectedMotifs.map((motif) => motif.graph.nodes.map((n) => n.id)).flat()
+    );
+
+    let res = allNodes.map((n) => {
+      let uniq = _.uniqWith(
+        nodes.filter((node) => node.data.id === n.toString()),
+        _.isEqual
+      ); // remove duplicated nodes to leave only one node if the node is from non-focused motif,
+      if (uniq.length > 1) {
+        // the node is from both focused motif and non-focused motif.
+        return uniq.filter((u) => u.data.label !== "")[0]; // get only node from focused motif
+      } else {
+        return uniq[0]; // get one from non-focused motif
+      }
+    });
+    return res.filter((r) => r !== undefined);
+  }
+
+  function getGraphElements() {
+    let selectedMotifs = context.selectedMotifs;
+    let neuronColors = context.neuronColors;
+
+    let nodes = getNodesForGraphElements(selectedMotifs, neuronColors);
+    let edges = [];
+
+    selectedMotifs.forEach((motif, i) => {
       // add edges
       motif.graph.links.forEach((edge) => {
+        let duplicatedEdge = edges.filter(
+          (e) => e.data.target === edge.target && e.data.source === edge.source
+        );
         if (
           // make sure no edges are added twice
-          edges.filter(
-            (e) =>
-              e.data.target === edge.target && e.data.source === edge.source
-          ).length === 0
+          duplicatedEdge.length === 0
         ) {
           edges.push({
             data: {
               source: edge.source,
               target: edge.target,
               label: "",
+              motifIndex: [i],
             },
           });
+        } else {
+          edges[edges.indexOf(duplicatedEdge[0])].data.motifIndex.push(i);
         }
       });
     });
     let elements = { nodes: nodes, edges: edges };
     return CytoscapeComponent.normalizeElements(elements);
+  }
+
+  function isEdgeFromFocusedMotif(edge) {
+    let edgeData = edge.data();
+    if (
+      isFocused(Number(edgeData.source), edgeData.motifIndex) &&
+      isFocused(Number(edgeData.target), edgeData.motifIndex)
+    ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  function edgeColor(edge) {
+    if (isEdgeSameAsSketchPanel(edge)) {
+      return "#ff1010";
+    } else if (isEdgeFromFocusedMotif(edge)) {
+      return "#000000";
+    } else {
+      return "#9b9b9b";
+    }
   }
 
   return (
@@ -208,10 +261,8 @@ function GraphSummary() {
                     style: {
                       "curve-style": "bezier",
                       "target-arrow-shape": "triangle",
-                      "line-color": (edge) =>
-                        isEdgeSameAsSketchPanel(edge) ? "#ff1010" : "#9b9b9b",
-                      "target-arrow-color": (edge) =>
-                        isEdgeSameAsSketchPanel(edge) ? "#ff1010" : "#9b9b9b",
+                      "line-color": (edge) => edgeColor(edge),
+                      "target-arrow-color": (edge) => edgeColor(edge),
                     },
                   },
                   // {

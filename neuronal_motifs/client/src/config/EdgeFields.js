@@ -2,7 +2,7 @@ export const EdgeFields = {
   weight: {
     label: "weight",
     type: "number",
-    operators: ["equal", "less", "greater"],
+    operators: ["greater", "less", "equal"],
     valueSources: ["value"],
   },
   "CRE(-ROB,-RUB)(R)": {
