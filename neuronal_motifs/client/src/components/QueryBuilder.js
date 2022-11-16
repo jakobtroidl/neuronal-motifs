@@ -15,6 +15,7 @@ InitialConfig["settings"]["groupOperators"] = false;
 InitialConfig["settings"]["canAddGroup"] = false;
 InitialConfig["settings"]["canReorder"] = false;
 InitialConfig["settings"]["renderSize"] = "small";
+InitialConfig["settings"]["setOpOnChangeField"] = ["keep", "first"];
 
 function QueryBuilder() {
   let [tree, setTree] = useState();
