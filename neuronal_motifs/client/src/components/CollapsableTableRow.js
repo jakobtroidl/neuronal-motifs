@@ -55,7 +55,10 @@ export function CollapsableTableRow(props) {
     if (idx > -1) {
       // motif is already selected
       let motif = selectedMotifs_copy.at(idx);
-      context.setFocusedMotif(motif);
+      context.setFocusedMotif({
+        ...motif,
+        index: idx,
+      });
     } else {
       // motif is not selected yet
 

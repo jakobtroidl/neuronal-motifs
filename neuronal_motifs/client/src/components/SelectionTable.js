@@ -43,15 +43,15 @@ export default function SelectionTable(props) {
 
   let columns = getSortedColumns(getVisibleColumns());
 
-  function handleClick(row) {
-    console.log("Clicked on selected motif");
-    let selectedMotifs_copy = [...context.selectedMotifs];
-    const idx = selectedMotifs_copy.indexOf(row);
-    if (idx > -1) {
-      let motif = selectedMotifs_copy.at(idx);
-      context.setFocusedMotif(motif);
-    }
-  }
+  // function handleClick(row) {
+  //   console.log("Clicked on selected motif");
+  //   let selectedMotifs_copy = [...context.selectedMotifs];
+  //   const idx = selectedMotifs_copy.indexOf(row);
+  //   if (idx > -1) {
+  //     let motif = selectedMotifs_copy.at(idx);
+  //     context.setFocusedMotif(motif);
+  //   }
+  // }
 
   function handleDelete(row) {
     let selectedMotifs_copy = [...context.selectedMotifs];
@@ -64,7 +64,10 @@ export default function SelectionTable(props) {
       context.setGlobalMotifIndex(context.globalMotifIndex - 1);
       if (selectedMotifs_copy.length > 0) {
         let focusedMotif = selectedMotifs_copy.at(-1);
-        context.setFocusedMotif(focusedMotif);
+        context.setFocusedMotif({
+          ...focusedMotif,
+          index: selectedMotifs_copy.length - 1,
+        });
       }
     } else {
       console.log("Motif Selection Delete. Row index not found.");

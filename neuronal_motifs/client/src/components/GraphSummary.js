@@ -63,7 +63,7 @@ function GraphSummary() {
   function isFocused(neuronId, motifIndex) {
     if (context.focusedMotif) {
       return (
-        context.focusedMotif.index === motifIndex &&
+        motifIndex.includes(context.focusedMotif.index) &&
         context.focusedMotif.neurons.some((n) => n.bodyId === neuronId)
       );
     }
@@ -145,33 +145,27 @@ function GraphSummary() {
   function getNodesForGraphElements(selectedMotifs, neuronColors) {
     let nodes = [];
     // First, get all nodes of selected motif instances
-    selectedMotifs.forEach((motif) => {
+    selectedMotifs.forEach((motif, i) => {
       motif.graph.nodes.forEach((node, idx) => {
         nodes.push({
           data: {
             id: node.id.toString(),
-            label: isFocused(node.id, motif.index)
-              ? String.fromCharCode(65 + idx)
-              : "",
-            color: isFocused(node.id, motif.index) ? neuronColors[idx] : "#ccc",
+            label: isFocused(node.id, [i]) ? String.fromCharCode(65 + idx) : "",
+            color: isFocused(node.id, [i]) ? neuronColors[idx] : "#ccc",
           },
         });
       });
     });
-    console.log(nodes);
     // Get all node ids
     let allNodes = _.uniq(
       selectedMotifs.map((motif) => motif.graph.nodes.map((n) => n.id)).flat()
     );
-    console.log(allNodes);
 
     let res = allNodes.map((n) => {
       let uniq = _.uniqWith(
         nodes.filter((node) => node.data.id === n.toString()),
         _.isEqual
       ); // remove duplicated nodes to leave only one node if the node is from non-focused motif,
-
-      console.log(uniq);
       if (uniq.length > 1) {
         // the node is from both focused motif and non-focused motif.
         return uniq.filter((u) => u.data.label !== "")[0]; // get only node from focused motif
@@ -179,7 +173,6 @@ function GraphSummary() {
         return uniq[0]; // get one from non-focused motif
       }
     });
-    console.log(res);
     return res.filter((r) => r !== undefined);
   }
 
@@ -190,28 +183,53 @@ function GraphSummary() {
     let nodes = getNodesForGraphElements(selectedMotifs, neuronColors);
     let edges = [];
 
-    selectedMotifs.forEach((motif) => {
+    selectedMotifs.forEach((motif, i) => {
       // add edges
       motif.graph.links.forEach((edge) => {
+        let duplicatedEdge = edges.filter(
+          (e) => e.data.target === edge.target && e.data.source === edge.source
+        );
         if (
           // make sure no edges are added twice
-          edges.filter(
-            (e) =>
-              e.data.target === edge.target && e.data.source === edge.source
-          ).length === 0
+          duplicatedEdge.length === 0
         ) {
           edges.push({
             data: {
               source: edge.source,
               target: edge.target,
               label: "",
+              motifIndex: [i],
             },
           });
+        } else {
+          edges[edges.indexOf(duplicatedEdge[0])].data.motifIndex.push(i);
         }
       });
     });
     let elements = { nodes: nodes, edges: edges };
     return CytoscapeComponent.normalizeElements(elements);
+  }
+
+  function isEdgeFromFocusedMotif(edge) {
+    let edgeData = edge.data();
+    if (
+      isFocused(Number(edgeData.source), edgeData.motifIndex) &&
+      isFocused(Number(edgeData.target), edgeData.motifIndex)
+    ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  function edgeColor(edge) {
+    if (isEdgeSameAsSketchPanel(edge)) {
+      return "#ff1010";
+    } else if (isEdgeFromFocusedMotif(edge)) {
+      return "#000000";
+    } else {
+      return "#9b9b9b";
+    }
   }
 
   return (
@@ -243,10 +261,8 @@ function GraphSummary() {
                     style: {
                       "curve-style": "bezier",
                       "target-arrow-shape": "triangle",
-                      "line-color": (edge) =>
-                        isEdgeSameAsSketchPanel(edge) ? "#ff1010" : "#9b9b9b",
-                      "target-arrow-color": (edge) =>
-                        isEdgeSameAsSketchPanel(edge) ? "#ff1010" : "#9b9b9b",
+                      "line-color": (edge) => edgeColor(edge),
+                      "target-arrow-color": (edge) => edgeColor(edge),
                     },
                   },
                   // {
