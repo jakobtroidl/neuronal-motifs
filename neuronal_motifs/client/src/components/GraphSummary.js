@@ -12,6 +12,7 @@ import Cytoscape from "cytoscape";
 import COSEBilkent from "cytoscape-cose-bilkent";
 import { AppContext } from "../contexts/GlobalContext";
 import { getIdFromNodeKey } from "../utils/edge";
+import _ from "lodash";
 
 function GraphSummary() {
   const id = "graph-summary-div";
@@ -141,39 +142,55 @@ function GraphSummary() {
     }
   }, [elements]);
 
+  function getNodesForGraphElements(selectedMotifs, neuronColors) {
+    let nodes = [];
+    // First, get all nodes of selected motif instances
+    selectedMotifs.forEach((motif) => {
+      motif.graph.nodes.forEach((node, idx) => {
+        nodes.push({
+          data: {
+            id: node.id.toString(),
+            label: isFocused(node.id, motif.index)
+              ? String.fromCharCode(65 + idx)
+              : "",
+            color: isFocused(node.id, motif.index) ? neuronColors[idx] : "#ccc",
+          },
+        });
+      });
+    });
+    console.log(nodes);
+    // Get all node ids
+    let allNodes = _.uniq(
+      selectedMotifs.map((motif) => motif.graph.nodes.map((n) => n.id)).flat()
+    );
+    console.log(allNodes);
+
+    let res = allNodes.map((n) => {
+      let uniq = _.uniqWith(
+        nodes.filter((node) => node.data.id === n.toString()),
+        _.isEqual
+      ); // remove duplicated nodes to leave only one node if the node is from non-focused motif,
+
+      console.log(uniq);
+      if (uniq.length > 1) {
+        // the node is from both focused motif and non-focused motif.
+        return uniq.filter((u) => u.data.label !== "")[0]; // get only node from focused motif
+      } else {
+        return uniq[0]; // get one from non-focused motif
+      }
+    });
+    console.log(res);
+    return res.filter((r) => r !== undefined);
+  }
+
   function getGraphElements() {
     let selectedMotifs = context.selectedMotifs;
     let neuronColors = context.neuronColors;
 
-    let nodes = [];
+    let nodes = getNodesForGraphElements(selectedMotifs, neuronColors);
     let edges = [];
 
-    let allNodes = selectedMotifs
-      .map((motif) => motif.graph.nodes.map((n) => n.id))
-      .flat();
-
     selectedMotifs.forEach((motif) => {
-      // add nodes
-      motif.graph.nodes.forEach((node, idx) => {
-        if (
-          allNodes.filter((n) => n === node.id).length > 1 &&
-          !isFocused(node.id, motif.index)
-        ) {
-          // console.log(node);
-        } else {
-          nodes.push({
-            data: {
-              id: node.id.toString(),
-              label: isFocused(node.id, motif.index)
-                ? String.fromCharCode(65 + idx)
-                : "",
-              color: isFocused(node.id, motif.index)
-                ? neuronColors[idx]
-                : "#ccc",
-            },
-          });
-        }
-      });
       // add edges
       motif.graph.links.forEach((edge) => {
         if (
