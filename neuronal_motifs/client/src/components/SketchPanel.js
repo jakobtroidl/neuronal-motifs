@@ -866,6 +866,9 @@ function SketchPanel() {
         edges[oppositeEdge]["oppositeEdge"] = i;
         e["oppositeEdge"] = oppositeEdge;
       }
+      if (e.properties === undefined && e.propertyLabel) {
+        e.propertyLabel.content = "";
+      }
     });
   }, [edges]);
 
