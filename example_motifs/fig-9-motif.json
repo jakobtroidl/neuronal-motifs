@@ -1,1 +1,187 @@
-{"nodes":[{"label":"A","properties":{"bodyId":1005710800},"index":0,"position":["Point",241,98],"tree":{"id":"8bb9bb8b-cdef-4012-b456-718477b6dbff","type":"group","path":["8bb9bb8b-cdef-4012-b456-718477b6dbff"],"children1":{"8aa9988a-0123-4456-b89a-b184a14757f6":{"type":"rule","id":"8aa9988a-0123-4456-b89a-b184a14757f6","properties":{"field":"bodyId","operator":"equal","value":[1005710800],"valueSrc":["value"],"operatorOptions":null,"valueType":["number"]},"path":["8bb9bb8b-cdef-4012-b456-718477b6dbff","8aa9988a-0123-4456-b89a-b184a14757f6"]}}}},{"label":"B","properties":{"bodyId":5813027016},"index":1,"position":["Point",86,201],"tree":{"id":"88baaa98-89ab-4cde-b012-318477b6889a","type":"group","path":["88baaa98-89ab-4cde-b012-318477b6889a"],"children1":{"a9a8bab8-4567-489a-bcde-f184a1479332":{"type":"rule","id":"a9a8bab8-4567-489a-bcde-f184a1479332","properties":{"field":"bodyId","operator":"equal","value":[5813027016],"valueSrc":["value"],"operatorOptions":null,"valueType":["number"]},"path":["88baaa98-89ab-4cde-b012-318477b6889a","a9a8bab8-4567-489a-bcde-f184a1479332"]}}}},{"label":"C","properties":{"bodyId":5813055913},"index":2,"position":["Point",220,313],"tree":{"id":"88b99989-89ab-4cde-b012-318477b9c2f3","type":"group","path":["88b99989-89ab-4cde-b012-318477b9c2f3"],"children1":{"baa8bb88-89ab-4cde-b012-3184a147cb0b":{"type":"rule","id":"baa8bb88-89ab-4cde-b012-3184a147cb0b","properties":{"field":"bodyId","operator":"equal","value":[5813055913],"valueSrc":["value"],"operatorOptions":null,"valueType":["number"]},"path":["88b99989-89ab-4cde-b012-318477b9c2f3","baa8bb88-89ab-4cde-b012-3184a147cb0b"]}}}}],"edges":[{"label":"A -> B","index":0,"indices":[0,1],"tree":{"id":"99aa899b-89ab-4cde-b012-318477b5101f","type":"group","path":["99aa899b-89ab-4cde-b012-318477b5101f"],"children1":{}}},{"label":"A -> C","index":1,"indices":[0,2],"tree":{"id":"99a9b8ba-cdef-4012-b456-718477b9f468","type":"group","path":["99a9b8ba-cdef-4012-b456-718477b9f468"],"children1":{}}},{"label":"C -> B","index":2,"indices":[2,1],"tree":{"id":"8bab9889-4567-489a-bcde-f18477babcf1","type":"group","path":["8bab9889-4567-489a-bcde-f18477babcf1"],"children1":{}}}],"dimension":{"width":375.6640625,"height":365.6953125}}
+{
+  "nodes": [
+    {
+      "label": "A",
+      "properties": {
+        "bodyId": 1005710800
+      },
+      "index": 0,
+      "position": [
+        "Point",
+        241,
+        98
+      ],
+      "tree": {
+        "id": "8bb9bb8b-cdef-4012-b456-718477b6dbff",
+        "type": "group",
+        "path": [
+          "8bb9bb8b-cdef-4012-b456-718477b6dbff"
+        ],
+        "children1": {
+          "8aa9988a-0123-4456-b89a-b184a14757f6": {
+            "type": "rule",
+            "id": "8aa9988a-0123-4456-b89a-b184a14757f6",
+            "properties": {
+              "field": "bodyId",
+              "operator": "equal",
+              "value": [
+                1005710800
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "number"
+              ]
+            },
+            "path": [
+              "8bb9bb8b-cdef-4012-b456-718477b6dbff",
+              "8aa9988a-0123-4456-b89a-b184a14757f6"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "B",
+      "properties": {
+        "bodyId": 5813027016
+      },
+      "index": 1,
+      "position": [
+        "Point",
+        86,
+        201
+      ],
+      "tree": {
+        "id": "88baaa98-89ab-4cde-b012-318477b6889a",
+        "type": "group",
+        "path": [
+          "88baaa98-89ab-4cde-b012-318477b6889a"
+        ],
+        "children1": {
+          "a9a8bab8-4567-489a-bcde-f184a1479332": {
+            "type": "rule",
+            "id": "a9a8bab8-4567-489a-bcde-f184a1479332",
+            "properties": {
+              "field": "bodyId",
+              "operator": "equal",
+              "value": [
+                5813027016
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "number"
+              ]
+            },
+            "path": [
+              "88baaa98-89ab-4cde-b012-318477b6889a",
+              "a9a8bab8-4567-489a-bcde-f184a1479332"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "C",
+      "properties": {
+        "bodyId": 5813055913
+      },
+      "index": 2,
+      "position": [
+        "Point",
+        220,
+        313
+      ],
+      "tree": {
+        "id": "88b99989-89ab-4cde-b012-318477b9c2f3",
+        "type": "group",
+        "path": [
+          "88b99989-89ab-4cde-b012-318477b9c2f3"
+        ],
+        "children1": {
+          "baa8bb88-89ab-4cde-b012-3184a147cb0b": {
+            "type": "rule",
+            "id": "baa8bb88-89ab-4cde-b012-3184a147cb0b",
+            "properties": {
+              "field": "bodyId",
+              "operator": "equal",
+              "value": [
+                5813055913
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "number"
+              ]
+            },
+            "path": [
+              "88b99989-89ab-4cde-b012-318477b9c2f3",
+              "baa8bb88-89ab-4cde-b012-3184a147cb0b"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "label": "A -> B",
+      "index": 0,
+      "indices": [
+        0,
+        1
+      ],
+      "tree": {
+        "id": "99aa899b-89ab-4cde-b012-318477b5101f",
+        "type": "group",
+        "path": [
+          "99aa899b-89ab-4cde-b012-318477b5101f"
+        ],
+        "children1": {}
+      }
+    },
+    {
+      "label": "A -> C",
+      "index": 1,
+      "indices": [
+        0,
+        2
+      ],
+      "tree": {
+        "id": "99a9b8ba-cdef-4012-b456-718477b9f468",
+        "type": "group",
+        "path": [
+          "99a9b8ba-cdef-4012-b456-718477b9f468"
+        ],
+        "children1": {}
+      }
+    },
+    {
+      "label": "C -> B",
+      "index": 2,
+      "indices": [
+        2,
+        1
+      ],
+      "tree": {
+        "id": "8bab9889-4567-489a-bcde-f18477babcf1",
+        "type": "group",
+        "path": [
+          "8bab9889-4567-489a-bcde-f18477babcf1"
+        ],
+        "children1": {}
+      }
+    }
+  ],
+  "dimension": {
+    "width": 375.6640625,
+    "height": 365.6953125
+  }
+}

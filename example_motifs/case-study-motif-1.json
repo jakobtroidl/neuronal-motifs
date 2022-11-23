@@ -1,1 +1,143 @@
-{"nodes":[{"label":"A","properties":{"type":"ExR*"},"index":0,"position":["Point",46.05469,155.5],"tree":{"id":"bb8a9a8a-89ab-4cde-b012-3184a58e056e","type":"group","path":["bb8a9a8a-89ab-4cde-b012-3184a58e056e"],"children1":{"9a9bb99a-0123-4456-b89a-b184a58e0915":{"type":"rule","id":"9a9bb99a-0123-4456-b89a-b184a58e0915","properties":{"field":"type","operator":"select_equals","value":["ExR*"],"valueSrc":["value"],"operatorOptions":null,"valueType":["select"],"asyncListValues":[{"title":"ExR*","value":"ExR*"}]},"path":["bb8a9a8a-89ab-4cde-b012-3184a58e056e","9a9bb99a-0123-4456-b89a-b184a58e0915"]}}}},{"label":"B","properties":null,"index":1,"position":["Point",247.05469,161.5]},{"label":"C","properties":null,"index":2,"position":["Point",144.05469,35.5]}],"edges":[{"label":"A -> B","properties":{"EB":{"$gt":10}},"index":0,"indices":[0,1],"tree":{"id":"8a99b9aa-4567-489a-bcde-f184a58e24b9","type":"group","path":["8a99b9aa-4567-489a-bcde-f184a58e24b9"],"children1":{"988ba89b-4567-489a-bcde-f184a58e28a5":{"type":"rule","id":"988ba89b-4567-489a-bcde-f184a58e28a5","properties":{"field":"EB","operator":"greater","value":[10],"valueSrc":["value"],"operatorOptions":null,"valueType":["number"]},"path":["8a99b9aa-4567-489a-bcde-f184a58e24b9","988ba89b-4567-489a-bcde-f184a58e28a5"]}}}},{"label":"A -> C","properties":null,"index":1,"indices":[0,2],"tree":null},{"label":"B -> C","properties":null,"index":2,"indices":[1,2],"tree":null}],"dimension":{"width":312.484375,"height":205.796875}}
+{
+  "nodes": [
+    {
+      "label": "A",
+      "properties": {
+        "type": "ExR*"
+      },
+      "index": 0,
+      "position": [
+        "Point",
+        46.05469,
+        155.5
+      ],
+      "tree": {
+        "id": "bb8a9a8a-89ab-4cde-b012-3184a58e056e",
+        "type": "group",
+        "path": [
+          "bb8a9a8a-89ab-4cde-b012-3184a58e056e"
+        ],
+        "children1": {
+          "9a9bb99a-0123-4456-b89a-b184a58e0915": {
+            "type": "rule",
+            "id": "9a9bb99a-0123-4456-b89a-b184a58e0915",
+            "properties": {
+              "field": "type",
+              "operator": "select_equals",
+              "value": [
+                "ExR*"
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "select"
+              ],
+              "asyncListValues": [
+                {
+                  "title": "ExR*",
+                  "value": "ExR*"
+                }
+              ]
+            },
+            "path": [
+              "bb8a9a8a-89ab-4cde-b012-3184a58e056e",
+              "9a9bb99a-0123-4456-b89a-b184a58e0915"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "B",
+      "properties": null,
+      "index": 1,
+      "position": [
+        "Point",
+        247.05469,
+        161.5
+      ]
+    },
+    {
+      "label": "C",
+      "properties": null,
+      "index": 2,
+      "position": [
+        "Point",
+        144.05469,
+        35.5
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "label": "A -> B",
+      "properties": {
+        "EB": {
+          "$gt": 10
+        }
+      },
+      "index": 0,
+      "indices": [
+        0,
+        1
+      ],
+      "tree": {
+        "id": "8a99b9aa-4567-489a-bcde-f184a58e24b9",
+        "type": "group",
+        "path": [
+          "8a99b9aa-4567-489a-bcde-f184a58e24b9"
+        ],
+        "children1": {
+          "988ba89b-4567-489a-bcde-f184a58e28a5": {
+            "type": "rule",
+            "id": "988ba89b-4567-489a-bcde-f184a58e28a5",
+            "properties": {
+              "field": "EB",
+              "operator": "greater",
+              "value": [
+                10
+              ],
+              "valueSrc": [
+                "value"
+              ],
+              "operatorOptions": null,
+              "valueType": [
+                "number"
+              ]
+            },
+            "path": [
+              "8a99b9aa-4567-489a-bcde-f184a58e24b9",
+              "988ba89b-4567-489a-bcde-f184a58e28a5"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "A -> C",
+      "properties": null,
+      "index": 1,
+      "indices": [
+        0,
+        2
+      ],
+      "tree": null
+    },
+    {
+      "label": "B -> C",
+      "properties": null,
+      "index": 2,
+      "indices": [
+        1,
+        2
+      ],
+      "tree": null
+    }
+  ],
+  "dimension": {
+    "width": 312.484375,
+    "height": 205.796875
+  }
+}
