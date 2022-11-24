@@ -35,3 +35,9 @@ The application is accessible under http://localhost:3000/
 
 ## Development
 - In PyCharm make sure the client and source directory are set as the source root (right click directory > mark directory as > source root)
+
+## Download Cache
+
+To render 3D neurons, downloading the neuron data from the data server (https://neuprint.janelia.org/) and computation are required each time. If you want to reduce these loading times, please download the neuron dataset and save it to your local folder.
+- [Click here](https://drive.google.com/file/d/1iv1AGUKxi55HWS2n8Yv_NY778I6OawG5/view?usp=share_link) to download the cache 
+- Unzip to `neunonal_motifs/server/cache/data/neurons/`
