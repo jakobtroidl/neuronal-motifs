@@ -6,12 +6,12 @@ steps:
             './neuronal_motifs/client' ]
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'push', 'gcr.io/jakob-troidl/motif-frontend:latest' ]
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'gcloud'
-    args: [ 'compute', 'instances', 'delete', 'motif-frontend' ]
-    env:
-      - 'CLOUDSDK_COMPUTE_REGION=us-east1'
-      - 'CLOUDSDK_COMPUTE_ZONE=us-east1-b'
+#   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+#     entrypoint: 'gcloud'
+#     args: [ 'compute', 'instances', 'delete', 'motif-frontend' ]
+#     env:
+#       - 'CLOUDSDK_COMPUTE_REGION=us-east1'
+#       - 'CLOUDSDK_COMPUTE_ZONE=us-east1-b'
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [ 'compute', 'instances', 'create-with-container', 'motif-frontend',
