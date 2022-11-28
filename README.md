@@ -8,7 +8,7 @@ A demo is available under [my-motifs.me](http://my-motifs.me/). Before you get s
 
 ## Installation
 
-Requirements: 
+Requirements
 * [`Node.js`](https://nodejs.org/en/)
 * [`conda`](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
 
