@@ -128,7 +128,6 @@ def nodes_and_edges_to_motif_string(motif):
                 elif '$ne' in prop[1]:
                     node_str += str(node['label']) + '["' + str(prop[0]) + '"] != ' + '"' + str(
                         prop[1]['$ne']) + '"' + '\n'
-        print(node_str)
         output += node_str.replace("'", "\'")
     return output
 
