@@ -1536,7 +1536,7 @@ function Viewer() {
       }
 
       let updateCamera = true;
-      if (context.resetUICounter > 0) {
+      if (context.selectedMotifs.length > 0) {
         updateCamera = false;
       }
 
