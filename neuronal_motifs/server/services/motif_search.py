@@ -10,6 +10,14 @@ def search_hemibrain_motif(motif_specs, lim, token):
                          token=token)
 
     motif_source = nodes_and_edges_to_motif_string(motif_specs)
+#     motif_source = """
+#     A -> B
+# A.status = "Traced"
+# A['b\'L(L)] = True
+# B.status = "Traced"
+# """
+    # print("src", motif_source, type(motif_source))
     motif = Motif(enforce_inequality=True).from_motif(motif_source)
+    # print("mmm", motif)
     results = E.find(motif=motif, limit=lim)
     return results.to_dict('records')
