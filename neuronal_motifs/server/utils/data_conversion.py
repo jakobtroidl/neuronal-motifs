@@ -113,22 +113,22 @@ def nodes_and_edges_to_motif_string(motif):
             for prop in list(node['properties'].items()):
                 # Special Handling for Wildcard Type Fields
                 if prop[0] == 'type' and type(prop[1]) == str and prop[1].endswith('*'):
-                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] contains " + str(prop[1])[:-1] + '\n'
+                    node_str += str(node['label']) + '["' + str(prop[0]) + '"] contains ' + str(prop[1])[:-1] + '\n'
                 elif prop[0] == 'type' and '$ne' in prop[1] and prop[1]['$ne'].endswith('*'):
-                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] !contains " + '"' + str(
+                    node_str += str(node['label']) + '["' + str(prop[0]) + '"] !contains ' + '"' + str(
                         prop[1]['$ne'])[:-1] + '"' + '\n'
                 elif type(prop[1]) == bool or type(prop[1]) == int or type(prop[1]) == float:
-                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] = " + str(prop[1]) + '\n'
+                    node_str += str(node['label']) + '["' + str(prop[0]) + '"] = ' + str(prop[1]) + '\n'
                 elif type(prop[1]) == str:
-                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] = " + '"' + str(prop[1]) + '"' + '\n'
+                    node_str += str(node['label']) + '["' + str(prop[0]) + '"] = ' + '"' + str(prop[1]) + '"' + '\n'
                 elif '$lt' in prop[1]:
-                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] < " + str(prop[1]['$lt']) + '\n'
+                    node_str += str(node['label']) + '["' + str(prop[0]) + '"] < ' + str(prop[1]['$lt']) + '\n'
                 elif '$gt' in prop[1]:
-                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] > " + str(prop[1]['$gt']) + '\n'
+                    node_str += str(node['label']) + '["' + str(prop[0]) + '"] > ' + str(prop[1]['$gt']) + '\n'
                 elif '$ne' in prop[1]:
-                    node_str += str(node['label']) + "['" + str(prop[0]) + "'] != " + '"' + str(
+                    node_str += str(node['label']) + '["' + str(prop[0]) + '"] != ' + '"' + str(
                         prop[1]['$ne']) + '"' + '\n'
-        output += node_str
+        output += node_str.replace("'", "\'")
     return output
 
 
