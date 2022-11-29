@@ -97,7 +97,7 @@ export function hierarchicalBundling(
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
 
     const material = new THREE.LineBasicMaterial({
-      color: 0x222222,
+      color: 0xa0a0a0,
       linewidth: 1,
     });
 

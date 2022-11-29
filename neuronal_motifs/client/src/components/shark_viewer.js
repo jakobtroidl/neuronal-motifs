@@ -723,7 +723,7 @@ export default class SharkViewer {
           radius = this.min_radius;
         }
 
-        customAttributes.radius.value.push(radius);
+        customAttributes.radius.value.push(1.8 * radius);
         customAttributes.typeColor.value.push(nodeColor.r);
         customAttributes.typeColor.value.push(nodeColor.g);
         customAttributes.typeColor.value.push(nodeColor.b);
@@ -831,6 +831,9 @@ export default class SharkViewer {
             if (this.min_radius && childRadius < this.min_radius) {
               childRadius = this.min_radius;
             }
+
+            parentRadius = parentRadius * 2.0;
+            childRadius = childRadius * 2.0;
 
             let label = swcJSON[node].type;
 
