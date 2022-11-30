@@ -5,12 +5,11 @@ import {
   swcParser,
 } from "./viewer/util";
 
+import OrbitUnlimitedControls from "./OrbitUnlimitedControls";
+
 import * as THREE from "three";
 
 export { swcParser, stretch, stretch_inv };
-
-const OrbitUnlimitedControls =
-  require("@janelia/three-orbit-unlimited-controls").default;
 
 const DEFAULT_POINT_THRESHOLD = 150;
 const DEFAULT_LINE_THRESHOLD = 100;
