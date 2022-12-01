@@ -18,6 +18,11 @@ export default function SettingsPanel(props) {
     context.setGreyOutNonMotifBranches(event.target.checked);
   }
 
+  function handleDrawArrowsOnLinesCheckBoxChanged(event) {
+    console.log("handleDrawArrowsOnLinesCheckBoxChanged");
+    context.setDrawArrowsOnLines(event.target.checked);
+  }
+
   useEffect(async () => {
     if (roiNames.length === 0) {
       let token = getAuthToken();
@@ -55,6 +60,18 @@ export default function SettingsPanel(props) {
             />
           }
           label="Grey out non-motif branches"
+        />
+      </FormGroup>
+      <FormGroup>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={context.drawArrowsOnLines}
+              onChange={handleDrawArrowsOnLinesCheckBoxChanged}
+              inputProps={{ "aria-label": "controlled" }}
+            />
+          }
+          label="Draw arrows on lines in exploded view"
         />
       </FormGroup>
     </div>
