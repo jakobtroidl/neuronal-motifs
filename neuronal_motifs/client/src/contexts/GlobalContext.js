@@ -63,6 +63,7 @@ export const ContextWrapper = (props) => {
   // highlight synapses
   const [selectedCytoscapeEdge, setSelectedCytoscapeEdge] = useState(null);
   const [greyOutNonMotifBranches, setGreyOutNonMotifBranches] = useState(false);
+  const [drawArrowsOnLines, setDrawArrowsOnLines] = useState(false);
 
   // search constraints
   const [constraintsToAddToSketch, setConstraintsToAddToSketch] = useState();
@@ -118,6 +119,8 @@ export const ContextWrapper = (props) => {
         setExplosionRange,
         greyOutNonMotifBranches,
         setGreyOutNonMotifBranches,
+        drawArrowsOnLines,
+        setDrawArrowsOnLines,
         constraintsToAddToSketch,
         setConstraintsToAddToSketch,
         displayedROIs,

@@ -1308,7 +1308,11 @@ function Viewer() {
             lineBundlingStrength
           );
 
-          allLines = allLines.concat(lines, arrows);
+          if (context.drawArrowsOnLines) {
+            allLines = allLines.concat(lines, arrows);
+          } else {
+            allLines = allLines.concat(lines);
+          }
         }
       });
 
@@ -1328,7 +1332,7 @@ function Viewer() {
 
       setPrevSliderValue(level);
     }
-  }, [context.abstractionLevel]);
+  }, [context.abstractionLevel, context.drawArrowsOnLines]);
 
   function deleteChild(parent, childName) {
     let child = parent.getObjectByName(childName);
