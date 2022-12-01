@@ -1297,7 +1297,7 @@ function Viewer() {
             isVisible = true;
           }
 
-          let lines = hierarchicalBundling(
+          let [lines, arrows] = hierarchicalBundling(
             pre_loc_transformed,
             post_loc_transformed,
             connection.clusters_per_synapse,
@@ -1308,7 +1308,7 @@ function Viewer() {
             lineBundlingStrength
           );
 
-          allLines = allLines.concat(lines);
+          allLines = allLines.concat(lines, arrows);
         }
       });
 
