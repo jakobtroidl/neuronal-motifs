@@ -70,6 +70,7 @@ export function hierarchicalBundling(
   });
 
   let lines = [];
+  let arrows = [];
 
   for (const [i, clusters] of Object.entries(clusters_per_synapse)) {
     let control_samples = [];
@@ -109,9 +110,24 @@ export function hierarchicalBundling(
     spline.post = post_id;
     spline.clusters = clusters;
     lines.push(spline);
+
+    // create arrowhead
+    const from = points[Math.floor(points.length / 2) - 5];
+    const to = points[Math.floor(points.length / 2) + 5];
+    const length = from.distanceTo(to) / 2;
+    const direction = new THREE.Vector3().subVectors(to, from).normalize();
+    const hex = 0x222222;
+
+    let arrow = new THREE.ArrowHelper(direction, from, length, hex, 300, 185);
+    arrow.visible = visible;
+    arrow.name = "arrow";
+    arrow.pre = pre_id;
+    arrow.post = post_id;
+    arrow.clusters = clusters;
+    arrows.push(arrow);
   }
 
-  return lines;
+  return [lines, arrows];
 }
 
 export function bundle(start_points, end_points, strength, color) {

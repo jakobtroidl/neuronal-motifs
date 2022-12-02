@@ -19,7 +19,7 @@ steps:
             '--zone', 'us-east1-b',
             '--address', 'motif-frontend',
             '--tags', 'https-server,http-server',
-            '--machine-type', 'e2-small',
+            '--machine-type', 'n2-standard-2',
             '--network-tier', 'STANDARD' ]
     env:
       - 'CLOUDSDK_COMPUTE_REGION=us-east1'
@@ -43,7 +43,7 @@ steps:
             '--container-image', 'gcr.io/jakob-troidl/motif-backend:latest',
             '--zone', 'us-east1-b',
             '--address', 'motif-backend',
-            '--machine-type', 'e2-medium',
+            '--machine-type', 'n2-standard-2',
             '--tags', 'https-server,http-server',
             '--boot-disk-size', '50GB',
             '--network-tier', 'STANDARD' ]

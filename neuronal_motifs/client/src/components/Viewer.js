@@ -1297,7 +1297,7 @@ function Viewer() {
             isVisible = true;
           }
 
-          let lines = hierarchicalBundling(
+          let [lines, arrows] = hierarchicalBundling(
             pre_loc_transformed,
             post_loc_transformed,
             connection.clusters_per_synapse,
@@ -1308,7 +1308,11 @@ function Viewer() {
             lineBundlingStrength
           );
 
-          allLines = allLines.concat(lines);
+          if (context.drawArrowsOnLines) {
+            allLines = allLines.concat(lines, arrows);
+          } else {
+            allLines = allLines.concat(lines);
+          }
         }
       });
 
@@ -1328,7 +1332,7 @@ function Viewer() {
 
       setPrevSliderValue(level);
     }
-  }, [context.abstractionLevel]);
+  }, [context.abstractionLevel, context.drawArrowsOnLines]);
 
   function deleteChild(parent, childName) {
     let child = parent.getObjectByName(childName);
@@ -1536,7 +1540,7 @@ function Viewer() {
       }
 
       let updateCamera = true;
-      if (context.resetUICounter > 0) {
+      if (context.selectedMotifs.length > 0) {
         updateCamera = false;
       }
 

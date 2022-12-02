@@ -18,19 +18,19 @@ function AbstractionSlider() {
     const marks = [
       {
         value: 0.01,
-        label: "Full Motif",
+        label: "Full MI",
       },
       {
         value: context.motifPathPosition,
-        label: "Motif",
+        label: "Pruned MI",
       },
       {
         value: context.motifPathPosition + context.explosionRange,
-        label: "Exploded",
+        label: "Exploded MI",
       },
       {
-        value: 0.99,
-        label: "Node-Link",
+        value: 0.97,
+        label: "Connectivity Vis",
       },
     ];
     return marks;
