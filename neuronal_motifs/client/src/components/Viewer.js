@@ -537,7 +537,7 @@ function Viewer() {
     );
     let neuron_ids = getSynapseIds(pre_id, post_id);
     //if (!scene.getObjectByName(name)) {
-    let geometry = new THREE.SphereGeometry(100, 16, 16);
+    let geometry = new THREE.SphereGeometry(150, 16, 16);
     let material = new THREE.MeshPhongMaterial({ color: color });
     let mesh = new THREE.Mesh(geometry, material);
     mesh.neuron_ids = neuron_ids;

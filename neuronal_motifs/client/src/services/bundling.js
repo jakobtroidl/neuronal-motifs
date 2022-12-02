@@ -98,7 +98,7 @@ export function hierarchicalBundling(
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
 
     const material = new THREE.LineBasicMaterial({
-      color: 0xa0a0a0,
+      color: 0xa7a7a7a,
       linewidth: 1,
     });
 
@@ -118,7 +118,7 @@ export function hierarchicalBundling(
     const direction = new THREE.Vector3().subVectors(to, from).normalize();
     const hex = 0x222222;
 
-    let arrow = new THREE.ArrowHelper(direction, from, length, hex, 300, 185);
+    let arrow = new THREE.ArrowHelper(direction, from, length, hex, 300, 250);
     arrow.visible = visible;
     arrow.name = "arrow";
     arrow.pre = pre_id;
