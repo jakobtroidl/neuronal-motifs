@@ -1171,6 +1171,9 @@ function Viewer() {
     if (level <= motif_path_threshold) {
       // only prune till motif path threshold
       sharkViewerInstance.setAbstractionThreshold(level);
+    } else if (level > motif_path_threshold) {
+      // if abstraction level is above the threshold, fix to the level of Pruned MI state.
+      sharkViewerInstance.setAbstractionThreshold(context.motifPathPosition);
     }
     return sharkViewerInstance.getAbstractionBoundary(level);
   }
