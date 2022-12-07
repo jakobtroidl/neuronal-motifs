@@ -119,7 +119,10 @@ export function CollapsableTableRow(props) {
         <TableCell
           component="th"
           scope="row"
-          style={{ ...style_default, width: "40%" }}
+          style={{ ...style_default, width: "40%", cursor: "pointer" }}
+          onClick={() => {
+            handleClick(row);
+          }}
         >
           {row.name}
         </TableCell>
@@ -150,7 +153,13 @@ export function CollapsableTableRow(props) {
         >
           <Collapse in={open}>
             <Box overflow={"auto"}>
-              <Table size="small" aria-label="motifs">
+              <Table
+                size="small"
+                aria-label="motifs"
+                onClick={() => {
+                  handleClick(row);
+                }}
+              >
                 <TableHead>
                   <TableRow>
                     <TableCell key="menu"></TableCell>
@@ -170,19 +179,21 @@ export function CollapsableTableRow(props) {
                       }}
                     >
                       <>
-                        <ResultTableRowContextMenu
-                          neuron={neuron}
-                          neurons={row.neurons}
-                        />
+                        <TableCell style={{ padding: 0 }}>
+                          <ResultTableRowContextMenu
+                            neuron={neuron}
+                            neurons={row.neurons}
+                          />
+                        </TableCell>
                         {columns
                           .filter((e) => e[1])
                           .map((col) => {
                             return (
                               <TableCell
                                 key={col[0]}
-                                onClick={() => {
-                                  handleClick(row);
-                                }}
+                                // onClick={() => {
+                                //   handleClick(row);
+                                // }}
                               >
                                 {neuron[col[0]]}
                               </TableCell>
