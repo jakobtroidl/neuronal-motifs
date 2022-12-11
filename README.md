@@ -41,3 +41,18 @@ The application is accessible under http://localhost:3000/
 To render 3D neurons, downloading the neuron data from the data server (https://neuprint.janelia.org/) and computation are required each time. If you want to reduce these loading times, please download the neuron dataset and save it to your local folder.
 - [Click here](https://drive.google.com/file/d/1iv1AGUKxi55HWS2n8Yv_NY778I6OawG5/view?usp=share_link) to download the cache 
 - Unzip to `neunonal_motifs/server/cache/data/neurons/`
+
+## Citing
+If you find our work helpful, please consider citing it.
+```bibtex
+@article {troidl2022vimo,
+    title={Vimo: Visual Analysis of Neuronal Connectivity Motifs},
+    author={Troidl, Jakob and Warchol, Simon and Choi, Jinhan and Matelsky, Jordan and Dhanysai, Nagaraju 
+    and Wang, Xueying and Wester, Brock and Wei, Donglai and Lichtman, Jeff W and Pfister, Hanspeter and Beyer, Johanna},
+    year={2022},
+    doi={10.1101/2022.12.09.519772},
+    publisher={Cold Spring Harbor Laboratory},
+    url={https://www.biorxiv.org/content/early/2022/12/11/2022.12.09.519772},
+    journal={bioRxiv}
+}
+```
