@@ -1,4 +1,8 @@
+
 # Neuronal Motifs
+[![Demo](https://img.shields.io/badge/demo-running-blue.svg?colorB=4AC8F4)](http://my-motifs.me/)
+[![Video](https://img.shields.io/badge/video-online-red.svg?colorB=f25100)](https://www.youtube.com/watch?v=lWc__xAo73o)
+[![doi](https://img.shields.io/badge/doi-10.1109%2FTVCG.2017.2745978-purple.svg?colorB=C46CFD)](https://doi.org/10.1101/2022.12.09.519772)
 
 An interactive tool for querying and visual analysis of network motifs in large connectomics data.
 
