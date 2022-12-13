@@ -5,6 +5,7 @@ data/
 neuronal_motifs/client/node_modules/
 neuronal_motifs/server/secrets/access_token.json
 
+neuronal_motifs/server/vimo/
 .DS_Store
 
 *.pyc

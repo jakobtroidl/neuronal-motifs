@@ -99,7 +99,6 @@ def get_all_roi_names(token: str):
     return access.get_all_roi_names()
 
 
-
 @app.get("/count/motif={motif}")
 def get_motif_count(motif: str):
     return count.get_absolute(motif)
@@ -110,5 +109,9 @@ def get_relative_motif_count(motif: str):
     return count.get_relative(motif)
 
 
+def start():
+    uvicorn.run("main:app", host="0.0.0.0", port=80, reload=True, log_level="info", app_dir="/")
+
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=80, log_level="info")
+    start()
