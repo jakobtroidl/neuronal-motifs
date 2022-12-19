@@ -1,3 +1,5 @@
 runtime: python39
 instance_class: F4
+#inbound_services:
+#- warmup
 entrypoint: gunicorn --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind :$PORT main:app
