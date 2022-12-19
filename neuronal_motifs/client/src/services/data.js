@@ -4,7 +4,7 @@ import { getAuthToken } from "../utils/authentication";
 export async function queryMotifs(motif, number) {
   try {
     const res = await axios.post(
-      `${process.env.REACT_APP_PROTOCOL}://${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_PORT}/search`,
+      `${process.env.REACT_APP_PROTOCOL}://${process.env.REACT_APP_API_URL}/search`,
       {
         withCredentials: true,
         motif: motif,

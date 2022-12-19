@@ -28,7 +28,7 @@ export default function SettingsPanel(props) {
       let token = getAuthToken();
       let rois = (
         await axios.get(
-          `${process.env.REACT_APP_PROTOCOL}://${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_PORT}/all_rois/token=${token}`,
+          `${process.env.REACT_APP_PROTOCOL}://${process.env.REACT_APP_API_URL}/all_rois/token=${token}`,
           {
             withCredentials: true,
           }

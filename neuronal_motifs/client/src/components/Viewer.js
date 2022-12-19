@@ -855,7 +855,7 @@ function Viewer() {
       let token = getAuthToken();
       let rois = (
         await axios.get(
-          `${process.env.REACT_APP_PROTOCOL}://${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_PORT}/roi/names=${roisJSON}&&token=${token}`,
+          `${process.env.REACT_APP_PROTOCOL}://${process.env.REACT_APP_API_URL}/roi/names=${roisJSON}&&token=${token}`,
           {
             withCredentials: true,
           }
@@ -917,7 +917,7 @@ function Viewer() {
       // filter for synapses to draw
       let synapses = (
         await axios.get(
-          `${process.env.REACT_APP_PROTOCOL}://${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_PORT}/synapses/neuron=${clickedNeuronId}&&inputNeurons=${inputNeuronsJSON}&&outputNeurons=${outputNeuronsJSON}&&token=${token}`,
+          `${process.env.REACT_APP_PROTOCOL}://${process.env.REACT_APP_API_URL}/synapses/neuron=${clickedNeuronId}&&inputNeurons=${inputNeuronsJSON}&&outputNeurons=${outputNeuronsJSON}&&token=${token}`,
           {
             withCredentials: true,
           }
@@ -987,7 +987,7 @@ function Viewer() {
       let token = JSON.stringify(getAuthToken());
 
       const ws = new WebSocket(
-        `ws://${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_PORT}/display_motif_ws/`
+        `wss://${process.env.REACT_APP_API_URL}/display_motif_ws/`
       );
       ws.onopen = function (e) {
         console.log("[open] Connection established", new Date().getSeconds());
