@@ -1,3 +1,5 @@
-cache
+cache/data
+cache/nblast
+cache/neurons
 vimo
 lib
