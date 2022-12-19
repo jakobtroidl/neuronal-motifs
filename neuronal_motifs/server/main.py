@@ -110,7 +110,7 @@ def get_relative_motif_count(motif: str):
 
 
 def start():
-    uvicorn.run("main:app", host="0.0.0.0", port=80, reload=True, log_level="info", app_dir="/")
+    uvicorn.run("main:app", host="127.0.0.1", port=4242, reload=True, log_level="info", app_dir="/")
 
 
 if __name__ == "__main__":

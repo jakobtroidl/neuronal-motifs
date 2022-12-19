@@ -24,8 +24,6 @@ def get_motif(ids, motif, token, prev_labels):
     #
     # filepath = path / (filename + ".pkl")
 
-    motif = None
-
     # if filepath.is_file() is False:
     if True:
         yield {'status': 202, 'message': 'Downloading Motif'}

@@ -20,3 +20,4 @@ zarr>=2.13.3
 google-cloud-storage>=2.7.0
 tamarind>=0.2.0
 gunicorn==20.0.4
+uvicorn[standard]>=0.20.0

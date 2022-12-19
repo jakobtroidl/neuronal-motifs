@@ -59,14 +59,13 @@ function SketchPanel() {
   const context = useContext(AppContext);
 
   const getMotifCount = async (motif) => {
-    // get request to backend to get motif count
-    let url = `http://${process.env.REACT_APP_API_URL}/count/motif=${motif}`;
+    let url = `${process.env.REACT_APP_PROTOCOL}://${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_PORT}/count/motif=${motif}`;
     return (await axios.get(url)).data;
   };
 
   const getRelativeMotifCount = async (motif) => {
     // get request to backend to get motif count
-    let url = `http://${process.env.REACT_APP_API_URL}/rel_count/motif=${motif}`;
+    let url = `${process.env.REACT_APP_PROTOCOL}://${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_PORT}/rel_count/motif=${motif}`;
     return (await axios.get(url)).data;
   };
 
