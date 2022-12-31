@@ -6,9 +6,8 @@ import { AppContext } from "../contexts/GlobalContext";
 import "./Viewer.css";
 import * as THREE from "three";
 import { InteractionManager } from "three.interactive";
-import { Color, mapQueryResult } from "../utils/rendering";
+import { Color } from "../utils/rendering";
 import _ from "lodash";
-import BasicMenu from "./ContextMenu";
 import axios from "axios";
 import { getAuthToken } from "../utils/authentication";
 import { getIdFromNodeKey } from "../utils/edge";
@@ -234,15 +233,12 @@ function Viewer() {
   const [synapses, setSynapses] = useState([]);
 
   const [displayContextMenu, setDisplayContextMenu] = useState({
-    display: false,
     position: { x: 0, y: 0 },
     neuron: null,
     motif: null,
   });
 
   const [parentSynapseObject, setParentSynapseObject] = useState();
-  // let parentSynapseObject = new THREE.Group();
-  // parentSynapseObject.name = "synapse-parent";
 
   function setSynapseColorToConnectingNeuron(scene) {
     let synapsesObject = scene.getObjectByName("synapse-parent");
@@ -438,28 +434,8 @@ function Viewer() {
     return mesh;
   }
 
-  function removeSynapseSuggestions() {
-    if (sharkViewerInstance) {
-      let scene = sharkViewerInstance.scene;
-      let synapsesObject = scene.getObjectByName("synapse-parent");
-      if (synapsesObject) {
-        synapsesObject.children.forEach((child) => {
-          if (child.name === motif_synapse_suggestions_name) {
-            scene.remove(child);
-          }
-        });
-      }
-    }
-  }
-
   function handleKeyPress(event) {
-    // check if R key was pressed
-    if (event.key === "r") {
-      console.log("r was pressed");
-      restoreColors(sharkViewerInstance);
-      removeSynapseSuggestions();
-      context.setNeighborhoodQuery(null);
-    } else if (event.key === "c") {
+    if (event.key === "c") {
       console.log("c was pressed");
       resetSynapsesColor(sharkViewerInstance, context.focusedMotif);
       unselectEdges();
@@ -493,7 +469,6 @@ function Viewer() {
     if (neuron != null && event.altKey) {
       console.log("click + alt key");
       setDisplayContextMenu({
-        display: true,
         position: { x: event.clientX, y: event.clientY },
         neuron: neuron,
         motif: this.motifQuery,
@@ -502,7 +477,6 @@ function Viewer() {
     } else {
       console.log("No neuron selected");
       setDisplayContextMenu({
-        display: false,
         position: { x: 0, y: 0 },
         neuron: null,
         motif: [],
@@ -552,92 +526,6 @@ function Viewer() {
       });
     }
   }, [highlightSynapse.highlight]);
-
-  function onSynapseSuggestionClick(synapse, type = "input") {
-    /**
-     * @param synapse: clicked on synapse object
-     * @param type: synapse type. can be "input" or "output"
-     */
-    console.log("synapse suggestion click");
-    if (context.neighborhoodQuery) {
-      let neighborhoodQuery = context.neighborhoodQuery;
-      let selected_label = neighborhoodQuery.selectedNode.label;
-      neighborhoodQuery.results.forEach((result) => {
-        // iterate over all elements in result
-        for (const [label, neuron] of Object.entries(result)) {
-          if (selected_label !== label) {
-            if (
-              (type === "input" && neuron.bodyId === synapse.pre_id) ||
-              (type === "output" && neuron.bodyId === synapse.post_id)
-            ) {
-              let motifToAdd = mapQueryResult(result, context.globalMotifIndex);
-              context.setGlobalMotifIndex(context.globalMotifIndex + 1);
-              context.setMotifToAdd(motifToAdd);
-
-              restoreColors(sharkViewerInstance);
-              removeSynapseSuggestions();
-              return true;
-            }
-          }
-        }
-      });
-      return false;
-    }
-    return false;
-  }
-
-  function onSynapseSuggestionEvent(
-    cursor = "default",
-    show = true,
-    pre_id = null,
-    post_id = null
-  ) {
-    document.body.style.cursor = cursor;
-    setHighlightedSynapse({
-      highlight: show,
-      pre_id: pre_id,
-      post_id: post_id,
-    });
-  }
-
-  function addSynapseSuggestions(
-    synapses_suggestions,
-    type = "input",
-    parent = null
-  ) {
-    /**
-     * @param synapses: array of synapse objects
-     * @param type: 'input' or 'output'
-     * @param parent: parent object 3D
-     */
-    if (sharkViewerInstance) {
-      let interactionManager = sharkViewerInstance.scene?.interactionManager;
-      for (let [label, synapses] of Object.entries(synapses_suggestions)) {
-        synapses.forEach((syn) => {
-          let mesh = addSynapse(
-            parent,
-            syn,
-            type === "input" ? Color.orange : Color.blue
-          );
-          mesh.addEventListener("mouseover", (event) =>
-            onSynapseSuggestionEvent(
-              "pointer",
-              true,
-              type === "input" ? syn.pre_id : null,
-              type === "output" ? syn.post_id : null
-            )
-          );
-          mesh.addEventListener("mouseout", (event) =>
-            onSynapseSuggestionEvent("default", false, null, null)
-          );
-          mesh.addEventListener("click", (event) =>
-            onSynapseSuggestionClick(syn, type)
-          );
-          interactionManager.add(mesh);
-        });
-      }
-    }
-  }
 
   function deleteAllROIs(scene) {
     let rois = scene.getObjectByName(roi_identifier);
@@ -695,72 +583,6 @@ function Viewer() {
       });
     }
   }, [context.displayedROIs]);
-
-  useEffect(async () => {
-    if (
-      context.neighborhoodQuery &&
-      sharkViewerInstance &&
-      context.motifQuery
-    ) {
-      let results = context.neighborhoodQuery.results;
-      let selectedNode = context.neighborhoodQuery.selectedNode;
-      let clickedNeuronId = context.neighborhoodQuery.clickedNeuronId;
-      let query = context.motifQuery;
-
-      // get all connected neurons to currently selected neuron
-      let inputNeurons = {};
-      let outputNeurons = {};
-      query.edges.forEach((edge) => {
-        if (edge.indices[0] === selectedNode.index) {
-          let neighbor_node = query.nodes.find(
-            (node) => node.index === edge.indices[1]
-          );
-          outputNeurons[neighbor_node.label] = [];
-        }
-        if (edge.indices[1] === selectedNode.index) {
-          let neighbor_node = query.nodes.find(
-            (node) => node.index === edge.indices[0]
-          );
-          inputNeurons[neighbor_node.label] = [];
-        }
-      });
-
-      results.forEach((result) => {
-        for (const [label, properties] of Object.entries(result)) {
-          if (label in inputNeurons) {
-            inputNeurons[label].push(properties.bodyId);
-          }
-          if (label in outputNeurons) {
-            outputNeurons[label].push(properties.bodyId);
-          }
-        }
-      });
-
-      let inputNeuronsJSON = JSON.stringify(inputNeurons);
-      let outputNeuronsJSON = JSON.stringify(outputNeurons);
-
-      let token = getAuthToken();
-
-      // filter for synapses to draw
-      let synapses = (
-        await axios.get(
-          `http://${process.env.REACT_APP_API_URL}/synapses/neuron=${clickedNeuronId}&&inputNeurons=${inputNeuronsJSON}&&outputNeurons=${outputNeuronsJSON}&&token=${token}`,
-          {
-            withCredentials: true,
-          }
-        )
-      ).data;
-
-      // change other neurons color before adding synapse suggestions
-      greyOutObjects(sharkViewerInstance, [clickedNeuronId]);
-
-      // add synapse suggestions
-      let parent = new THREE.Object3D();
-      parent.name = motif_synapse_suggestions_name;
-      addSynapseSuggestions(synapses.input, "input", parent);
-      addSynapseSuggestions(synapses.output, "output", parent);
-    }
-  }, [context.neighborhoodQuery]);
 
   useEffect(() => {
     if (context.motifQuery) {
@@ -1114,7 +936,6 @@ function Viewer() {
     let syn_to_delete = [];
 
     let synapsesObject = scene.getObjectByName("synapse-parent");
-    console.log(synapsesObject);
     if (synapsesObject) {
       synapsesObject.children.forEach((child) => {
         if (
@@ -1127,8 +948,6 @@ function Viewer() {
         }
       });
     }
-    console.log(syn_to_delete);
-    // scene.remove(...syn_to_delete);
     synapsesObject.remove(...syn_to_delete);
   }
 
@@ -1392,16 +1211,6 @@ function Viewer() {
   return (
     <div id={id} className={className} onKeyDown={handleKeyPress}>
       {displayTooltip && <ArrowTooltips props={tooltipInfo}></ArrowTooltips>}
-      {displayContextMenu.display && (
-        <BasicMenu
-          open={displayContextMenu.display}
-          position={displayContextMenu.position}
-          neuron={displayContextMenu.neuron}
-          motif={displayContextMenu.motif}
-        >
-          {" "}
-        </BasicMenu>
-      )}
     </div>
   );
 }
