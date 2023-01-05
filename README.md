@@ -14,17 +14,18 @@ A demo is available under [my-motifs.me](http://my-motifs.me/). Before you get s
 
 Requirements
 * [`Node.js`](https://nodejs.org/en/)
-* [`conda`](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
+* [`virtualenv`](https://virtualenv.pypa.io/en/latest/installation.html)
 
 Clone the repository:
 ```bash
 git clone https://github.com/jakobtroidl/neuronal-motifs.git && cd neuronal-motifs
 ```
 
-Install/activate the conda environmeny and start the backend:
+Install/activate virtualenv and start the backend:
 ```bash
 cd neuronal_motifs/server/
-conda env create -f environment.yml && conda activate neuronal-motifs
+virtualenv -p python3.9 vimo
+source vimo/bin/activate
 python main.py
 ```
 
