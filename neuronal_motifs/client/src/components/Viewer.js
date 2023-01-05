@@ -855,7 +855,7 @@ function Viewer() {
       let token = getAuthToken();
       let rois = (
         await axios.get(
-          `http://${process.env.REACT_APP_API_URL}/roi/names=${roisJSON}&&token=${token}`,
+          `${process.env.REACT_APP_API_PROTOCOL}://${process.env.REACT_APP_API_URL}/roi/names=${roisJSON}&&token=${token}`,
           {
             withCredentials: true,
           }
@@ -917,7 +917,7 @@ function Viewer() {
       // filter for synapses to draw
       let synapses = (
         await axios.get(
-          `http://${process.env.REACT_APP_API_URL}/synapses/neuron=${clickedNeuronId}&&inputNeurons=${inputNeuronsJSON}&&outputNeurons=${outputNeuronsJSON}&&token=${token}`,
+          `${process.env.REACT_APP_API_PROTOCOL}://${process.env.REACT_APP_API_URL}/synapses/neuron=${clickedNeuronId}&&inputNeurons=${inputNeuronsJSON}&&outputNeurons=${outputNeuronsJSON}&&token=${token}`,
           {
             withCredentials: true,
           }
