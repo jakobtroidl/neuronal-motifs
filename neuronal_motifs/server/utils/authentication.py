@@ -1,7 +1,6 @@
 from params import Params
 from google.cloud import storage
 from pathlib import Path
-from google.oauth2 import service_account
 
 def get_data_server():
     """

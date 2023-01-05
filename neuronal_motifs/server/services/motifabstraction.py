@@ -1,12 +1,9 @@
-import pickle as pkl
-from pathlib import Path
 from services.data_access import DataAccess
 
 import networkx as nx
 
 from models.motif import MyMotif
-from utils.data_conversion import get_cache_filename, apply_ids_to_motif_adjacency
-from params import Params
+from utils.data_conversion import apply_ids_to_motif_adjacency
 
 
 def test_generator():
