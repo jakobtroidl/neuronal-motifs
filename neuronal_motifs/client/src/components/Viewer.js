@@ -987,7 +987,7 @@ function Viewer() {
       let token = JSON.stringify(getAuthToken());
 
       const ws = new WebSocket(
-        `wss://${process.env.REACT_APP_API_URL}/display_motif_ws/`
+        `${process.env.REACT_APP_WS_PROTOCOL}://${process.env.REACT_APP_API_URL}/display_motif_ws/`
       );
       ws.onopen = function (e) {
         console.log("[open] Connection established", new Date().getSeconds());
