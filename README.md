@@ -7,7 +7,7 @@
 An interactive tool for querying and visual analysis of network motifs in large connectomics data.
 
 ## Demo 
-A demo is available under [here](https://vimo-client-3jagpvnfya-uc.a.run.app/). Before you get started, please add your personal neuprint authentication token under `Settings > Auth Token`. You can find your token [here](https://neuprint.janelia.org/account). 
+A demo is available [here](https://vimo-client-3jagpvnfya-uc.a.run.app/). Before you get started, please add your personal neuprint authentication token under `Settings > Auth Token`. You can find your token [here](https://neuprint.janelia.org/account). 
 
 
 ## Installation
