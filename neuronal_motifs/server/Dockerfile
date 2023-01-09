@@ -1,11 +1,22 @@
-FROM conda/miniconda3
-WORKDIR /app
-COPY environment.yml .
-RUN apt update && apt install -y libgles2-mesa-dev libglu1-mesa-dev freeglut3-dev
-RUN conda update conda
-RUN conda env create -f environment.yml
-RUN echo "conda activate neuronal-motifs" >> ~/.bashrc
-SHELL ["/bin/bash", "--login", "-c"]
-COPY . /app
-ENTRYPOINT ["conda", "run","--no-capture-output", "-n", "neuronal-motifs", "uvicorn", "main:app", "--host", "0.0.0.0","--port", "80", "--log-level", "info"]
-EXPOSE 80
+# Use the official lightweight Python image.
+# https://hub.docker.com/_/python
+FROM python:3.9-slim
+
+# Allow statements and log messages to immediately appear in the Knative logs
+ENV PYTHONUNBUFFERED True
+
+# Copy local code to the container image.
+ENV APP_HOME /app
+WORKDIR $APP_HOME
+COPY . ./
+
+# Install production dependencies.
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Run the web service on container startup. Here we use the gunicorn
+# webserver, with one worker process and 8 threads.
+# For environments with multiple CPU cores, increase the number of workers
+# to be equal to the cores available.
+# Timeout is set to 0 to disable the timeouts of the workers to allow Cloud Run to handle instance scaling.
+CMD exec gunicorn --workers 1 --worker-class uvicorn.workers.UvicornWorker --timeout 420 --bind :$PORT main:app
+

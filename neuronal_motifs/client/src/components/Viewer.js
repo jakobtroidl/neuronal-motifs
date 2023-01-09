@@ -570,7 +570,7 @@ function Viewer() {
       let token = getAuthToken();
       let rois = (
         await axios.get(
-          `http://${process.env.REACT_APP_API_URL}/roi/names=${roisJSON}&&token=${token}`,
+          `${process.env.REACT_APP_API_PROTOCOL}://${process.env.REACT_APP_API_URL}/roi/names=${roisJSON}&&token=${token}`,
           {
             withCredentials: true,
           }
@@ -634,7 +634,7 @@ function Viewer() {
       let token = JSON.stringify(getAuthToken());
 
       const ws = new WebSocket(
-        `ws://${process.env.REACT_APP_API_URL}/display_motif_ws/`
+        `${process.env.REACT_APP_WS_PROTOCOL}://${process.env.REACT_APP_API_URL}/display_motif_ws/`
       );
       ws.onopen = function (e) {
         console.log("[open] Connection established", new Date().getSeconds());
