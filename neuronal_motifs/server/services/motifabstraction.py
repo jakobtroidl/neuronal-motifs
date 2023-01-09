@@ -55,8 +55,8 @@ def compute_motif_data(body_ids, motif, token, prev_labels):
     motif.compute_motif_paths(prev_labels)
     yield 'Compute Synapse Trajectory'
     motif.compute_synapse_trajectory()
-    yield 'Computing Distances'
-    motif.compute_synapse_soma_distances()
+    # yield 'Computing Distances'
+    # motif.compute_synapse_soma_distances()
 
     filename = get_cache_filename(body_ids)
     path = Params.root / "cache" / "data" / "motifs"
