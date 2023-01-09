@@ -7433,7 +7433,6 @@ export const NodeFields = {
       ],
     },
     valueSources: ["value"],
-    defaultValue: true,
     operators: ["select_equals", "select_not_equals"],
   },
   size: {
