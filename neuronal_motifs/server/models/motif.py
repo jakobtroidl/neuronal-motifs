@@ -150,44 +150,6 @@ class MyMotif:
             out = self.data_access.get_neurons([id])[0]
         return out
 
-    def syn_soma_distance(self, neuron_id, syn_pos):
-        """
-        Computes the geodesic distance between a synapse and the soma of a neuron
-        @param neuron_id: int
-        @param syn_pos: 3D position of synapse
-        @return: geodesic distance between synapse and soma
-        """
-        neuron = self.get_neuron(neuron_id)
-        syn_node, snap_distance = neuron.skeleton.snap(syn_pos)
-        soma = neuron.get_soma()
-        if soma is not None:
-            distance = navis.dist_between(neuron.skeleton, soma, syn_node)
-            return round(distance)
-        else:
-            return 0
-
-    def compute_synapse_soma_distances(self):
-        """
-        Generates geodesic distance matrix across all nodes in motif
-        The graph is directed to preserve presynaptic/postsynaptic distances
-        """
-        print('Compute synapse soma distances...')
-        t = time.time()
-        pre_synaptic_soma_distances = []
-        post_synaptic_soma_distances = []
-        for index, synapse in self.synapses.iterrows():  # can be optimized
-            pre_distance = self.syn_soma_distance(synapse['bodyId_pre'],
-                                                  [synapse['x_pre'], synapse['y_pre'], synapse['z_pre']])
-            pre_synaptic_soma_distances.append(pre_distance)
-
-            post_distance = self.syn_soma_distance(synapse['bodyId_post'],
-                                                   [synapse['x_post'], synapse['y_post'], synapse['z_post']])
-            post_synaptic_soma_distances.append(post_distance)
-
-        self.synapses['soma_distance_pre'] = pre_synaptic_soma_distances
-        self.synapses['soma_distance_post'] = post_synaptic_soma_distances
-        print('Done. Took {} sec'.format(time.time() - t))
-
     def cluster_synapse_group(self, group):
         """
         Hierarchical clustering of synapses. @n_clusters is the number of clusters to be generated

@@ -42,7 +42,7 @@ def compute_motif_data(body_ids, motif, token, prev_labels):
     motif.compute_motif_paths(prev_labels)
     print('Compute Synapse Trajectory')
     motif.compute_synapse_trajectory()
-    print('Computing Distances')
-    motif.compute_synapse_soma_distances()
+    # yield 'Computing Distances'
+    # motif.compute_synapse_soma_distances()
 
     return motif
