@@ -1,13 +1,13 @@
 
 # Neuronal Motifs
-[![Demo](https://img.shields.io/badge/demo-running-blue.svg?colorB=4AC8F4)](http://my-motifs.me/)
+[![Demo](https://img.shields.io/badge/demo-running-blue.svg?colorB=4AC8F4)](https://vimo-client-3jagpvnfya-uc.a.run.app/)
 [![Video](https://img.shields.io/badge/video-online-red.svg?colorB=f25100)](https://www.youtube.com/watch?v=lWc__xAo73o)
 [![doi](https://img.shields.io/badge/doi-10.1109%2FTVCG.2017.2745978-purple.svg?colorB=C46CFD)](https://doi.org/10.1101/2022.12.09.519772)
 
 An interactive tool for querying and visual analysis of network motifs in large connectomics data.
 
 ## Demo 
-A demo is available under [my-motifs.me](http://my-motifs.me/). Before you get started, please add your personal neuprint authentication token under `Settings > Auth Token`. You can find your token [here](https://neuprint.janelia.org/account). 
+A demo is available under [here](https://vimo-client-3jagpvnfya-uc.a.run.app/). Before you get started, please add your personal neuprint authentication token under `Settings > Auth Token`. You can find your token [here](https://neuprint.janelia.org/account). 
 
 
 ## Installation
