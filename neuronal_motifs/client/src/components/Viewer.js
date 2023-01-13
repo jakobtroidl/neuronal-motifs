@@ -330,22 +330,22 @@ function Viewer() {
             connection.pre,
             true
           );
-          addSynapse(
-            // scene,
-            parentSynapseObject,
-            connection.pre,
-            connection.post,
-            pre_syn_location,
-            connection.post_loc[j],
-            Color.orange,
-            motif,
-            setDisplayTooltip,
-            setTooltipInfo,
-            interactionManager,
-            onClickHighlightEdgesAndSynapses,
-            connection.post,
-            false
-          );
+          // addSynapse(
+          //   // scene,
+          //   parentSynapseObject,
+          //   connection.pre,
+          //   connection.post,
+          //   pre_syn_location,
+          //   connection.post_loc[j],
+          //   Color.orange,
+          //   motif,
+          //   setDisplayTooltip,
+          //   setTooltipInfo,
+          //   interactionManager,
+          //   onClickHighlightEdgesAndSynapses,
+          //   connection.post,
+          //   false
+          // );
         }
       });
     });
@@ -1031,26 +1031,27 @@ function Viewer() {
       let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
 
       let neuron_translate = new THREE.Vector3(0, 0, 0);
-      if (level > motif_path_threshold) {
-        let old_directions = getTranslationVectors(neurons.length);
-        let new_directions = getTranslationVectors(neurons.length + 1);
-
-        neurons.forEach((neuron, i) => {
-          console.log("translate neuron", neuron);
-          neuron.translateX(factor * -old_directions[i][0]);
-          neuron.translateY(factor * -old_directions[i][1]);
-          neuron.translateZ(factor * -old_directions[i][2]);
-
-          neuron.translateX(factor * new_directions[i][0]);
-          neuron.translateY(factor * new_directions[i][1]);
-          neuron.translateZ(factor * new_directions[i][2]);
-        });
-        neuron_translate = new THREE.Vector3(
-          factor * new_directions[neurons.length][0],
-          factor * new_directions[neurons.length][1],
-          factor * new_directions[neurons.length][2]
-        );
-      }
+      // if (level > motif_path_threshold) {
+      //   let old_directions = getTranslationVectors(neurons.length);
+      //   let new_directions = getTranslationVectors(neurons.length + 1);
+      //
+      //   neurons.forEach((neuron, i) => {
+      //     console.log("translate neuron", neuron);
+      //     neuron.translateX(factor * -old_directions[i][0]);
+      //     neuron.translateY(factor * -old_directions[i][1]);
+      //     neuron.translateZ(factor * -old_directions[i][2]);
+      //
+      //     neuron.translateX(factor * new_directions[i][0]);
+      //     neuron.translateY(factor * new_directions[i][1]);
+      //     neuron.translateZ(factor * new_directions[i][2]);
+      //   });
+      //   neuron_translate = new THREE.Vector3(
+      //     factor * new_directions[neurons.length][0],
+      //     factor * new_directions[neurons.length][1],
+      //     factor * new_directions[neurons.length][2]
+      //   );
+      //   console.log(neuron_translate);
+      // }
 
       let updateCamera = true;
       if (context.selectedMotifs.length > 0) {
