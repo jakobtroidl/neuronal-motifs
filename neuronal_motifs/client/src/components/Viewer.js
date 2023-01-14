@@ -213,7 +213,7 @@ function Viewer() {
   let line_clusters_identifier = "line_clusters";
   let roi_identifier = "rois";
 
-  const [motif, setMotif] = React.useState();
+  const [motif, setMotif] = useState();
   const [sharkViewerInstance, setSharkViewerInstance] = useState();
   const [prevSliderValue, setPrevSliderValue] = useState();
   const [displayTooltip, setDisplayTooltip] = useState(false); // for synapse selecting & highlighting
@@ -763,7 +763,7 @@ function Viewer() {
 
   // Updates the motifs, runs when data, viewer, or abstraction state change
   useEffect(() => {
-    if (motif && sharkViewerInstance) {
+    if (motif && sharkViewerInstance && context.focusedMotif) {
       let scene = sharkViewerInstance.scene;
       let level = getAbstractionLevel();
       let abstraction_boundary = getAbstractionBoundary(sharkViewerInstance);
@@ -814,7 +814,7 @@ function Viewer() {
       }
 
       let allLines = [];
-      motif.syn_clusters.forEach((connection, i) => {
+      context.focusedMotif.syn_clusters.forEach((connection, i) => {
         neurons.forEach((neuron, i) => {
           moveObject(neuron, directions[i], explosionProgression);
         });
@@ -829,40 +829,42 @@ function Viewer() {
             connection.post
           );
 
-          let pre_loc_transformed = transformPoints(
-            connection.pre_loc,
-            directions[pre_neuron_number],
-            explosionProgression
-          );
-          let post_loc_transformed = transformPoints(
-            connection.post_loc,
-            directions[post_neuron_number],
-            explosionProgression
-          );
+          if (pre_neuron_number != -1 && post_neuron_number != -1) {
+            let pre_loc_transformed = transformPoints(
+              connection.pre_loc,
+              directions[pre_neuron_number],
+              explosionProgression
+            );
+            let post_loc_transformed = transformPoints(
+              connection.post_loc,
+              directions[post_neuron_number],
+              explosionProgression
+            );
 
-          let isVisible = false;
-          if (
-            highlightedConnection.pre === connection.pre &&
-            highlightedConnection.post === connection.post
-          ) {
-            isVisible = true;
-          }
+            let isVisible = false;
+            if (
+              highlightedConnection.pre === connection.pre &&
+              highlightedConnection.post === connection.post
+            ) {
+              isVisible = true;
+            }
 
-          let [lines, arrows] = hierarchicalBundling(
-            pre_loc_transformed,
-            post_loc_transformed,
-            connection.clusters_per_synapse,
-            connection.synapses_per_cluster,
-            connection.pre,
-            connection.post,
-            isVisible,
-            lineBundlingStrength
-          );
+            let [lines, arrows] = hierarchicalBundling(
+              pre_loc_transformed,
+              post_loc_transformed,
+              connection.clusters_per_synapse,
+              connection.synapses_per_cluster,
+              connection.pre,
+              connection.post,
+              isVisible,
+              lineBundlingStrength
+            );
 
-          if (context.drawArrowsOnLines) {
-            allLines = allLines.concat(lines, arrows);
-          } else {
-            allLines = allLines.concat(lines);
+            if (context.drawArrowsOnLines) {
+              allLines = allLines.concat(lines, arrows);
+            } else {
+              allLines = allLines.concat(lines);
+            }
           }
         }
       });
@@ -883,7 +885,11 @@ function Viewer() {
 
       setPrevSliderValue(level);
     }
-  }, [context.abstractionLevel, context.drawArrowsOnLines]);
+  }, [
+    context.abstractionLevel,
+    context.drawArrowsOnLines,
+    context.focusedMotif,
+  ]);
 
   function deleteChild(parent, childName) {
     let child = parent.getObjectByName(childName);
@@ -1099,7 +1105,13 @@ function Viewer() {
 
       setLineVisibility(sharkViewerInstance.scene, 0, false);
 
+      // let isEdgeFromFocusedMotif = context.focusedMotif.edges.some(
+      //   (e) =>
+      //     String(e.start_neuron_id) === sourceId &&
+      //     String(e.end_neuron_id) === targetId
+      // );
       if (sourceId !== "" && targetId !== "" && context.focusedMotif) {
+        // if (sourceId !== "" && targetId !== "" && isEdgeFromFocusedMotif) {
         setHighlightedConnection({
           pre: parseInt(sourceId),
           post: parseInt(targetId),
