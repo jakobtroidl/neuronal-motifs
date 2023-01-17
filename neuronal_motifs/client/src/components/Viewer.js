@@ -761,6 +761,10 @@ function Viewer() {
     }
   }, [context.greyOutNonMotifBranches]);
 
+  useEffect(() => {
+    context.setAbstractionLevel(context.abstractionLevel + 0.001);
+  }, [neurons]);
+
   // Updates the motifs, runs when data, viewer, or abstraction state change
   useEffect(() => {
     if (motif && sharkViewerInstance && context.focusedMotif) {
@@ -829,7 +833,7 @@ function Viewer() {
             connection.post
           );
 
-          if (pre_neuron_number != -1 && post_neuron_number != -1) {
+          if (pre_neuron_number !== -1 && post_neuron_number !== -1) {
             let pre_loc_transformed = transformPoints(
               connection.pre_loc,
               directions[pre_neuron_number],
