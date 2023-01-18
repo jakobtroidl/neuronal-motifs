@@ -1109,13 +1109,7 @@ function Viewer() {
 
       setLineVisibility(sharkViewerInstance.scene, 0, false);
 
-      // let isEdgeFromFocusedMotif = context.focusedMotif.edges.some(
-      //   (e) =>
-      //     String(e.start_neuron_id) === sourceId &&
-      //     String(e.end_neuron_id) === targetId
-      // );
       if (sourceId !== "" && targetId !== "" && context.focusedMotif) {
-        // if (sourceId !== "" && targetId !== "" && isEdgeFromFocusedMotif) {
         setHighlightedConnection({
           pre: parseInt(sourceId),
           post: parseInt(targetId),
