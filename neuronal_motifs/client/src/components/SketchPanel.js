@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from "react";
 import "./SketchPanel.css";
 import QueryBuilder from "./QueryBuilder";
 import CircleTwoToneIcon from "@mui/icons-material/CircleTwoTone";
-import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InfoIcon from "@mui/icons-material/Info";
@@ -15,6 +14,9 @@ import {
   faFileExport,
   faFileImport,
   faHand,
+  faArrowRight,
+  faArrowsUpDown,
+  faArrowUp,
 } from "@fortawesome/free-solid-svg-icons";
 import { Utils as QbUtils } from "react-awesome-query-builder";
 import axios from "axios";
@@ -222,6 +224,8 @@ function SketchPanel() {
       setNodes(newNodes);
     }
   };
+
+  const allowBidirectional = () => {};
 
   const renameEdge = (fromNode, toNode, nodeIndices, edge) => {
     let tree = "tree" in edge ? edge.tree : null;
@@ -1219,7 +1223,7 @@ function SketchPanel() {
                   setMouseState("edge");
                 }}
               >
-                <ArrowRightAltIcon fontSize="small" />
+                <FontAwesomeIcon size={"sm"} icon={faArrowRight} />
               </IconButton>
             </Tooltip>
             <Tooltip title="Edit Properties" placement="right">
@@ -1361,6 +1365,28 @@ function SketchPanel() {
                 onClick={() => exportMotif()}
               >
                 <FontAwesomeIcon size={"sm"} icon={faFileExport} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip
+              title={
+                context.allowBidirectional
+                  ? "Change to search for Isomorphisms"
+                  : "Change to search for Monomorphisms"
+              }
+              placement="left"
+            >
+              <IconButton
+                value="edit"
+                color="default"
+                onClick={() =>
+                  context.setAllowBidirectional(!context.allowBidirectional)
+                }
+              >
+                {context.allowBidirectional ? (
+                  <FontAwesomeIcon size={"sm"} icon={faArrowsUpDown} />
+                ) : (
+                  <FontAwesomeIcon size={"sm"} icon={faArrowUp} />
+                )}
               </IconButton>
             </Tooltip>
           </Grid>

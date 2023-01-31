@@ -83,7 +83,11 @@ function MotifPanel() {
     context.setLoadingMessage("Searching for Motifs");
     context.setErrorMessage(null);
     try {
-      const motifs = await queryMotifs(context.motifQuery, number);
+      const motifs = await queryMotifs(
+        context.motifQuery,
+        number,
+        context.allowBidirectional
+      );
       context.setLoadingMessage(null);
       setSearchedMotifs(motifs);
       setSearched(true);
@@ -163,18 +167,20 @@ function MotifPanel() {
       <div className="form">
         <div className="handle">
           <DragHandleIcon />
-          <ThemeProvider theme={Color.theme}>
-            <Tooltip title={parseButtonTooltip()} arrow placement="right">
-              <span>
-                <InfoButton
-                  text={getMotifCountAsString()}
-                  disabled={!enableAbsMotifCountInfo}
-                  color={countButtonColor}
-                  icon={<SearchIcon />}
-                />
-              </span>
-            </Tooltip>
-          </ThemeProvider>
+          {context.allowBidirectional && (
+            <ThemeProvider theme={Color.theme}>
+              <Tooltip title={parseButtonTooltip()} arrow placement="right">
+                <span>
+                  <InfoButton
+                    text={getMotifCountAsString()}
+                    disabled={!enableAbsMotifCountInfo}
+                    color={countButtonColor}
+                    icon={<SearchIcon />}
+                  />
+                </span>
+              </Tooltip>
+            </ThemeProvider>
+          )}
           {context.showWarning ? (
             <InfoButton color="error" icon={<PriorityHighIcon />} />
           ) : null}
