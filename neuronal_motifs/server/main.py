@@ -44,8 +44,9 @@ async def search_motif(req: Request):
     motif = req['motif']
     lim = req['lim']
     token = req['token']
+    allowBidirectional = req['allowBidirectional']
     try:
-        return motif_search.search_hemibrain_motif(motif, lim, token)
+        return motif_search.search_hemibrain_motif(motif, lim, token, allowBidirectional)
     except HTTPError as e:
         raise HTTPException(status_code=e.response.status_code, detail=json.loads(e.response.text))
     except Exception as e:

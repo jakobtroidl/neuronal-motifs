@@ -5,11 +5,11 @@ from utils.authentication import get_data_server, get_data_version
 from utils.data_conversion import nodes_and_edges_to_motif_string
 
 
-def search_hemibrain_motif(motif_specs, lim, token):
+def search_hemibrain_motif(motif_specs, lim, token, allowBidirectional):
     E = NeuPrintExecutor(host=get_data_server(), dataset=get_data_version(),
                          token=token)
 
-    motif_source = nodes_and_edges_to_motif_string(motif_specs)
+    motif_source = nodes_and_edges_to_motif_string(motif_specs, allowBidirectional)
     motif = Motif(enforce_inequality=True).from_motif(motif_source)
     results = E.find(motif=motif, limit=lim)
     return results.to_dict('records')

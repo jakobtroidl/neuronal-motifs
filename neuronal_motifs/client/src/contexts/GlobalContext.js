@@ -67,6 +67,7 @@ export const ContextWrapper = (props) => {
 
   // search constraints
   const [constraintsToAddToSketch, setConstraintsToAddToSketch] = useState();
+  const [allowBidirectional, setAllowBidirectional] = useState(true);
 
   const [displayedROIs, setDisplayedROIs] = useState([]);
 
@@ -125,6 +126,8 @@ export const ContextWrapper = (props) => {
         setConstraintsToAddToSketch,
         displayedROIs,
         setDisplayedROIs,
+        allowBidirectional,
+        setAllowBidirectional,
       }}
     >
       {props.children}

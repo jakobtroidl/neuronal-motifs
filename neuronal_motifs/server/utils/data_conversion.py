@@ -72,7 +72,7 @@ def nodes_and_edges_to_networkx(motif):
 
 
 # Converts Query Builder Mongo-esque parameters to dotmotif query format
-def nodes_and_edges_to_motif_string(motif):
+def nodes_and_edges_to_motif_string(motif, allowBidirectional):
     print(motif)
     edges = motif['edges']
     nodes = motif['nodes']
@@ -80,8 +80,10 @@ def nodes_and_edges_to_motif_string(motif):
 
     rois = fetch_all_rois()
     # First list every edge like A -> B [weight > x]
+    edgeLabels = []
     for edge in edges:
         edge_str = edge['label']
+        edgeLabels.append(edge['label'])
         if 'properties' in edge and edge['properties'] is not None:
             edge_str += ' ['
             for i, prop in enumerate(list(edge['properties'].items())):
@@ -106,6 +108,17 @@ def nodes_and_edges_to_motif_string(motif):
             edge_str += ']'
         edge_str += ' \n'
         output += edge_str
+
+    # Check opposite direction of edge
+    # https://github.com/aplbrain/dotmotif/wiki/Monomorphism-and-Isomorphism#considerations-for-motif-search
+    if allowBidirectional is not True:
+        for label in edgeLabels:
+            start, arrow, end = label.split(' ')
+            oppositeLabel = ' '.join([end, arrow, start])
+            if oppositeLabel not in output:
+                output += ' '.join([end, '!>', start]) + ' \n'
+        print(output)
+
     # Now list every node property like A['prop'] == True
     for node in nodes:
         node_str = str(node['label']) + '.status = "Traced" \n'
