@@ -17,80 +17,6 @@ export { swcParser, stretch, stretch_inv };
 const DEFAULT_POINT_THRESHOLD = 150;
 const DEFAULT_LINE_THRESHOLD = 100;
 
-const vertexShaderCone = [
-  "attribute float radius;",
-  "attribute float label;",
-  "varying vec2 sphereUv;",
-  "varying vec4 mvPosition;",
-  "varying float depthScale;",
-  "varying float vLabel;",
-  "void main() ",
-  "{",
-  "	// TODO - offset cone position for different sphere sizes",
-  "	// TODO - implement depth buffer on Chrome",
-  "	mvPosition = modelViewMatrix * vec4(position, 1.0);",
-  " vLabel = label;",
-  "	// Expand quadrilateral perpendicular to both view/screen direction and cone axis",
-  "	vec3 cylAxis = (modelViewMatrix * vec4(normal, 0.0)).xyz; // convert cone axis to camera space",
-  "	vec3 sideDir = normalize(cross(vec3(0.0,0.0,-1.0), cylAxis));",
-  "	mvPosition += vec4(radius * sideDir, 0.0);",
-  "	gl_Position = projectionMatrix * mvPosition;",
-  "	// Pass and interpolate color",
-  "	// Texture coordinates",
-  "	sphereUv = uv - vec2(0.5, 0.5); // map from [0,1] range to [-.5,.5], before rotation",
-  '	// If sideDir is "up" on screen, make sure u is positive',
-  "	float q = sideDir.y * sphereUv.y;",
-  "	sphereUv.y = sign(q) * sphereUv.y;",
-  "	// rotate texture coordinates to match cone orientation about z",
-  "	float angle = atan(sideDir.x/sideDir.y);",
-  "	float c = cos(angle);",
-  "	float s = sin(angle);",
-  "	mat2 rotMat = mat2(",
-  "		c, -s, ",
-  "		s,  c);",
-  "	sphereUv = rotMat * sphereUv;",
-  "	sphereUv += vec2(0.5, 0.5); // map back from [-.5,.5] => [0,1]",
-  "	// We are painting an angled cone onto a flat quad, so depth correction is complicated",
-  "   float foreshortening = length(cylAxis) / length(cylAxis.xy); // correct depth for foreshortening",
-  "   // foreshortening limit is a tradeoff between overextruded cone artifacts, and depth artifacts",
-  "   if (foreshortening > 4.0) foreshortening = 0.9; // hack to not pop out at extreme angles...",
-  "   depthScale = radius * foreshortening; // correct depth for foreshortening",
-  "}",
-].join("\n");
-
-const fragmentShaderCone = [
-  "uniform sampler2D sphereTexture; // Imposter image of sphere",
-  "uniform mat4 projectionMatrix;",
-  "uniform float abstraction_threshold;",
-  "uniform vec3 color; // colors associated to vertices; assigned by vertex shader",
-  "uniform int grey_out;",
-  "varying vec2 sphereUv;",
-  "varying vec4 mvPosition;",
-  "varying float depthScale;",
-  "varying float vLabel;",
-  "void main() ",
-  "{",
-  "	vec4 sphereColors = texture2D(sphereTexture, sphereUv);",
-  "vec3 myColor = color;",
-  "if(grey_out > 0 && vLabel > 0.0) {",
-  "   myColor = vec3(0.75, 0.75, 0.75);",
-  "}",
-  "	if (sphereColors.a < 0.3 || vLabel > abstraction_threshold) discard;",
-  "	vec3 baseColor = myColor * sphereColors.r;",
-  "	vec3 highlightColor = baseColor + sphereColors.ggg;",
-  "	gl_FragColor = vec4(highlightColor, sphereColors.a);",
-  "#ifdef GL_EXT_frag_depth",
-  "float dz = sphereColors.b * depthScale;",
-  "vec4 mvp = mvPosition + vec4(0, 0, dz, 0);",
-  "vec4 clipPos = projectionMatrix * mvp;",
-  "float ndc_depth = clipPos.z/clipPos.w;",
-  "float far = gl_DepthRange.far; float near = gl_DepthRange.near;",
-  "float depth = (((far-near) * ndc_depth) + near + far) / 2.0;",
-  "gl_FragDepthEXT = depth;",
-  "#endif",
-  "}",
-].join("\n");
-
 function convertToHexColor(i) {
   let result = "#000000";
   if (i >= 0 && i <= 15) {
@@ -341,49 +267,6 @@ export default class SharkViewer {
     return this.three_colors[0];
   }
 
-  // generates sphere mesh
-  generateSphere(node) {
-    const sphereMaterial = this.three_materials[node.type];
-    const r1 = node.radius || 0.01;
-    const geometry = new THREE.SphereGeometry(r1);
-    const mesh = new THREE.Mesh(geometry, sphereMaterial);
-    mesh.position.x = node.x;
-    mesh.position.y = node.y;
-    mesh.position.z = node.z;
-    return mesh;
-  }
-
-  // generates cones connecting spheres
-  generateConeGeometry(node, nodeParent) {
-    const coneMaterial = this.three_materials[nodeParent.type];
-    const nodeVec = new THREE.Vector3(node.x, node.y, node.z);
-    const nodeParentVec = new THREE.Vector3(
-      nodeParent.x,
-      nodeParent.y,
-      nodeParent.z
-    );
-    const dist = nodeVec.distanceTo(nodeParentVec);
-    const cylAxis = new THREE.Vector3().subVectors(nodeVec, nodeParentVec);
-    cylAxis.normalize();
-    const theta = Math.acos(cylAxis.y);
-    const rotationAxis = new THREE.Vector3();
-    rotationAxis.crossVectors(cylAxis, new THREE.Vector3(0, 1, 0));
-    rotationAxis.normalize();
-    const r1 = node.radius || 0.01;
-    const r2 = nodeParent.radius || 0.01;
-    const geometry = new THREE.CylinderGeometry(r1, r2, dist);
-    const mesh = new THREE.Mesh(geometry, coneMaterial);
-    mesh.matrixAutoUpdate = false;
-    mesh.matrix.makeRotationAxis(rotationAxis, -theta);
-    const position = new THREE.Vector3(
-      (node.x + nodeParent.x) / 2,
-      (node.y + nodeParent.y) / 2,
-      (node.z + nodeParent.z) / 2
-    );
-    mesh.matrix.setPosition(position);
-    return mesh;
-  }
-
   // generates cone properties for node, parent pair
   generateCone(node, nodeParent, color) {
     const coneChild = {};
@@ -506,12 +389,6 @@ export default class SharkViewer {
     let normalized_motif_path_position = 0.5;
 
     neuron.color = color;
-    // particle mode uses vertex info to place texture image, very fast
-    //if (this.mode === "particle") {
-    // special imposter image contains:
-    // 1 - colorizable sphere image in red channel
-    // 2 - specular highlight in green channel
-    // 3 - depth offset in blue channel (currently unused)
     const image = document.createElement("img");
     const sphereImg = new THREE.Texture(image);
     image.onload = function onload() {
@@ -520,9 +397,6 @@ export default class SharkViewer {
     image.src = this.nodeParticleTexture;
 
     let geometry = new THREE.BufferGeometry();
-    // properties that may consty from particle to particle. only accessible in vertex shaders!
-    //	(can pass color info to fragment shader via vColor.)
-    // compute scale for particles, in pixels
     const particleScale =
       (0.5 * this.HEIGHT) /
       this.renderer.getPixelRatio() /
@@ -594,28 +468,8 @@ export default class SharkViewer {
       new THREE.Float32BufferAttribute(customAttributes.label.value, 1)
     );
 
-    //material.extensions.fragDepth = true;
-
-    //let materialShader = null;
-
     const particles = new THREE.Points(geometry, material);
     particles.name = "skeleton-vertex";
-
-    //particles.userData = { indexLookup, materialShader };
-
-    // material.onBeforeCompile = (shader) => {
-    //   shader.uniforms.alpha = { value: 0 };
-    //   shader.vertexShader = `uniform float alpha;\n${shader.vertexShader}`;
-    //   shader.vertexShader = shader.vertexShader.replace(
-    //     "#include <begin_vertex>",
-    //     ["vAlpha = alpha"].join("\n")
-    //   );
-    //   materialShader = shader;
-    //
-    //   materialShader.uniforms.alpha.value = 0.9;
-    //
-    //   particles.userData.materialShader = materialShader;
-    // };
 
     neuron.add(particles);
 
@@ -712,13 +566,6 @@ export default class SharkViewer {
           coneAttributes.label.value.push(label);
           ix21 += 1;
 
-          // Triangle #2
-          // Parent
-          nodeColor = cone.parent.color;
-          if (color) {
-            nodeColor = new THREE.Color(color);
-          }
-
           // vertex 1
           coneAttributes.vertices.value.push(cone.parent.vertex.x);
           coneAttributes.vertices.value.push(cone.parent.vertex.y);
@@ -786,39 +633,28 @@ export default class SharkViewer {
         new THREE.Float32BufferAttribute(coneAttributes.label.value, 1)
       );
 
+      let coneShader = structuredClone(ConeShader);
+
+      coneShader.uniforms["sphereTexture"].value = sphereImg;
+      coneShader.uniforms["color"].value = new THREE.Color(color);
+      coneShader.uniforms["abstraction_threshold"].value = threshold;
+      coneShader.uniforms["grey_out"].value = 0;
+
       const coneMaterial = new THREE.ShaderMaterial({
-        uniforms: coneUniforms,
-        vertexShader: vertexShaderCone,
-        fragmentShader: fragmentShaderCone,
+        uniforms: coneShader.uniforms,
+        vertexShader: coneShader.vertexShader,
+        fragmentShader: coneShader.fragmentShader,
         transparent: true,
         depthTest: true,
         side: THREE.DoubleSide,
-        alphaTest: 0.5, // if having transparency issues, try including: alphaTest: 0.5,
+        alphaTest: 0.5,
       });
-
-      coneMaterial.extensions.fragDepth = true;
 
       const coneMesh = new THREE.Mesh(coneGeom, coneMaterial);
       coneMesh.name = "skeleton-edge";
 
-      // coneMaterial.onBeforeCompile = (shader) => {
-      //   // console.log( shader )
-      //   shader.uniforms.alpha = { value: 0 };
-      //   shader.vertexShader = `uniform float alpha;\n${shader.vertexShader}`;
-      //   shader.vertexShader = shader.vertexShader.replace(
-      //     "#include <begin_vertex>",
-      //     ["vAlpha = alpha"].join("\n")
-      //   );
-      //   materialShader = shader;
-      //
-      //   materialShader.uniforms.alpha.value = 0.9;
-      //
-      //   coneMesh.userData = { materialShader };
-      // };
-
       neuron.add(coneMesh);
     }
-    //}
     return [neuron, normalized_motif_path_position];
   }
 
@@ -886,21 +722,10 @@ export default class SharkViewer {
 
   // Sets up three.js scene
   init() {
-    if (this.effect === "noeffect") this.effect = false;
-
-    // set up colors and materials based on color array
+    // // set up colors and materials based on color array
     this.three_colors = [];
     Object.keys(this.colors).forEach((color) => {
       this.three_colors.push(new THREE.Color(this.colors[color]));
-    });
-    this.three_materials = [];
-    Object.keys(this.colors).forEach((color) => {
-      this.three_materials.push(
-        new THREE.MeshBasicMaterial({
-          color: this.colors[color],
-          wireframe: false,
-        })
-      );
     });
 
     // setup render
