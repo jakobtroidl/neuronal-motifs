@@ -403,8 +403,6 @@ function Viewer() {
       });
       document.body.style.cursor = "pointer";
 
-      mesh.oldMaterial = mesh.material.clone();
-
       mesh.material = new THREE.MeshPhongMaterial({ color: Color.pink });
       mesh.material.needsUpdate = true;
     });
@@ -417,7 +415,11 @@ function Viewer() {
         mesh.material.needsUpdate = true;
         mesh.highlighted = true;
       } else {
-        mesh.material = mesh.oldMaterial;
+        if (mesh.oldMaterial.color.equals(Color.red)) {
+          mesh.material = new THREE.MeshPhongMaterial({ color: color.orange });
+        } else {
+          mesh.material = mesh.oldMaterial;
+        }
         mesh.material.needsUpdate = true;
         mesh.highlighted = false;
       }
