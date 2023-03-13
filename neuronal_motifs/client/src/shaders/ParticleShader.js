@@ -15,7 +15,6 @@ const ParticleShader = {
     	uniform float particleScale;
     	
         attribute float radius;
-        // attribute vec3 typeColor;
         attribute float label;
         
         varying float vLabel;
