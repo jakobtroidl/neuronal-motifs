@@ -11,7 +11,7 @@ import { ConeShader } from "../shaders/ConeShader";
 import OrbitUnlimitedControls from "./OrbitUnlimitedControls";
 
 import * as THREE from "three";
-import { BokehShader } from "three/addons/shaders/BokehShader2";
+import { BokehShader } from "../shaders/BokehShader";
 import { ParticleDepthShader } from "../shaders/ParticleDepthShader";
 import { ConeDepthShader } from "../shaders/ConeDepthShader";
 
