@@ -8,6 +8,10 @@ import { AppContext } from "../contexts/GlobalContext";
 import { useContext, useEffect } from "react";
 import CustomizedHook from "./ROIAutocomplete";
 import axios from "axios";
+import Box from "@mui/material/Box";
+import Slider from "@mui/material/Slider";
+import Typography from "@mui/material/Typography";
+import Divider from "@mui/material/Divider";
 
 export default function SettingsPanel(props) {
   let context = useContext(AppContext);
@@ -17,6 +21,21 @@ export default function SettingsPanel(props) {
     console.log("handleGreyOutCheckBoxChanged");
     context.setGreyOutNonMotifBranches(event.target.checked);
   }
+
+  const handleFocusChange = (event, value) => {
+    console.log("handleFocusChange: ", value);
+    context.setDofFocus(value);
+  };
+
+  const handleApertureChange = (event, value) => {
+    console.log("handleApertureChange: ", value);
+    context.setDofAperture(value);
+  };
+
+  const handleMaxBlurChange = (event, value) => {
+    console.log("handleMaxBlurChange: ", value);
+    context.setDofBlur(value);
+  };
 
   function handleDrawArrowsOnLinesCheckBoxChanged(event) {
     console.log("handleDrawArrowsOnLinesCheckBoxChanged");
@@ -40,7 +59,6 @@ export default function SettingsPanel(props) {
 
   return (
     <div>
-      <CustomizedHook options={roiNames}></CustomizedHook>
       <TextField
         id="outlined-basic"
         label="Auth Token"
@@ -50,6 +68,10 @@ export default function SettingsPanel(props) {
         onChange={setAuthToken}
         style={{ marginTop: "15px" }}
       />
+      <Divider style={{ marginTop: "15px", marginBottom: "15px" }} />
+
+      <Typography gutterBottom>Rendering Settings</Typography>
+      <CustomizedHook options={roiNames}></CustomizedHook>
       <FormGroup>
         <FormControlLabel
           control={
@@ -74,6 +96,38 @@ export default function SettingsPanel(props) {
           label="Draw arrows on lines in exploded view"
         />
       </FormGroup>
+      <Box>
+        <Typography gutterBottom>DOF focus</Typography>
+        <Slider
+          defaultValue={1020}
+          min={0}
+          max={5000}
+          step={10}
+          aria-label="Default"
+          valueLabelDisplay="auto"
+          onChange={handleFocusChange}
+        />
+        <Typography gutterBottom>DOF aperture</Typography>
+        <Slider
+          defaultValue={0.0001}
+          min={0}
+          max={0.1}
+          step={0.000001}
+          aria-label="Default"
+          valueLabelDisplay="auto"
+          onChange={handleApertureChange}
+        />
+        <Typography gutterBottom>DOF maxBlur</Typography>
+        <Slider
+          defaultValue={0.01}
+          min={0.0}
+          max={0.01}
+          step={0.00001}
+          aria-label="Default"
+          valueLabelDisplay="auto"
+          onChange={handleMaxBlurChange}
+        />
+      </Box>
     </div>
   );
 }
