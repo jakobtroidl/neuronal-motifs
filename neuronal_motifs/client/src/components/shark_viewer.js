@@ -11,6 +11,8 @@ import { ConeShader } from "../shaders/ConeShader";
 import OrbitUnlimitedControls from "./OrbitUnlimitedControls";
 
 import * as THREE from "three";
+import { BokehShader } from "three/addons/shaders/BokehShader2";
+import { ParticleDepthShader } from "../shaders/ParticleDepthShader";
 
 export { swcParser, stretch, stretch_inv };
 
@@ -223,6 +225,13 @@ export default class SharkViewer {
     this.lineClick = null;
     this.motifQuery = null;
 
+    this.effectController = { enabled: true };
+    this.postprocessing = { enabled: true };
+    this.shaderSettings = {
+      rings: 3,
+      samples: 4,
+    };
+
     this.setValues(args);
     // anything after the above line can not be set by the caller.
 
@@ -239,6 +248,63 @@ export default class SharkViewer {
     this.HEIGHT = this.dom_element.clientHeight;
     // width of canvas
     this.WIDTH = this.dom_element.clientWidth;
+  }
+
+  initPostprocessing() {
+    this.postprocessing.scene = new THREE.Scene();
+
+    this.postprocessing.camera = new THREE.OrthographicCamera(
+      window.innerWidth / -2,
+      window.innerWidth / 2,
+      window.innerHeight / 2,
+      window.innerHeight / -2,
+      -10000,
+      10000
+    );
+    this.postprocessing.camera.position.z = 100;
+
+    this.postprocessing.scene.add(this.postprocessing.camera);
+
+    this.postprocessing.rtTextureDepth = new THREE.WebGLRenderTarget(
+      window.innerWidth,
+      window.innerHeight
+    );
+    this.postprocessing.rtTextureColor = new THREE.WebGLRenderTarget(
+      window.innerWidth,
+      window.innerHeight
+    );
+
+    const bokeh_shader = BokehShader;
+
+    this.postprocessing.bokeh_uniforms = THREE.UniformsUtils.clone(
+      bokeh_shader.uniforms
+    );
+
+    this.postprocessing.bokeh_uniforms["tColor"].value =
+      this.postprocessing.rtTextureColor.texture;
+    this.postprocessing.bokeh_uniforms["tDepth"].value =
+      this.postprocessing.rtTextureDepth.texture;
+    this.postprocessing.bokeh_uniforms["textureWidth"].value =
+      window.innerWidth;
+    this.postprocessing.bokeh_uniforms["textureHeight"].value =
+      window.innerHeight;
+
+    this.postprocessing.materialBokeh = new THREE.ShaderMaterial({
+      uniforms: this.postprocessing.bokeh_uniforms,
+      vertexShader: bokeh_shader.vertexShader,
+      fragmentShader: bokeh_shader.fragmentShader,
+      defines: {
+        RINGS: this.shaderSettings.rings,
+        SAMPLES: this.shaderSettings.samples,
+      },
+    });
+
+    this.postprocessing.quad = new THREE.Mesh(
+      new THREE.PlaneGeometry(window.innerWidth, window.innerHeight),
+      this.postprocessing.materialBokeh
+    );
+    this.postprocessing.quad.position.z = -500;
+    this.postprocessing.scene.add(this.postprocessing.quad);
   }
 
   // sets up user specified configuration
@@ -426,6 +492,19 @@ export default class SharkViewer {
       fragmentShader: particleShader.fragmentShader,
     });
 
+    let particleDepthShader = structuredClone(ParticleDepthShader);
+
+    particleDepthShader.uniforms.mNear.value = this.camera.near;
+    particleDepthShader.uniforms.mFar.value = this.camera.far;
+    particleDepthShader.uniforms.sphereTexture.value = sphereImg;
+    particleDepthShader.uniforms.particleScale.value = particleScale;
+
+    neuron.particleMaterialDepth = new THREE.ShaderMaterial({
+      uniforms: particleDepthShader.uniforms,
+      vertexShader: particleDepthShader.vertexShader,
+      fragmentShader: particleDepthShader.fragmentShader,
+    });
+
     Object.keys(swcJSON).forEach((node) => {
       const particleVertex = generateParticle(swcJSON[node]);
 
@@ -484,12 +563,6 @@ export default class SharkViewer {
         uv: { type: "f", value: [] },
         label: { type: "fv1", value: [] },
       };
-      const coneUniforms = {
-        sphereTexture: { type: "t", value: sphereImg },
-        abstraction_threshold: { type: "f", value: threshold },
-        grey_out: { type: "i", value: 0 },
-        color: { value: new THREE.Color(neuron.color) },
-      };
       const uvs = [
         new THREE.Vector2(0.5, 0),
         new THREE.Vector2(0.5, 1),
@@ -507,10 +580,6 @@ export default class SharkViewer {
             swcJSON[swcJSON[node].parent],
             color
           );
-          let nodeColor = cone.child.color;
-          if (color) {
-            nodeColor = new THREE.Color(color);
-          }
 
           let parentRadius = cone.parent.radius * this.radius_scale_factor;
           if (this.min_radius && parentRadius < this.min_radius) {
@@ -807,6 +876,55 @@ export default class SharkViewer {
       this.onClick.bind(this),
       true
     );
+
+    this.initPostprocessing();
+
+    this.effectController.enabled = true;
+    this.effectController.jsDepthCalculation = false;
+    this.effectController.shaderFocus = false;
+
+    this.effectController.fstop = 2.2;
+    this.effectController.maxblur = 1.0;
+
+    this.effectController.showFocus = false;
+    this.effectController.focalDepth = 10;
+    this.effectController.manualdof = false;
+    this.effectController.vignetting = false;
+    this.effectController.depthblur = false;
+
+    this.effectController.threshold = 0.5;
+    this.effectController.gain = 2.0;
+    this.effectController.bias = 0.5;
+    this.effectController.fringe = 0.7;
+
+    this.effectController.focalLength = 35;
+    this.effectController.noise = false;
+    this.effectController.pentagon = false;
+
+    this.effectController.dithering = 0.0001;
+
+    this.matChanger();
+    this.shaderUpdate();
+  }
+
+  shaderUpdate() {
+    this.postprocessing.materialBokeh.defines.RINGS = this.shaderSettings.rings;
+    this.postprocessing.materialBokeh.defines.SAMPLES =
+      this.shaderSettings.samples;
+    this.postprocessing.materialBokeh.needsUpdate = true;
+  }
+
+  matChanger() {
+    console.log("update params");
+    for (const e in this.effectController) {
+      if (e in this.postprocessing.bokeh_uniforms) {
+        this.postprocessing.bokeh_uniforms[e].value = this.effectController[e];
+      }
+    }
+    this.postprocessing.enabled = this.effectController.enabled;
+    this.postprocessing.bokeh_uniforms["znear"].value = this.camera.near;
+    this.postprocessing.bokeh_uniforms["zfar"].value = this.camera.far;
+    this.camera.setFocalLength(this.effectController.focalLength);
   }
 
   cameraCoords() {
@@ -911,7 +1029,6 @@ export default class SharkViewer {
     if (!this.last_anim_timestamp) {
       this.last_anim_timestamp = timestamp;
       if (this.animated) {
-        this.render();
       }
     } else if (timestamp - this.last_anim_timestamp > 50) {
       this.last_anim_timestamp = timestamp;
@@ -926,7 +1043,8 @@ export default class SharkViewer {
         this.axesCamera.lookAt(this.axesScene.position);
       }
     }
-    window.requestAnimationFrame(this.animate.bind(this));
+    requestAnimationFrame(this.animate.bind(this));
+    //this.render();
   }
 
   // render the scene
@@ -983,11 +1101,8 @@ export default class SharkViewer {
     }
 
     neuron.name = filename;
-    // store neuron status and bounding sphere for later use
-    // when resetting the view.
     neuron.isNeuron = true;
     neuron.boundingSphere = boundingSphere;
-    const scene = onTopable ? this.sceneOnTopable : this.scene;
     return [neuron, motif_path];
   }
 
