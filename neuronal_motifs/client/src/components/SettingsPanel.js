@@ -101,8 +101,8 @@ export default function SettingsPanel(props) {
         <Slider
           defaultValue={20}
           min={0}
-          max={200}
-          step={0.5}
+          max={400}
+          step={1}
           aria-label="Default"
           valueLabelDisplay="auto"
           onChange={handleFocusChange}
@@ -121,7 +121,7 @@ export default function SettingsPanel(props) {
         <Slider
           defaultValue={1.0}
           min={0.0}
-          max={3.0}
+          max={10.0}
           step={0.01}
           aria-label="Default"
           valueLabelDisplay="auto"
