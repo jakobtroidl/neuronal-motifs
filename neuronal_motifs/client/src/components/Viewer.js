@@ -499,6 +499,18 @@ function Viewer() {
 
   useEffect(() => {
     if (sharkViewerInstance) {
+      sharkViewerInstance.updateDofFocus(context.dofFocus);
+    }
+  }, [context.dofFocus]);
+
+  useEffect(() => {
+    if (sharkViewerInstance) {
+      sharkViewerInstance.updateDofBlur(context.dofBlur);
+    }
+  }, [context.dofBlur]);
+
+  useEffect(() => {
+    if (sharkViewerInstance) {
       let scene = sharkViewerInstance.scene;
       scene.traverse((child) => {
         if (

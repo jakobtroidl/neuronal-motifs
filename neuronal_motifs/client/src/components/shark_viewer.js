@@ -980,6 +980,16 @@ export default class SharkViewer {
     }
   }
 
+  updateDofFocus(focus) {
+    this.effectController.focalDepth = focus;
+    this.matChanger();
+  }
+
+  updateDofBlur(blur) {
+    this.effectController.maxblur = blur;
+    this.matChanger();
+  }
+
   // TODO: alt click should target meshes and center the orbit controls
   // on them if intersected.
   onClick(event) {
@@ -1050,7 +1060,6 @@ export default class SharkViewer {
 
     this.scene.children.forEach((child) => {
       if (child.isNeuron) {
-        // render depth into texture
         this.scene.overrideMaterial = child.particleMaterialDepth;
         this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
         this.renderer.render(this.scene, this.camera);

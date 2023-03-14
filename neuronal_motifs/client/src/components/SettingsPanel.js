@@ -26,11 +26,11 @@ export default function SettingsPanel(props) {
     console.log("handleFocusChange: ", value);
     context.setDofFocus(value);
   };
-
-  const handleApertureChange = (event, value) => {
-    console.log("handleApertureChange: ", value);
-    context.setDofAperture(value);
-  };
+  //
+  // const handleApertureChange = (event, value) => {
+  //   console.log("handleApertureChange: ", value);
+  //   context.setDofAperture(value);
+  // };
 
   const handleMaxBlurChange = (event, value) => {
     console.log("handleMaxBlurChange: ", value);
@@ -99,30 +99,30 @@ export default function SettingsPanel(props) {
       <Box>
         <Typography gutterBottom>DOF focus</Typography>
         <Slider
-          defaultValue={1020}
+          defaultValue={20}
           min={0}
-          max={5000}
-          step={10}
+          max={200}
+          step={0.5}
           aria-label="Default"
           valueLabelDisplay="auto"
           onChange={handleFocusChange}
         />
-        <Typography gutterBottom>DOF aperture</Typography>
-        <Slider
-          defaultValue={0.0001}
-          min={0}
-          max={0.1}
-          step={0.000001}
-          aria-label="Default"
-          valueLabelDisplay="auto"
-          onChange={handleApertureChange}
-        />
+        {/*<Typography gutterBottom>DOF aperture</Typography>*/}
+        {/*<Slider*/}
+        {/*  defaultValue={0.0001}*/}
+        {/*  min={0}*/}
+        {/*  max={0.1}*/}
+        {/*  step={0.000001}*/}
+        {/*  aria-label="Default"*/}
+        {/*  valueLabelDisplay="auto"*/}
+        {/*  onChange={handleApertureChange}*/}
+        {/*/>*/}
         <Typography gutterBottom>DOF maxBlur</Typography>
         <Slider
-          defaultValue={0.01}
+          defaultValue={1.0}
           min={0.0}
-          max={0.01}
-          step={0.00001}
+          max={3.0}
+          step={0.01}
           aria-label="Default"
           valueLabelDisplay="auto"
           onChange={handleMaxBlurChange}
