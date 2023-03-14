@@ -729,6 +729,10 @@ export default class SharkViewer {
         uniforms: coneDepthShader.uniforms,
         vertexShader: coneDepthShader.vertexShader,
         fragmentShader: coneDepthShader.fragmentShader,
+        transparent: true,
+        depthTest: true,
+        side: THREE.DoubleSide,
+        alphaTest: 0.5,
       });
 
       const coneMesh = new THREE.Mesh(coneGeom, coneMaterial);
