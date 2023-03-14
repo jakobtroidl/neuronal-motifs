@@ -13,6 +13,7 @@ import OrbitUnlimitedControls from "./OrbitUnlimitedControls";
 import * as THREE from "three";
 import { BokehShader } from "three/addons/shaders/BokehShader2";
 import { ParticleDepthShader } from "../shaders/ParticleDepthShader";
+import { ConeDepthShader } from "../shaders/ConeDepthShader";
 
 export { swcParser, stretch, stretch_inv };
 
@@ -719,6 +720,17 @@ export default class SharkViewer {
         alphaTest: 0.5,
       });
 
+      let coneDepthShader = structuredClone(ConeDepthShader);
+      coneDepthShader.uniforms.mNear.value = this.camera.near;
+      coneDepthShader.uniforms.mFar.value = this.camera.far;
+      coneDepthShader.uniforms.sphereTexture.value = sphereImg;
+
+      neuron.coneMaterialDepth = new THREE.ShaderMaterial({
+        uniforms: coneDepthShader.uniforms,
+        vertexShader: coneDepthShader.vertexShader,
+        fragmentShader: coneDepthShader.fragmentShader,
+      });
+
       const coneMesh = new THREE.Mesh(coneGeom, coneMaterial);
       coneMesh.name = "skeleton-edge";
 
@@ -884,10 +896,10 @@ export default class SharkViewer {
     this.effectController.shaderFocus = false;
 
     this.effectController.fstop = 2.2;
-    this.effectController.maxblur = 1.0;
+    this.effectController.maxblur = 4.0;
 
     this.effectController.showFocus = false;
-    this.effectController.focalDepth = 10;
+    this.effectController.focalDepth = 100;
     this.effectController.manualdof = false;
     this.effectController.vignetting = false;
     this.effectController.depthblur = false;
@@ -1026,41 +1038,32 @@ export default class SharkViewer {
 
   // animation loop
   animate(timestamp = null) {
-    if (!this.last_anim_timestamp) {
-      this.last_anim_timestamp = timestamp;
-      if (this.animated) {
-      }
-    } else if (timestamp - this.last_anim_timestamp > 50) {
-      this.last_anim_timestamp = timestamp;
-      if (this.animated) {
-        this.render();
-      }
-      this.trackControls.update();
-      if (this.showAxes) {
-        this.axesCamera.position.copy(this.camera.position);
-        this.axesCamera.position.sub(this.trackControls.target);
-        this.axesCamera.position.setLength(300);
-        this.axesCamera.lookAt(this.axesScene.position);
-      }
-    }
     requestAnimationFrame(this.animate.bind(this));
-    //this.render();
+    this.render();
   }
 
   // render the scene
   render() {
-    // capture mouse over events
+    this.renderer.setRenderTarget(this.postprocessing.rtTextureColor);
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
 
-    if (this.onTop) {
-      this.renderer.clearDepth();
-    }
+    this.scene.children.forEach((child) => {
+      if (child.isNeuron) {
+        // render depth into texture
+        this.scene.overrideMaterial = child.particleMaterialDepth;
+        this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
+        this.renderer.render(this.scene, this.camera);
 
-    this.renderer.render(this.sceneOnTopable, this.camera);
-    if (this.showAxes) {
-      this.axesRenderer.render(this.axesScene, this.axesCamera);
-    }
+        if (this.show_cones) {
+          this.scene.overrideMaterial = child.coneMaterialDepth;
+          this.renderer.render(this.scene, this.camera);
+        }
+        this.scene.overrideMaterial = null;
+      }
+    });
+    this.renderer.setRenderTarget(null);
+    this.renderer.render(this.postprocessing.scene, this.postprocessing.camera);
   }
 
   /**
