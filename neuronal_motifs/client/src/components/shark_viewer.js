@@ -900,10 +900,10 @@ export default class SharkViewer {
     this.effectController.shaderFocus = false;
 
     this.effectController.fstop = 2.2;
-    this.effectController.maxblur = 4.0;
+    this.effectController.maxblur = 1.0;
 
     this.effectController.showFocus = false;
-    this.effectController.focalDepth = 100;
+    this.effectController.focalDepth = 20;
     this.effectController.manualdof = false;
     this.effectController.vignetting = false;
     this.effectController.depthblur = false;
@@ -1058,16 +1058,19 @@ export default class SharkViewer {
 
   // render the scene
   render() {
+    this.renderer.clear();
+
     this.renderer.setRenderTarget(this.postprocessing.rtTextureColor);
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
 
-    this.scene.children.forEach((child) => {
+    this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
+    this.renderer.clear();
+
+    this.scene.children.forEach((child, i) => {
       if (child.isNeuron) {
         this.scene.overrideMaterial = child.particleMaterialDepth;
-        this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
         this.renderer.render(this.scene, this.camera);
-
         if (this.show_cones) {
           this.scene.overrideMaterial = child.coneMaterialDepth;
           this.renderer.render(this.scene, this.camera);
