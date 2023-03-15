@@ -56,32 +56,33 @@ function addNeurons(
   translate
 ) {
   motif.neurons.forEach((neuron, i) => {
-    let oldNeuron = scene.getObjectByName(neuron.id);
-    let parsedSwc = swcParser(neuron.skeleton_swc);
-    let color = context.neuronColors[i];
-    let [neuronObject, motif_path] = sharkViewerInstance.loadNeuron(
-      neuron.id,
-      color,
-      parsedSwc,
-      updateCamera
-    );
+    if (i === 0) {
+      let oldNeuron = scene.getObjectByName(neuron.id);
+      let parsedSwc = swcParser(neuron.skeleton_swc);
+      let color = context.neuronColors[i];
+      let [neuronObject, motif_path] = sharkViewerInstance.loadNeuron(
+        neuron.id,
+        color,
+        parsedSwc,
+        updateCamera
+      );
 
-    context.setMotifPathPosition(motif_path);
+      context.setMotifPathPosition(motif_path);
 
-    neuronObject.motifs = [motif];
-    if (oldNeuron) {
-      neuronObject.motifs = neuronObject.motifs.concat(oldNeuron.motifs);
-      scene.remove(oldNeuron);
-    }
-    neuronObject.meta = { ...neuron };
-    neuronObject.translateX(translate.x);
-    neuronObject.translateY(translate.y);
-    neuronObject.translateZ(translate.z);
+      neuronObject.motifs = [motif];
+      if (oldNeuron) {
+        neuronObject.motifs = neuronObject.motifs.concat(oldNeuron.motifs);
+        scene.remove(oldNeuron);
+      }
+      neuronObject.meta = { ...neuron };
+      neuronObject.translateX(translate.x);
+      neuronObject.translateY(translate.y);
+      neuronObject.translateZ(translate.z);
 
-    neuronObject.origin = new THREE.Vector3(
-      translate.x,
-      translate.y,
-      translate.z
+      neuronObject.origin = new THREE.Vector3(
+        translate.x,
+        translate.y,
+        translate.z
     );
 
     scene.add(neuronObject);

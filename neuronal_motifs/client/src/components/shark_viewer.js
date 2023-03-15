@@ -7,13 +7,15 @@ import {
 
 import { ParticleShader } from "../shaders/ParticleShader";
 import { ConeShader } from "../shaders/ConeShader";
+import { BokehShader } from "../shaders/BokehShader";
+import { ParticleDepthShader } from "../shaders/ParticleDepthShader";
+import { ConeDepthShader } from "../shaders/ConeDepthShader";
 
 import OrbitUnlimitedControls from "./OrbitUnlimitedControls";
 
 import * as THREE from "three";
-import { BokehShader } from "../shaders/BokehShader";
-import { ParticleDepthShader } from "../shaders/ParticleDepthShader";
-import { ConeDepthShader } from "../shaders/ConeDepthShader";
+
+import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 
 export { swcParser, stretch, stretch_inv };
 
@@ -206,7 +208,7 @@ export default class SharkViewer {
     this.three = THREE;
 
     this.showAxes = false;
-    this.show_cones = true;
+    this.show_cones = false;
     this.brainboundingbox = null;
     this.last_anim_timestamp = null;
     this.mouseHandler = null;
@@ -919,6 +921,81 @@ export default class SharkViewer {
 
     this.effectController.dithering = 0.0001;
 
+    const gui = new GUI();
+
+    gui
+      .add(this.effectController, "enabled")
+      .onChange(this.matChanger.bind(this));
+    gui
+      .add(this.effectController, "jsDepthCalculation")
+      .onChange(this.matChanger.bind(this));
+    gui
+      .add(this.effectController, "shaderFocus")
+      .onChange(this.matChanger.bind(this));
+    gui
+      .add(this.effectController, "focalDepth", 0.0, 80.0)
+      .listen()
+      .onChange(this.matChanger.bind(this));
+
+    gui
+      .add(this.effectController, "fstop", 0.1, 22, 0.001)
+      .onChange(this.matChanger.bind(this));
+    gui
+      .add(this.effectController, "maxblur", 0.0, 5.0, 0.025)
+      .onChange(this.matChanger.bind(this));
+
+    gui
+      .add(this.effectController, "showFocus")
+      .onChange(this.matChanger.bind(this));
+    gui
+      .add(this.effectController, "manualdof")
+      .onChange(this.matChanger.bind(this));
+    gui
+      .add(this.effectController, "vignetting")
+      .onChange(this.matChanger.bind(this));
+
+    gui
+      .add(this.effectController, "depthblur")
+      .onChange(this.matChanger.bind(this));
+
+    gui
+      .add(this.effectController, "threshold", 0, 1, 0.001)
+      .onChange(this.matChanger.bind(this));
+    gui
+      .add(this.effectController, "gain", 0, 100, 0.001)
+      .onChange(this.matChanger.bind(this));
+    gui
+      .add(this.effectController, "bias", 0, 3, 0.001)
+      .onChange(this.matChanger.bind(this));
+    gui
+      .add(this.effectController, "fringe", 0, 5, 0.001)
+      .onChange(this.matChanger.bind(this));
+
+    gui
+      .add(this.effectController, "focalLength", 16, 80, 0.001)
+      .onChange(this.matChanger.bind(this));
+
+    gui
+      .add(this.effectController, "noise")
+      .onChange(this.matChanger.bind(this));
+
+    gui
+      .add(this.effectController, "dithering", 0, 0.001, 0.0001)
+      .onChange(this.matChanger.bind(this));
+
+    gui
+      .add(this.effectController, "pentagon")
+      .onChange(this.matChanger.bind(this));
+
+    gui
+      .add(this.shaderSettings, "rings", 1, 8)
+      .step(1)
+      .onChange(this.shaderUpdate.bind(this));
+    gui
+      .add(this.shaderSettings, "samples", 1, 13)
+      .step(1)
+      .onChange(this.shaderUpdate.bind(this));
+
     this.matChanger();
     this.shaderUpdate();
   }
@@ -1064,15 +1141,22 @@ export default class SharkViewer {
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
 
-    this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
-    this.renderer.clear();
+    let count = 0;
 
     this.scene.children.forEach((child, i) => {
       if (child.isNeuron) {
+        count += 1;
         this.scene.overrideMaterial = child.particleMaterialDepth;
+        this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
+        //this.renderer.setRenderTarget(null);
+
+        this.renderer.clear();
+
         this.renderer.render(this.scene, this.camera);
         if (this.show_cones) {
           this.scene.overrideMaterial = child.coneMaterialDepth;
+          this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
+          //this.renderer.clear();
           this.renderer.render(this.scene, this.camera);
         }
         this.scene.overrideMaterial = null;
@@ -1080,6 +1164,8 @@ export default class SharkViewer {
     });
     this.renderer.setRenderTarget(null);
     this.renderer.render(this.postprocessing.scene, this.postprocessing.camera);
+
+    console.log(count, " neurons rendered");
   }
 
   /**
