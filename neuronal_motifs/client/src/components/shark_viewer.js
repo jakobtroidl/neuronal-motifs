@@ -208,7 +208,7 @@ export default class SharkViewer {
     this.three = THREE;
 
     this.showAxes = false;
-    this.show_cones = false;
+    this.show_cones = true;
     this.brainboundingbox = null;
     this.last_anim_timestamp = null;
     this.mouseHandler = null;
@@ -832,8 +832,8 @@ export default class SharkViewer {
     // put a camera in the scene
     this.fov = 45;
     const cameraPosition = this.maxVolumeSize;
-    const farClipping = cameraPosition * 2;
-    const nearClipping = 10;
+    const farClipping = 30000;
+    const nearClipping = 1;
     this.camera = new THREE.PerspectiveCamera(
       this.fov,
       this.WIDTH / this.HEIGHT,
@@ -841,7 +841,7 @@ export default class SharkViewer {
       farClipping
     );
 
-    this.camera.position.z = cameraPosition;
+    this.camera.position.z = farClipping;
 
     if (this.showAxes) {
       this.addAxes();
@@ -1141,22 +1141,17 @@ export default class SharkViewer {
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
 
-    let count = 0;
-
     this.scene.children.forEach((child, i) => {
       if (child.isNeuron) {
-        count += 1;
         this.scene.overrideMaterial = child.particleMaterialDepth;
         this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
         //this.renderer.setRenderTarget(null);
-
         this.renderer.clear();
-
         this.renderer.render(this.scene, this.camera);
         if (this.show_cones) {
           this.scene.overrideMaterial = child.coneMaterialDepth;
           this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
-          //this.renderer.clear();
+          this.renderer.clear();
           this.renderer.render(this.scene, this.camera);
         }
         this.scene.overrideMaterial = null;
@@ -1164,8 +1159,6 @@ export default class SharkViewer {
     });
     this.renderer.setRenderTarget(null);
     this.renderer.render(this.postprocessing.scene, this.postprocessing.camera);
-
-    console.log(count, " neurons rendered");
   }
 
   /**
