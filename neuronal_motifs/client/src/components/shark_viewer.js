@@ -227,9 +227,10 @@ export default class SharkViewer {
     this.on_Alt_Click = null;
     this.lineClick = null;
     this.motifQuery = null;
+    this.show_dof_debug_UI = false;
 
-    this.effectController = { enabled: true };
-    this.postprocessing = { enabled: true };
+    this.effectController = { enabled: false };
+    this.postprocessing = { enabled: false };
     this.shaderSettings = {
       rings: 3,
       samples: 4,
@@ -832,7 +833,7 @@ export default class SharkViewer {
     // put a camera in the scene
     this.fov = 45;
     const cameraPosition = this.maxVolumeSize;
-    const farClipping = 30000;
+    const farClipping = 60000;
     const nearClipping = 1;
     this.camera = new THREE.PerspectiveCamera(
       this.fov,
@@ -897,20 +898,20 @@ export default class SharkViewer {
 
     this.initPostprocessing();
 
-    this.effectController.enabled = true;
+    this.effectController.enabled = false;
     this.effectController.jsDepthCalculation = false;
     this.effectController.shaderFocus = false;
 
     this.effectController.fstop = 2.2;
-    this.effectController.maxblur = 1.0;
+    this.effectController.maxblur = 0.5;
 
     this.effectController.showFocus = false;
-    this.effectController.focalDepth = 20;
+    this.effectController.focalDepth = 4;
     this.effectController.manualdof = false;
-    this.effectController.vignetting = false;
+    this.effectController.vignetting = true;
     this.effectController.depthblur = false;
 
-    this.effectController.threshold = 0.5;
+    this.effectController.threshold = 0.8;
     this.effectController.gain = 2.0;
     this.effectController.bias = 0.5;
     this.effectController.fringe = 0.7;
@@ -921,80 +922,82 @@ export default class SharkViewer {
 
     this.effectController.dithering = 0.0001;
 
-    const gui = new GUI();
+    if (this.show_dof_debug_UI) {
+      const gui = new GUI();
 
-    gui
-      .add(this.effectController, "enabled")
-      .onChange(this.matChanger.bind(this));
-    gui
-      .add(this.effectController, "jsDepthCalculation")
-      .onChange(this.matChanger.bind(this));
-    gui
-      .add(this.effectController, "shaderFocus")
-      .onChange(this.matChanger.bind(this));
-    gui
-      .add(this.effectController, "focalDepth", 0.0, 80.0)
-      .listen()
-      .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "enabled")
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "jsDepthCalculation")
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "shaderFocus")
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "focalDepth", 0.0, 6.0, 0.05)
+        .listen()
+        .onChange(this.matChanger.bind(this));
 
-    gui
-      .add(this.effectController, "fstop", 0.1, 22, 0.001)
-      .onChange(this.matChanger.bind(this));
-    gui
-      .add(this.effectController, "maxblur", 0.0, 5.0, 0.025)
-      .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "fstop", 0.1, 22, 0.001)
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "maxblur", 0.0, 2.0, 0.025)
+        .onChange(this.matChanger.bind(this));
 
-    gui
-      .add(this.effectController, "showFocus")
-      .onChange(this.matChanger.bind(this));
-    gui
-      .add(this.effectController, "manualdof")
-      .onChange(this.matChanger.bind(this));
-    gui
-      .add(this.effectController, "vignetting")
-      .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "showFocus")
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "manualdof")
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "vignetting")
+        .onChange(this.matChanger.bind(this));
 
-    gui
-      .add(this.effectController, "depthblur")
-      .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "depthblur")
+        .onChange(this.matChanger.bind(this));
 
-    gui
-      .add(this.effectController, "threshold", 0, 1, 0.001)
-      .onChange(this.matChanger.bind(this));
-    gui
-      .add(this.effectController, "gain", 0, 100, 0.001)
-      .onChange(this.matChanger.bind(this));
-    gui
-      .add(this.effectController, "bias", 0, 3, 0.001)
-      .onChange(this.matChanger.bind(this));
-    gui
-      .add(this.effectController, "fringe", 0, 5, 0.001)
-      .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "threshold", 0, 1, 0.001)
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "gain", 0, 100, 0.001)
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "bias", 0, 3, 0.001)
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "fringe", 0, 5, 0.001)
+        .onChange(this.matChanger.bind(this));
 
-    gui
-      .add(this.effectController, "focalLength", 16, 80, 0.001)
-      .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "focalLength", 16, 80, 0.001)
+        .onChange(this.matChanger.bind(this));
 
-    gui
-      .add(this.effectController, "noise")
-      .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "noise")
+        .onChange(this.matChanger.bind(this));
 
-    gui
-      .add(this.effectController, "dithering", 0, 0.001, 0.0001)
-      .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "dithering", 0, 0.001, 0.0001)
+        .onChange(this.matChanger.bind(this));
 
-    gui
-      .add(this.effectController, "pentagon")
-      .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "pentagon")
+        .onChange(this.matChanger.bind(this));
 
-    gui
-      .add(this.shaderSettings, "rings", 1, 8)
-      .step(1)
-      .onChange(this.shaderUpdate.bind(this));
-    gui
-      .add(this.shaderSettings, "samples", 1, 13)
-      .step(1)
-      .onChange(this.shaderUpdate.bind(this));
+      gui
+        .add(this.shaderSettings, "rings", 1, 8)
+        .step(1)
+        .onChange(this.shaderUpdate.bind(this));
+      gui
+        .add(this.shaderSettings, "samples", 1, 13)
+        .step(1)
+        .onChange(this.shaderUpdate.bind(this));
+    }
 
     this.matChanger();
     this.shaderUpdate();
@@ -1059,6 +1062,11 @@ export default class SharkViewer {
       this.camera.position.set(position.x, position.y, position.z);
       this.camera.up.set(0, 1, 0);
     }
+  }
+
+  updateDofEnabled(enabled) {
+    this.effectController.enabled = enabled;
+    this.matChanger();
   }
 
   updateDofFocus(focus) {
@@ -1135,30 +1143,40 @@ export default class SharkViewer {
 
   // render the scene
   render() {
-    this.renderer.clear();
+    if (this.postprocessing.enabled) {
+      this.renderer.clear();
 
-    this.renderer.setRenderTarget(this.postprocessing.rtTextureColor);
-    this.renderer.clear();
-    this.renderer.render(this.scene, this.camera);
+      this.renderer.setRenderTarget(this.postprocessing.rtTextureColor);
+      this.renderer.clear();
+      this.renderer.render(this.scene, this.camera);
 
-    this.scene.children.forEach((child, i) => {
-      if (child.isNeuron) {
-        this.scene.overrideMaterial = child.particleMaterialDepth;
-        this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
-        //this.renderer.setRenderTarget(null);
-        this.renderer.clear();
-        this.renderer.render(this.scene, this.camera);
-        if (this.show_cones) {
-          this.scene.overrideMaterial = child.coneMaterialDepth;
+      this.scene.children.forEach((child, i) => {
+        if (child.isNeuron) {
+          this.scene.overrideMaterial = child.particleMaterialDepth;
           this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
+          //this.renderer.setRenderTarget(null);
           this.renderer.clear();
           this.renderer.render(this.scene, this.camera);
+          if (this.show_cones) {
+            this.scene.overrideMaterial = child.coneMaterialDepth;
+            this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
+            this.renderer.clear();
+            this.renderer.render(this.scene, this.camera);
+          }
+          this.scene.overrideMaterial = null;
         }
-        this.scene.overrideMaterial = null;
-      }
-    });
-    this.renderer.setRenderTarget(null);
-    this.renderer.render(this.postprocessing.scene, this.postprocessing.camera);
+      });
+      this.renderer.setRenderTarget(null);
+      this.renderer.render(
+        this.postprocessing.scene,
+        this.postprocessing.camera
+      );
+    } else {
+      this.scene.overrideMaterial = null;
+      this.renderer.setRenderTarget(null);
+      this.renderer.clear();
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 
   /**

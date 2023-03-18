@@ -22,15 +22,15 @@ export default function SettingsPanel(props) {
     context.setGreyOutNonMotifBranches(event.target.checked);
   }
 
+  const handleDofEnabledChange = (event, value) => {
+    console.log("handleDofEnabledChange: ", value);
+    context.setDofEnabled(value);
+  };
+
   const handleFocusChange = (event, value) => {
     console.log("handleFocusChange: ", value);
     context.setDofFocus(value);
   };
-  //
-  // const handleApertureChange = (event, value) => {
-  //   console.log("handleApertureChange: ", value);
-  //   context.setDofAperture(value);
-  // };
 
   const handleMaxBlurChange = (event, value) => {
     console.log("handleMaxBlurChange: ", value);
@@ -97,31 +97,28 @@ export default function SettingsPanel(props) {
         />
       </FormGroup>
       <Box>
+        <FormGroup>
+          <FormControlLabel
+            control={<Checkbox defaultChecked={context.dofEnabled} />}
+            label="DOF enabled"
+            onChange={handleDofEnabledChange}
+          />
+        </FormGroup>
         <Typography gutterBottom>DOF focus</Typography>
         <Slider
-          defaultValue={20}
+          defaultValue={3}
           min={0}
-          max={400}
-          step={1}
+          max={9}
+          step={0.05}
           aria-label="Default"
           valueLabelDisplay="auto"
           onChange={handleFocusChange}
         />
-        {/*<Typography gutterBottom>DOF aperture</Typography>*/}
-        {/*<Slider*/}
-        {/*  defaultValue={0.0001}*/}
-        {/*  min={0}*/}
-        {/*  max={0.1}*/}
-        {/*  step={0.000001}*/}
-        {/*  aria-label="Default"*/}
-        {/*  valueLabelDisplay="auto"*/}
-        {/*  onChange={handleApertureChange}*/}
-        {/*/>*/}
         <Typography gutterBottom>DOF maxBlur</Typography>
         <Slider
-          defaultValue={1.0}
+          defaultValue={0.5}
           min={0.0}
-          max={10.0}
+          max={1.5}
           step={0.01}
           aria-label="Default"
           valueLabelDisplay="auto"

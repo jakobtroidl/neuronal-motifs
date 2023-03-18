@@ -499,6 +499,12 @@ function Viewer() {
 
   useEffect(() => {
     if (sharkViewerInstance) {
+      sharkViewerInstance.updateDofEnabled(context.dofEnabled);
+    }
+  }, [context.dofEnabled]);
+
+  useEffect(() => {
+    if (sharkViewerInstance) {
       sharkViewerInstance.updateDofFocus(context.dofFocus);
     }
   }, [context.dofFocus]);

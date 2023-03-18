@@ -71,8 +71,8 @@ export const ContextWrapper = (props) => {
   const [displayedROIs, setDisplayedROIs] = useState([]);
 
   // DOF rendering parameters
+  const [dofEnabled, setDofEnabled] = useState(false);
   const [dofFocus, setDofFocus] = useState(null);
-  const [dofAperture, setDofAperture] = useState(null);
   const [dofBlur, setDofBlur] = useState(null);
 
   return (
@@ -130,10 +130,10 @@ export const ContextWrapper = (props) => {
         setConstraintsToAddToSketch,
         displayedROIs,
         setDisplayedROIs,
+        dofEnabled,
+        setDofEnabled,
         dofFocus,
         setDofFocus,
-        dofAperture,
-        setDofAperture,
         dofBlur,
         setDofBlur,
       }}
