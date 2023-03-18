@@ -472,6 +472,8 @@ export default class SharkViewer {
       this.renderer.getPixelRatio() /
       Math.tan((0.5 * this.fov * Math.PI) / 180.0);
 
+    console.log("particle scale: ", particleScale);
+
     const customAttributes = {
       radius: { type: "fv1", value: [] },
       vertices: { type: "f", value: [] },
@@ -553,6 +555,20 @@ export default class SharkViewer {
 
     const particles = new THREE.Points(geometry, material);
     particles.name = "skeleton-vertex";
+
+    let materialShader = null;
+
+    material.onBeforeCompile = (shader) => {
+      shader.uniforms.alpha = { value: 0 };
+      shader.vertexShader = `uniform float alpha;\n${shader.vertexShader}`;
+      shader.vertexShader = shader.vertexShader.replace(
+        "#include <begin_vertex>",
+        ["vAlpha = alpha"].join("\n")
+      );
+      materialShader = shader;
+      materialShader.uniforms.alpha.value = 0.9;
+      particles.userData.materialShader = materialShader;
+    };
 
     neuron.add(particles);
 
