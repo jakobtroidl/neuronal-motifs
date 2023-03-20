@@ -227,7 +227,7 @@ export default class SharkViewer {
     this.on_Alt_Click = null;
     this.lineClick = null;
     this.motifQuery = null;
-    this.show_dof_debug_UI = false;
+    this.show_dof_debug_UI = true;
 
     this.effectController = { enabled: false };
     this.postprocessing = { enabled: false };
@@ -506,7 +506,7 @@ export default class SharkViewer {
     particleDepthShader.uniforms.sphereTexture.value = sphereImg;
     particleDepthShader.uniforms.particleScale.value = particleScale;
 
-    neuron.particleMaterialDepth = new THREE.ShaderMaterial({
+    let particleDepth = new THREE.ShaderMaterial({
       uniforms: particleDepthShader.uniforms,
       vertexShader: particleDepthShader.vertexShader,
       fragmentShader: particleDepthShader.fragmentShader,
@@ -571,7 +571,11 @@ export default class SharkViewer {
       particles.userData.materialShader = materialShader;
     };
 
-    neuron.add(particles);
+    let particlesObject = new THREE.Object3D();
+    particlesObject.name = "particle-object";
+    particlesObject.customDepthMaterial = particleDepth;
+    particlesObject.add(particles);
+    neuron.add(particlesObject);
 
     if (this.show_cones) {
       // Cone quad imposters, to link spheres together
@@ -745,7 +749,7 @@ export default class SharkViewer {
       coneDepthShader.uniforms.mFar.value = this.camera.far;
       coneDepthShader.uniforms.sphereTexture.value = sphereImg;
 
-      neuron.coneMaterialDepth = new THREE.ShaderMaterial({
+      let coneMaterialDepth = new THREE.ShaderMaterial({
         uniforms: coneDepthShader.uniforms,
         vertexShader: coneDepthShader.vertexShader,
         fragmentShader: coneDepthShader.fragmentShader,
@@ -773,7 +777,11 @@ export default class SharkViewer {
         coneMesh.userData = { materialShader };
       };
 
-      neuron.add(coneMesh);
+      let coneObject = new THREE.Object3D();
+      coneObject.name = "cone-object";
+      coneObject.customDepthMaterial = coneMaterialDepth;
+      coneObject.add(coneMesh);
+      neuron.add(coneObject);
     }
     return [neuron, normalized_motif_path_position];
   }
@@ -852,7 +860,7 @@ export default class SharkViewer {
     this.renderer = new THREE.WebGLRenderer({
       antialias: true, // to get smoother output
     });
-    this.renderer.setClearColor(this.backgroundColor, 1);
+    //this.renderer.setClearColor(this.backgroundColor, 1);
     this.renderer.setSize(this.WIDTH, this.HEIGHT);
     this.dom_element.appendChild(this.renderer.domElement);
 
@@ -1167,6 +1175,25 @@ export default class SharkViewer {
     }
   }
 
+  // Function to set materials to depth materials
+  setMaterialsToDepthMaterials(object) {
+    let isParticle = object.name === "particle-object";
+    let isCone = object.name === "cone-object";
+    if ((isParticle || isCone) && object.customDepthMaterial) {
+      object.oldDepthMaterial = object.material;
+      object.material = object.customDepthMaterial;
+    }
+  }
+
+  // Function to restore original materials
+  restoreOriginalMaterials(object) {
+    let isParticle = object.name === "particle-object";
+    let isCone = object.name === "cone-object";
+    if ((isParticle || isCone) && object.customDepthMaterial) {
+      object.material = object.oldDepthMaterial;
+    }
+  }
+
   // animation loop
   animate(timestamp = null) {
     requestAnimationFrame(this.animate.bind(this));
@@ -1182,22 +1209,38 @@ export default class SharkViewer {
       this.renderer.clear();
       this.renderer.render(this.scene, this.camera);
 
-      this.scene.children.forEach((child, i) => {
-        if (child.isNeuron) {
-          this.scene.overrideMaterial = child.particleMaterialDepth;
-          this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
-          //this.renderer.setRenderTarget(null);
-          this.renderer.clear();
-          this.renderer.render(this.scene, this.camera);
-          if (this.show_cones) {
-            this.scene.overrideMaterial = child.coneMaterialDepth;
-            this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
-            this.renderer.clear();
-            this.renderer.render(this.scene, this.camera);
-          }
-          this.scene.overrideMaterial = null;
-        }
-      });
+      this.scene.traverse(this.setMaterialsToDepthMaterials);
+      //this.scene.overrideMaterial = child.particleMaterialDepth;
+      this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
+      //this.renderer.setRenderTarget(null);
+      this.renderer.clear();
+      this.renderer.render(this.scene, this.camera);
+      this.scene.traverse(this.restoreOriginalMaterials);
+
+      // if (this.show_cones) {
+      //   this.scene.overrideMaterial = child.coneMaterialDepth;
+      //   this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
+      //   this.renderer.clear();
+      //   this.renderer.render(this.scene, this.camera);
+      // }
+      //this.scene.overrideMaterial = null;
+
+      // this.scene.children.forEach((child, i) => {
+      //   if (child.isNeuron) {
+      //     this.scene.overrideMaterial = child.particleMaterialDepth;
+      //     this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
+      //     //this.renderer.setRenderTarget(null);
+      //     this.renderer.clear();
+      //     this.renderer.render(this.scene, this.camera);
+      //     if (this.show_cones) {
+      //       this.scene.overrideMaterial = child.coneMaterialDepth;
+      //       this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
+      //       this.renderer.clear();
+      //       this.renderer.render(this.scene, this.camera);
+      //     }
+      //     this.scene.overrideMaterial = null;
+      //   }
+      // });
       this.renderer.setRenderTarget(null);
       this.renderer.render(
         this.postprocessing.scene,
