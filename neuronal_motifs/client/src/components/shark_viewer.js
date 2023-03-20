@@ -757,6 +757,21 @@ export default class SharkViewer {
       const coneMesh = new THREE.Mesh(coneGeom, coneMaterial);
       coneMesh.name = "skeleton-edge";
 
+      coneMaterial.onBeforeCompile = (shader) => {
+        // console.log( shader )
+        shader.uniforms.alpha = { value: 0 };
+        shader.vertexShader = `uniform float alpha;\n${shader.vertexShader}`;
+        shader.vertexShader = shader.vertexShader.replace(
+          "#include <begin_vertex>",
+          ["vAlpha = alpha"].join("\n")
+        );
+        materialShader = shader;
+
+        materialShader.uniforms.alpha.value = 0.9;
+
+        coneMesh.userData = { materialShader };
+      };
+
       neuron.add(coneMesh);
     }
     return [neuron, normalized_motif_path_position];
