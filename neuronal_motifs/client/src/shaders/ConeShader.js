@@ -56,6 +56,7 @@ const ConeShader = {
 		uniform float abstraction_threshold;
 		uniform int grey_out;
 		uniform vec3 color;
+		uniform mat4 projectionMatrix;
         
         varying vec2 sphereUv;
         varying vec4 mvPosition;
@@ -76,6 +77,14 @@ const ConeShader = {
             vec3 baseColor = myColor * sphereColors.r;
             vec3 highlightColor = baseColor + sphereColors.ggg;
             gl_FragColor = vec4(highlightColor, sphereColors.a);
+            
+            float dz = sphereColors.b * depthScale;
+            vec4 mvp = mvPosition + vec4(0, 0, dz, 0);
+            vec4 clipPos = projectionMatrix * mvp;
+            float ndc_depth = clipPos.z/clipPos.w;
+            float far = gl_DepthRange.far; float near = gl_DepthRange.near;
+            float depth = (((far-near) * ndc_depth) + near + far) / 2.0;
+            gl_FragDepth = depth;
         }
 	`,
 };

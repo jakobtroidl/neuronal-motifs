@@ -108,7 +108,7 @@ export default function SettingsPanel(props) {
         <Slider
           defaultValue={3}
           min={0}
-          max={9}
+          max={20}
           step={0.05}
           aria-label="Default"
           valueLabelDisplay="auto"

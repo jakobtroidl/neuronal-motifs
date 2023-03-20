@@ -468,9 +468,9 @@ export default class SharkViewer {
 
     let geometry = new THREE.BufferGeometry();
     const particleScale =
-      (0.5 * this.HEIGHT) /
-      this.renderer.getPixelRatio() /
-      Math.tan((0.5 * this.fov * Math.PI) / 180.0);
+      (0.2 * this.HEIGHT) /
+      //this.renderer.getPixelRatio() /
+      Math.tan((0.28 * this.fov * Math.PI) / 180.0);
 
     console.log("particle scale: ", particleScale);
 
@@ -496,6 +496,7 @@ export default class SharkViewer {
       uniforms: particleShader.uniforms,
       vertexShader: particleShader.vertexShader,
       fragmentShader: particleShader.fragmentShader,
+      transparent: true,
     });
 
     let particleDepthShader = structuredClone(ParticleDepthShader);
@@ -864,7 +865,7 @@ export default class SharkViewer {
     // put a camera in the scene
     this.fov = 45;
     const cameraPosition = this.maxVolumeSize;
-    const farClipping = 60000;
+    const farClipping = 120000;
     const nearClipping = 1;
     this.camera = new THREE.PerspectiveCamera(
       this.fov,

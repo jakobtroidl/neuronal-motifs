@@ -26,7 +26,7 @@ const ParticleShader = {
             vLabel = label ;
             mvPosition = modelViewMatrix * vec4(position, 1.0);
         
-            gl_PointSize = radius * ((particleScale*2.0) / length(mvPosition.z));
+            gl_PointSize = radius * ((particleScale*2.5) / length(mvPosition.z));
             gl_Position = projectionMatrix * mvPosition;
             vRadius = radius;
         }
