@@ -5,182 +5,22 @@ import {
   swcParser,
 } from "./viewer/util";
 
+import { ParticleShader } from "../shaders/ParticleShader";
+import { ConeShader } from "../shaders/ConeShader";
+import { BokehShader } from "../shaders/BokehShader";
+import { ParticleDepthShader } from "../shaders/ParticleDepthShader";
+import { ConeDepthShader } from "../shaders/ConeDepthShader";
+
 import OrbitUnlimitedControls from "./OrbitUnlimitedControls";
 
 import * as THREE from "three";
+
+import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 
 export { swcParser, stretch, stretch_inv };
 
 const DEFAULT_POINT_THRESHOLD = 150;
 const DEFAULT_LINE_THRESHOLD = 100;
-
-const vertexShader = [
-  "uniform float particleScale;",
-  "attribute float radius;",
-  "attribute vec3 typeColor;",
-  "attribute float label;",
-  "varying vec4 mvPosition;",
-  "varying float vRadius;",
-  "varying float vLabel;",
-  "void main() ",
-  "{",
-  "mvPosition = modelViewMatrix * vec4(position, 1.0);",
-  "vLabel = label;",
-  "// gl_PointSize = size;",
-  "gl_PointSize = radius * ((particleScale*2.0) / length(mvPosition.z));",
-  "gl_Position = projectionMatrix * mvPosition;",
-  "vRadius = radius;",
-  "}",
-].join("\n");
-
-const fragmentShader = [
-  "uniform sampler2D sphereTexture; // Imposter image of sphere",
-  "uniform mat4 projectionMatrix;",
-  "uniform float abstraction_threshold;",
-  "uniform int grey_out;",
-  "uniform vec3 color;",
-  "varying vec4 mvPosition;",
-  "varying float vRadius;",
-  "varying float vLabel;",
-  "void main() ",
-  "{",
-  "// what part of the sphere image?",
-  "vec2 uv = vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y);",
-  "vec4 sphereColors = texture2D(sphereTexture, uv);",
-  "// avoid further computation at invisible corners",
-  "if (sphereColors.a < 0.3 || vLabel > abstraction_threshold) discard;",
-  "// calculates a color for the particle",
-  "// gl_FragColor = vec4(color, 1.0);",
-  "// sets a white particle texture to desired color",
-  "// gl_FragColor = sqrt(gl_FragColor * texture2D(sphereTexture, uv)) + vec4(0.1, 0.1, 0.1, 0.0);",
-  "// red channel contains colorizable sphere image",
-  "vec3 myColor = color;",
-  "if(grey_out > 0 && vLabel > 0.0) {",
-  "   myColor = vec3(0.75, 0.75, 0.75);",
-  "}",
-  "vec3 baseColor = myColor * sphereColors.r;",
-  "// green channel contains (white?) specular highlight",
-  "vec3 highlightColor = baseColor + sphereColors.ggg;",
-  "gl_FragColor = vec4(highlightColor, sphereColors.a);",
-  "// TODO blue channel contains depth offset, but we cannot use gl_FragDepth in webgl?",
-  "#ifdef GL_EXT_frag_depth",
-  "float far = gl_DepthRange.far; float near = gl_DepthRange.near;",
-  "float dz = sphereColors.b * vRadius;",
-  "vec4 clipPos = projectionMatrix * (mvPosition + vec4(0, 0, dz, 0));",
-  "float ndc_depth = clipPos.z/clipPos.w;",
-  "float depth = (((far-near) * ndc_depth) + near + far) / 2.0;",
-  "gl_FragDepthEXT = depth;",
-  "#endif",
-  "}",
-].join("\n");
-
-// const fragmentShaderAnnotation = [
-//   "uniform sampler2D sphereTexture; // Imposter image of sphere",
-//   "uniform mat4 projectionMatrix;",
-//   "varying vec3 vColor; // colors associated to vertices; assigned by vertex shader",
-//   "varying vec4 mvPosition;",
-//   "varying float vRadius;",
-//   "void main() ",
-//   "{",
-//   "// what part of the sphere image?",
-//   "vec2 uv = vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y);",
-//   "vec4 sphereColors = texture2D(sphereTexture, uv);",
-//   "// avoid further computation at invisible corners",
-//   "if (sphereColors.a < 0.3) discard;",
-//
-//   "// calculates a color for the particle",
-//   "// gl_FragColor = vec4(vColor, 1.0);",
-//   "// sets a white particle texture to desired color",
-//   "// gl_FragColor = sqrt(gl_FragColor * texture2D(sphereTexture, uv)) + vec4(0.1, 0.1, 0.1, 0.0);",
-//   "// red channel contains colorizable sphere image",
-//   "vec3 baseColor = vColor * sphereColors.r;",
-//   "// green channel contains (white?) specular highlight",
-//   "gl_FragColor = vec4(baseColor, sphereColors.a);",
-//   "// TODO blue channel contains depth offset, but we cannot use gl_FragDepth in webgl?",
-//   "#ifdef GL_EXT_frag_depth",
-//   "float far = gl_DepthRange.far; float near = gl_DepthRange.near;",
-//   "float dz = sphereColors.b * vRadius;",
-//   "vec4 clipPos = projectionMatrix * (mvPosition + vec4(0, 0, dz, 0));",
-//   "float ndc_depth = clipPos.z/clipPos.w;",
-//   "float depth = (((far-near) * ndc_depth) + near + far) / 2.0;",
-//   "gl_FragDepthEXT = depth;",
-//   "#endif",
-//   "}"
-// ].join("\n");
-
-const vertexShaderCone = [
-  "attribute float radius;",
-  "attribute float label;",
-  "varying vec2 sphereUv;",
-  "varying vec4 mvPosition;",
-  "varying float depthScale;",
-  "varying float vLabel;",
-  "void main() ",
-  "{",
-  "	// TODO - offset cone position for different sphere sizes",
-  "	// TODO - implement depth buffer on Chrome",
-  "	mvPosition = modelViewMatrix * vec4(position, 1.0);",
-  " vLabel = label;",
-  "	// Expand quadrilateral perpendicular to both view/screen direction and cone axis",
-  "	vec3 cylAxis = (modelViewMatrix * vec4(normal, 0.0)).xyz; // convert cone axis to camera space",
-  "	vec3 sideDir = normalize(cross(vec3(0.0,0.0,-1.0), cylAxis));",
-  "	mvPosition += vec4(radius * sideDir, 0.0);",
-  "	gl_Position = projectionMatrix * mvPosition;",
-  "	// Pass and interpolate color",
-  "	// Texture coordinates",
-  "	sphereUv = uv - vec2(0.5, 0.5); // map from [0,1] range to [-.5,.5], before rotation",
-  '	// If sideDir is "up" on screen, make sure u is positive',
-  "	float q = sideDir.y * sphereUv.y;",
-  "	sphereUv.y = sign(q) * sphereUv.y;",
-  "	// rotate texture coordinates to match cone orientation about z",
-  "	float angle = atan(sideDir.x/sideDir.y);",
-  "	float c = cos(angle);",
-  "	float s = sin(angle);",
-  "	mat2 rotMat = mat2(",
-  "		c, -s, ",
-  "		s,  c);",
-  "	sphereUv = rotMat * sphereUv;",
-  "	sphereUv += vec2(0.5, 0.5); // map back from [-.5,.5] => [0,1]",
-  "	// We are painting an angled cone onto a flat quad, so depth correction is complicated",
-  "   float foreshortening = length(cylAxis) / length(cylAxis.xy); // correct depth for foreshortening",
-  "   // foreshortening limit is a tradeoff between overextruded cone artifacts, and depth artifacts",
-  "   if (foreshortening > 4.0) foreshortening = 0.9; // hack to not pop out at extreme angles...",
-  "   depthScale = radius * foreshortening; // correct depth for foreshortening",
-  "}",
-].join("\n");
-
-const fragmentShaderCone = [
-  "uniform sampler2D sphereTexture; // Imposter image of sphere",
-  "uniform mat4 projectionMatrix;",
-  "uniform float abstraction_threshold;",
-  "uniform vec3 color; // colors associated to vertices; assigned by vertex shader",
-  "uniform int grey_out;",
-  "varying vec2 sphereUv;",
-  "varying vec4 mvPosition;",
-  "varying float depthScale;",
-  "varying float vLabel;",
-  "void main() ",
-  "{",
-  "	vec4 sphereColors = texture2D(sphereTexture, sphereUv);",
-  "vec3 myColor = color;",
-  "if(grey_out > 0 && vLabel > 0.0) {",
-  "   myColor = vec3(0.75, 0.75, 0.75);",
-  "}",
-  "	if (sphereColors.a < 0.3 || vLabel > abstraction_threshold) discard;",
-  "	vec3 baseColor = myColor * sphereColors.r;",
-  "	vec3 highlightColor = baseColor + sphereColors.ggg;",
-  "	gl_FragColor = vec4(highlightColor, sphereColors.a);",
-  "#ifdef GL_EXT_frag_depth",
-  "float dz = sphereColors.b * depthScale;",
-  "vec4 mvp = mvPosition + vec4(0, 0, dz, 0);",
-  "vec4 clipPos = projectionMatrix * mvp;",
-  "float ndc_depth = clipPos.z/clipPos.w;",
-  "float far = gl_DepthRange.far; float near = gl_DepthRange.near;",
-  "float depth = (((far-near) * ndc_depth) + near + far) / 2.0;",
-  "gl_FragDepthEXT = depth;",
-  "#endif",
-  "}",
-].join("\n");
 
 function convertToHexColor(i) {
   let result = "#000000";
@@ -308,66 +148,9 @@ function calculateCameraPosition(
   return new THREE.Vector3(center.x, center.y, z);
 }
 
-function applySemiTransparentShader(object, color) {
-  object.traverse((child) => {
-    child.material = new THREE.ShaderMaterial({
-      uniforms: {
-        color: { type: "c", value: new THREE.Color(`${color}`) },
-      },
-      vertexShader: `
-        #line 585
-        varying vec3 normal_in_camera;
-        varying vec3 view_direction;
-
-        void main() {
-          vec4 pos_in_camera = modelViewMatrix * vec4(position, 1.0);
-          gl_Position = projectionMatrix * pos_in_camera;
-          normal_in_camera = normalize(mat3(modelViewMatrix) * normal);
-          view_direction = normalize(pos_in_camera.xyz);
-        }
-      `,
-      fragmentShader: `
-        #line 597
-        uniform vec3 color;
-        varying vec3 normal_in_camera;
-        varying vec3 view_direction;
-
-        void main() {
-          // Make edges more opaque than center
-          float edginess = 1.0 - abs(dot(normal_in_camera, view_direction));
-          float opacity = clamp(edginess - 0.30, 0.0, 0.5);
-          // Darken compartment at the very edge
-          float blackness = pow(edginess, 4.0) - 0.3;
-          vec3 c = mix(color, vec3(0,0,0), blackness);
-          gl_FragColor = vec4(c, opacity);
-        }
-      `,
-      transparent: true,
-      depthTest: true,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-  });
-  return object;
-}
-
 // generates particle vertices
 function generateParticle(node) {
   return new THREE.Vector3(node.x, node.y, node.z);
-}
-
-// generates skeleton vertices
-function generateSkeleton(node, nodeParent) {
-  const vertex = new THREE.Vector3(node.x, node.y, node.z);
-  const vertexParent = new THREE.Vector3(
-    nodeParent.x,
-    nodeParent.y,
-    nodeParent.z
-  );
-  return {
-    child: vertex,
-    parent: vertexParent,
-  };
 }
 
 function createMetadataElement(metadata, colors) {
@@ -409,8 +192,6 @@ export default class SharkViewer {
    */
   constructor(args) {
     this.swc = null;
-    // mode (sphere, particle, skeleton)
-    this.mode = "particle";
     // flip y axis
     this.flip = false;
     // color array, nodes of type 0 show as first color, etc.
@@ -446,6 +227,14 @@ export default class SharkViewer {
     this.on_Alt_Click = null;
     this.lineClick = null;
     this.motifQuery = null;
+    this.show_dof_debug_UI = false;
+
+    this.effectController = { enabled: false };
+    this.postprocessing = { enabled: false };
+    this.shaderSettings = {
+      rings: 3,
+      samples: 4,
+    };
 
     this.setValues(args);
     // anything after the above line can not be set by the caller.
@@ -463,6 +252,63 @@ export default class SharkViewer {
     this.HEIGHT = this.dom_element.clientHeight;
     // width of canvas
     this.WIDTH = this.dom_element.clientWidth;
+  }
+
+  initPostprocessing() {
+    this.postprocessing.scene = new THREE.Scene();
+
+    this.postprocessing.camera = new THREE.OrthographicCamera(
+      window.innerWidth / -2,
+      window.innerWidth / 2,
+      window.innerHeight / 2,
+      window.innerHeight / -2,
+      -10000,
+      10000
+    );
+    this.postprocessing.camera.position.z = 100;
+
+    this.postprocessing.scene.add(this.postprocessing.camera);
+
+    this.postprocessing.rtTextureDepth = new THREE.WebGLRenderTarget(
+      window.innerWidth,
+      window.innerHeight
+    );
+    this.postprocessing.rtTextureColor = new THREE.WebGLRenderTarget(
+      window.innerWidth,
+      window.innerHeight
+    );
+
+    const bokeh_shader = BokehShader;
+
+    this.postprocessing.bokeh_uniforms = THREE.UniformsUtils.clone(
+      bokeh_shader.uniforms
+    );
+
+    this.postprocessing.bokeh_uniforms["tColor"].value =
+      this.postprocessing.rtTextureColor.texture;
+    this.postprocessing.bokeh_uniforms["tDepth"].value =
+      this.postprocessing.rtTextureDepth.texture;
+    this.postprocessing.bokeh_uniforms["textureWidth"].value =
+      window.innerWidth;
+    this.postprocessing.bokeh_uniforms["textureHeight"].value =
+      window.innerHeight;
+
+    this.postprocessing.materialBokeh = new THREE.ShaderMaterial({
+      uniforms: this.postprocessing.bokeh_uniforms,
+      vertexShader: bokeh_shader.vertexShader,
+      fragmentShader: bokeh_shader.fragmentShader,
+      defines: {
+        RINGS: this.shaderSettings.rings,
+        SAMPLES: this.shaderSettings.samples,
+      },
+    });
+
+    this.postprocessing.quad = new THREE.Mesh(
+      new THREE.PlaneGeometry(window.innerWidth, window.innerHeight),
+      this.postprocessing.materialBokeh
+    );
+    this.postprocessing.quad.position.z = -500;
+    this.postprocessing.scene.add(this.postprocessing.quad);
   }
 
   // sets up user specified configuration
@@ -489,49 +335,6 @@ export default class SharkViewer {
       return this.three_colors[node.type];
     }
     return this.three_colors[0];
-  }
-
-  // generates sphere mesh
-  generateSphere(node) {
-    const sphereMaterial = this.three_materials[node.type];
-    const r1 = node.radius || 0.01;
-    const geometry = new THREE.SphereGeometry(r1);
-    const mesh = new THREE.Mesh(geometry, sphereMaterial);
-    mesh.position.x = node.x;
-    mesh.position.y = node.y;
-    mesh.position.z = node.z;
-    return mesh;
-  }
-
-  // generates cones connecting spheres
-  generateConeGeometry(node, nodeParent) {
-    const coneMaterial = this.three_materials[nodeParent.type];
-    const nodeVec = new THREE.Vector3(node.x, node.y, node.z);
-    const nodeParentVec = new THREE.Vector3(
-      nodeParent.x,
-      nodeParent.y,
-      nodeParent.z
-    );
-    const dist = nodeVec.distanceTo(nodeParentVec);
-    const cylAxis = new THREE.Vector3().subVectors(nodeVec, nodeParentVec);
-    cylAxis.normalize();
-    const theta = Math.acos(cylAxis.y);
-    const rotationAxis = new THREE.Vector3();
-    rotationAxis.crossVectors(cylAxis, new THREE.Vector3(0, 1, 0));
-    rotationAxis.normalize();
-    const r1 = node.radius || 0.01;
-    const r2 = nodeParent.radius || 0.01;
-    const geometry = new THREE.CylinderGeometry(r1, r2, dist);
-    const mesh = new THREE.Mesh(geometry, coneMaterial);
-    mesh.matrixAutoUpdate = false;
-    mesh.matrix.makeRotationAxis(rotationAxis, -theta);
-    const position = new THREE.Vector3(
-      (node.x + nodeParent.x) / 2,
-      (node.y + nodeParent.y) / 2,
-      (node.z + nodeParent.z) / 2
-    );
-    mesh.matrix.setPosition(position);
-    return mesh;
   }
 
   // generates cone properties for node, parent pair
@@ -629,6 +432,8 @@ export default class SharkViewer {
 
   setColor(neuron, color) {
     if (neuron.isNeuron) {
+      console.log("setColor", neuron.name, color);
+
       neuron.children.forEach((child) => {
         if (
           typeof child.name === "string" &&
@@ -651,122 +456,310 @@ export default class SharkViewer {
   createNeuron(name, swcJSON, color = undefined) {
     // neuron is object 3d which ensures all components move together
     const neuron = new THREE.Object3D();
-    let geometry;
-    let material;
     let normalized_motif_path_position = 0.5;
 
     neuron.color = color;
-    // particle mode uses vertex info to place texture image, very fast
-    if (this.mode === "particle") {
-      // special imposter image contains:
-      // 1 - colorizable sphere image in red channel
-      // 2 - specular highlight in green channel
-      // 3 - depth offset in blue channel (currently unused)
-      const image = document.createElement("img");
-      const sphereImg = new THREE.Texture(image);
-      image.onload = function onload() {
-        sphereImg.needsUpdate = true;
-      };
-      image.src = this.nodeParticleTexture;
+    const image = document.createElement("img");
+    const sphereImg = new THREE.Texture(image);
+    image.onload = function onload() {
+      sphereImg.needsUpdate = true;
+    };
+    image.src = this.nodeParticleTexture;
 
-      geometry = new THREE.BufferGeometry();
-      // properties that may consty from particle to particle. only accessible in vertex shaders!
-      //	(can pass color info to fragment shader via vColor.)
-      // compute scale for particles, in pixels
-      const particleScale =
-        (0.5 * this.HEIGHT) /
-        this.renderer.getPixelRatio() /
-        Math.tan((0.5 * this.fov * Math.PI) / 180.0);
+    let geometry = new THREE.BufferGeometry();
+    const particleScale =
+      (0.2 * this.HEIGHT) /
+      //this.renderer.getPixelRatio() /
+      Math.tan((0.28 * this.fov * Math.PI) / 180.0);
 
-      const customAttributes = {
+    console.log("particle scale: ", particleScale);
+
+    const customAttributes = {
+      radius: { type: "fv1", value: [] },
+      vertices: { type: "f", value: [] },
+      label: { type: "fv1", value: [] },
+    };
+
+    let threshold = Object.assign({}, this.maxLabel);
+
+    const indexLookup = {};
+
+    let particleShader = structuredClone(ParticleShader);
+
+    particleShader.uniforms["sphereTexture"].value = sphereImg;
+    particleShader.uniforms["particleScale"].value = particleScale;
+    particleShader.uniforms["color"].value = new THREE.Color(color);
+    particleShader.uniforms["abstraction_threshold"].value = threshold;
+    particleShader.uniforms["grey_out"].value = 0;
+
+    let material = new THREE.ShaderMaterial({
+      uniforms: particleShader.uniforms,
+      vertexShader: particleShader.vertexShader,
+      fragmentShader: particleShader.fragmentShader,
+      transparent: true,
+    });
+
+    let particleDepthShader = structuredClone(ParticleDepthShader);
+
+    particleDepthShader.uniforms.mNear.value = this.camera.near;
+    particleDepthShader.uniforms.mFar.value = this.camera.far;
+    particleDepthShader.uniforms.sphereTexture.value = sphereImg;
+    particleDepthShader.uniforms.particleScale.value = particleScale;
+
+    neuron.particleMaterialDepth = new THREE.ShaderMaterial({
+      uniforms: particleDepthShader.uniforms,
+      vertexShader: particleDepthShader.vertexShader,
+      fragmentShader: particleDepthShader.fragmentShader,
+    });
+
+    Object.keys(swcJSON).forEach((node) => {
+      const particleVertex = generateParticle(swcJSON[node]);
+
+      let radius = swcJSON[node].radius * this.radius_scale_factor;
+      let label = swcJSON[node].type;
+
+      if (label < this.minLabel) {
+        this.minLabel = label;
+      }
+      if (label > this.maxLabel) {
+        this.maxLabel = label;
+      }
+
+      normalized_motif_path_position = this.getMotifPathThreshold();
+
+      if (this.min_radius && radius < this.min_radius) {
+        radius = this.min_radius;
+      }
+
+      customAttributes.radius.value.push(radius);
+      customAttributes.vertices.value.push(particleVertex.x);
+      customAttributes.vertices.value.push(particleVertex.y);
+      customAttributes.vertices.value.push(particleVertex.z);
+      customAttributes.label.value.push(label);
+
+      indexLookup[customAttributes.radius.value.length - 1] =
+        swcJSON[node].sampleNumber;
+    });
+
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(customAttributes.vertices.value, 3)
+    );
+    geometry.setAttribute(
+      "radius",
+      new THREE.Float32BufferAttribute(customAttributes.radius.value, 1)
+    );
+    geometry.setAttribute(
+      "label",
+      new THREE.Float32BufferAttribute(customAttributes.label.value, 1)
+    );
+
+    const particles = new THREE.Points(geometry, material);
+    particles.name = "skeleton-vertex";
+
+    let materialShader = null;
+
+    material.onBeforeCompile = (shader) => {
+      shader.uniforms.alpha = { value: 0 };
+      shader.vertexShader = `uniform float alpha;\n${shader.vertexShader}`;
+      shader.vertexShader = shader.vertexShader.replace(
+        "#include <begin_vertex>",
+        ["vAlpha = alpha"].join("\n")
+      );
+      materialShader = shader;
+      materialShader.uniforms.alpha.value = 0.9;
+      particles.userData.materialShader = materialShader;
+    };
+
+    neuron.add(particles);
+
+    if (this.show_cones) {
+      // Cone quad imposters, to link spheres together
+      const coneAttributes = {
         radius: { type: "fv1", value: [] },
+        indices: { type: "iv1", value: [] },
         typeColor: { type: "c", value: [] },
         vertices: { type: "f", value: [] },
+        normals: { type: "f", value: [] },
+        uv: { type: "f", value: [] },
         label: { type: "fv1", value: [] },
       };
-
-      let threshold = Object.assign({}, this.maxLabel);
-
-      const customUniforms = {
-        particleScale: { type: "f", value: particleScale },
-        sphereTexture: { type: "t", value: sphereImg },
-        abstraction_threshold: { type: "f", value: threshold },
-        grey_out: { type: "i", value: 0 },
-        color: { value: new THREE.Color(neuron.color) },
-      };
-
-      const indexLookup = {};
+      const uvs = [
+        new THREE.Vector2(0.5, 0),
+        new THREE.Vector2(0.5, 1),
+        new THREE.Vector2(0.5, 1),
+      ];
+      const coneGeom = new THREE.BufferGeometry();
+      let ix21 = 0;
 
       Object.keys(swcJSON).forEach((node) => {
-        let nodeColor = this.nodeColor(swcJSON[node]);
+        if (swcJSON[node].parent !== -1) {
+          // Paint two triangles to make a cone-imposter quadrilateral
+          // Triangle #1
+          const cone = this.generateCone(
+            swcJSON[node],
+            swcJSON[swcJSON[node].parent],
+            color
+          );
 
-        if (color) {
-          nodeColor = new THREE.Color(color);
+          let parentRadius = cone.parent.radius * this.radius_scale_factor;
+          if (this.min_radius && parentRadius < this.min_radius) {
+            parentRadius = this.min_radius;
+          }
+
+          let childRadius = cone.child.radius * this.radius_scale_factor;
+          if (this.min_radius && childRadius < this.min_radius) {
+            childRadius = this.min_radius;
+          }
+
+          let label = swcJSON[node].type;
+
+          // vertex 1
+          coneAttributes.vertices.value.push(cone.child.vertex.x);
+          coneAttributes.vertices.value.push(cone.child.vertex.y);
+          coneAttributes.vertices.value.push(cone.child.vertex.z);
+          coneAttributes.radius.value.push(childRadius);
+          coneAttributes.normals.value.push(cone.normal1.x);
+          coneAttributes.normals.value.push(cone.normal1.y);
+          coneAttributes.normals.value.push(cone.normal1.z);
+          coneAttributes.uv.value.push(uvs[0].x);
+          coneAttributes.uv.value.push(uvs[0].y);
+          coneAttributes.indices.value.push(ix21);
+          coneAttributes.label.value.push(label);
+          ix21 += 1;
+
+          // vertex 2
+          coneAttributes.vertices.value.push(cone.child.vertex.x);
+          coneAttributes.vertices.value.push(cone.child.vertex.y);
+          coneAttributes.vertices.value.push(cone.child.vertex.z);
+          coneAttributes.radius.value.push(childRadius);
+          coneAttributes.normals.value.push(cone.normal2.x);
+          coneAttributes.normals.value.push(cone.normal2.y);
+          coneAttributes.normals.value.push(cone.normal2.z);
+          coneAttributes.uv.value.push(uvs[1].x);
+          coneAttributes.uv.value.push(uvs[1].y);
+          coneAttributes.indices.value.push(ix21);
+          coneAttributes.label.value.push(label);
+          ix21 += 1;
+
+          // vertex 3
+          coneAttributes.vertices.value.push(cone.parent.vertex.x);
+          coneAttributes.vertices.value.push(cone.parent.vertex.y);
+          coneAttributes.vertices.value.push(cone.parent.vertex.z);
+          coneAttributes.radius.value.push(parentRadius);
+          coneAttributes.normals.value.push(cone.normal2.x);
+          coneAttributes.normals.value.push(cone.normal2.y);
+          coneAttributes.normals.value.push(cone.normal2.z);
+          coneAttributes.uv.value.push(uvs[2].x);
+          coneAttributes.uv.value.push(uvs[2].y);
+          coneAttributes.indices.value.push(ix21);
+          coneAttributes.label.value.push(label);
+          ix21 += 1;
+
+          // vertex 1
+          coneAttributes.vertices.value.push(cone.parent.vertex.x);
+          coneAttributes.vertices.value.push(cone.parent.vertex.y);
+          coneAttributes.vertices.value.push(cone.parent.vertex.z);
+          coneAttributes.radius.value.push(parentRadius);
+          coneAttributes.normals.value.push(cone.normal1.x);
+          coneAttributes.normals.value.push(cone.normal1.y);
+          coneAttributes.normals.value.push(cone.normal1.z);
+          coneAttributes.uv.value.push(uvs[0].x);
+          coneAttributes.uv.value.push(uvs[0].y);
+          coneAttributes.indices.value.push(ix21);
+          coneAttributes.label.value.push(label);
+          ix21 += 1;
+
+          // vertex 2
+          coneAttributes.vertices.value.push(cone.parent.vertex.x);
+          coneAttributes.vertices.value.push(cone.parent.vertex.y);
+          coneAttributes.vertices.value.push(cone.parent.vertex.z);
+          coneAttributes.radius.value.push(parentRadius);
+          coneAttributes.normals.value.push(cone.normal2.x);
+          coneAttributes.normals.value.push(cone.normal2.y);
+          coneAttributes.normals.value.push(cone.normal2.z);
+          coneAttributes.uv.value.push(uvs[1].x);
+          coneAttributes.uv.value.push(uvs[1].y);
+          coneAttributes.indices.value.push(ix21);
+          coneAttributes.label.value.push(label);
+          ix21 += 1;
+
+          // vertex 3
+          coneAttributes.vertices.value.push(cone.child.vertex.x);
+          coneAttributes.vertices.value.push(cone.child.vertex.y);
+          coneAttributes.vertices.value.push(cone.child.vertex.z);
+          coneAttributes.radius.value.push(childRadius);
+          coneAttributes.normals.value.push(cone.normal1.x);
+          coneAttributes.normals.value.push(cone.normal1.y);
+          coneAttributes.normals.value.push(cone.normal1.z);
+          coneAttributes.uv.value.push(uvs[2].x);
+          coneAttributes.uv.value.push(uvs[2].y);
+          coneAttributes.indices.value.push(ix21);
+          coneAttributes.label.value.push(label);
+          ix21 += 1;
         }
-
-        const particleVertex = generateParticle(swcJSON[node]);
-
-        let radius = swcJSON[node].radius * this.radius_scale_factor;
-        let label = swcJSON[node].type;
-
-        if (label < this.minLabel) {
-          this.minLabel = label;
-        }
-        if (label > this.maxLabel) {
-          this.maxLabel = label;
-        }
-
-        normalized_motif_path_position = this.getMotifPathThreshold();
-
-        if (this.min_radius && radius < this.min_radius) {
-          radius = this.min_radius;
-        }
-
-        customAttributes.radius.value.push(radius);
-        customAttributes.typeColor.value.push(nodeColor.r);
-        customAttributes.typeColor.value.push(nodeColor.g);
-        customAttributes.typeColor.value.push(nodeColor.b);
-        customAttributes.vertices.value.push(particleVertex.x);
-        customAttributes.vertices.value.push(particleVertex.y);
-        customAttributes.vertices.value.push(particleVertex.z);
-        customAttributes.label.value.push(label);
-
-        indexLookup[customAttributes.radius.value.length - 1] =
-          swcJSON[node].sampleNumber;
       });
-      geometry.setAttribute(
+      coneGeom.setIndex(
+        new THREE.Uint32BufferAttribute(coneAttributes.indices.value, 1)
+      );
+      coneGeom.setAttribute(
         "position",
-        new THREE.Float32BufferAttribute(customAttributes.vertices.value, 3)
+        new THREE.Float32BufferAttribute(coneAttributes.vertices.value, 3)
       );
-      geometry.setAttribute(
+      coneGeom.setAttribute(
         "radius",
-        new THREE.Float32BufferAttribute(customAttributes.radius.value, 1)
+        new THREE.Float32BufferAttribute(coneAttributes.radius.value, 1)
       );
-      geometry.setAttribute(
-        "typeColor",
-        new THREE.Float32BufferAttribute(customAttributes.typeColor.value, 3)
+      coneGeom.setAttribute(
+        "normal",
+        new THREE.Float32BufferAttribute(coneAttributes.normals.value, 3)
       );
-      geometry.setAttribute(
+      coneGeom.setAttribute(
+        "uv",
+        new THREE.Float32BufferAttribute(coneAttributes.uv.value, 2)
+      );
+      coneGeom.setAttribute(
         "label",
-        new THREE.Float32BufferAttribute(customAttributes.label.value, 1)
+        new THREE.Float32BufferAttribute(coneAttributes.label.value, 1)
       );
 
-      material = new THREE.ShaderMaterial({
-        uniforms: customUniforms,
-        vertexShader,
-        fragmentShader,
+      let coneShader = structuredClone(ConeShader);
+
+      coneShader.uniforms["sphereTexture"].value = sphereImg;
+      coneShader.uniforms["color"].value = new THREE.Color(color);
+      coneShader.uniforms["abstraction_threshold"].value = threshold;
+      coneShader.uniforms["grey_out"].value = 0;
+
+      const coneMaterial = new THREE.ShaderMaterial({
+        uniforms: coneShader.uniforms,
+        vertexShader: coneShader.vertexShader,
+        fragmentShader: coneShader.fragmentShader,
         transparent: true,
-        // alphaTest: 0.5 // if having transparency issues, try including: alphaTest: 0.5,
+        depthTest: true,
+        side: THREE.DoubleSide,
+        alphaTest: 0.5,
       });
-      material.extensions.fragDepth = true;
 
-      let materialShader = null;
+      let coneDepthShader = structuredClone(ConeDepthShader);
+      coneDepthShader.uniforms.mNear.value = this.camera.near;
+      coneDepthShader.uniforms.mFar.value = this.camera.far;
+      coneDepthShader.uniforms.sphereTexture.value = sphereImg;
 
-      const particles = new THREE.Points(geometry, material);
-      particles.name = "skeleton-vertex";
-      particles.userData = { indexLookup, materialShader };
+      neuron.coneMaterialDepth = new THREE.ShaderMaterial({
+        uniforms: coneDepthShader.uniforms,
+        vertexShader: coneDepthShader.vertexShader,
+        fragmentShader: coneDepthShader.fragmentShader,
+        transparent: true,
+        depthTest: true,
+        side: THREE.DoubleSide,
+        alphaTest: 0.5,
+      });
 
-      material.onBeforeCompile = (shader) => {
+      const coneMesh = new THREE.Mesh(coneGeom, coneMaterial);
+      coneMesh.name = "skeleton-edge";
+
+      coneMaterial.onBeforeCompile = (shader) => {
+        // console.log( shader )
         shader.uniforms.alpha = { value: 0 };
         shader.vertexShader = `uniform float alpha;\n${shader.vertexShader}`;
         shader.vertexShader = shader.vertexShader.replace(
@@ -777,210 +770,10 @@ export default class SharkViewer {
 
         materialShader.uniforms.alpha.value = 0.9;
 
-        particles.userData.materialShader = materialShader;
+        coneMesh.userData = { materialShader };
       };
 
-      neuron.add(particles);
-
-      if (this.show_cones) {
-        // Cone quad imposters, to link spheres together
-        const coneAttributes = {
-          radius: { type: "fv1", value: [] },
-          indices: { type: "iv1", value: [] },
-          typeColor: { type: "c", value: [] },
-          vertices: { type: "f", value: [] },
-          normals: { type: "f", value: [] },
-          uv: { type: "f", value: [] },
-          label: { type: "fv1", value: [] },
-        };
-        const coneUniforms = {
-          sphereTexture: { type: "t", value: sphereImg },
-          abstraction_threshold: { type: "f", value: threshold },
-          grey_out: { type: "i", value: 0 },
-          color: { value: new THREE.Color(neuron.color) },
-        };
-        const uvs = [
-          new THREE.Vector2(0.5, 0),
-          new THREE.Vector2(0.5, 1),
-          new THREE.Vector2(0.5, 1),
-        ];
-        const coneGeom = new THREE.BufferGeometry();
-        let ix21 = 0;
-
-        Object.keys(swcJSON).forEach((node) => {
-          if (swcJSON[node].parent !== -1) {
-            // Paint two triangles to make a cone-imposter quadrilateral
-            // Triangle #1
-            const cone = this.generateCone(
-              swcJSON[node],
-              swcJSON[swcJSON[node].parent],
-              color
-            );
-            let nodeColor = cone.child.color;
-            if (color) {
-              nodeColor = new THREE.Color(color);
-            }
-
-            let parentRadius = cone.parent.radius * this.radius_scale_factor;
-            if (this.min_radius && parentRadius < this.min_radius) {
-              parentRadius = this.min_radius;
-            }
-
-            let childRadius = cone.child.radius * this.radius_scale_factor;
-            if (this.min_radius && childRadius < this.min_radius) {
-              childRadius = this.min_radius;
-            }
-
-            let label = swcJSON[node].type;
-
-            // vertex 1
-            coneAttributes.vertices.value.push(cone.child.vertex.x);
-            coneAttributes.vertices.value.push(cone.child.vertex.y);
-            coneAttributes.vertices.value.push(cone.child.vertex.z);
-            coneAttributes.radius.value.push(childRadius);
-            coneAttributes.normals.value.push(cone.normal1.x);
-            coneAttributes.normals.value.push(cone.normal1.y);
-            coneAttributes.normals.value.push(cone.normal1.z);
-            coneAttributes.uv.value.push(uvs[0].x);
-            coneAttributes.uv.value.push(uvs[0].y);
-            coneAttributes.indices.value.push(ix21);
-            coneAttributes.label.value.push(label);
-            ix21 += 1;
-
-            // vertex 2
-            coneAttributes.vertices.value.push(cone.child.vertex.x);
-            coneAttributes.vertices.value.push(cone.child.vertex.y);
-            coneAttributes.vertices.value.push(cone.child.vertex.z);
-            coneAttributes.radius.value.push(childRadius);
-            coneAttributes.normals.value.push(cone.normal2.x);
-            coneAttributes.normals.value.push(cone.normal2.y);
-            coneAttributes.normals.value.push(cone.normal2.z);
-            coneAttributes.uv.value.push(uvs[1].x);
-            coneAttributes.uv.value.push(uvs[1].y);
-            coneAttributes.indices.value.push(ix21);
-            coneAttributes.label.value.push(label);
-            ix21 += 1;
-
-            // vertex 3
-            coneAttributes.vertices.value.push(cone.parent.vertex.x);
-            coneAttributes.vertices.value.push(cone.parent.vertex.y);
-            coneAttributes.vertices.value.push(cone.parent.vertex.z);
-            coneAttributes.radius.value.push(parentRadius);
-            coneAttributes.normals.value.push(cone.normal2.x);
-            coneAttributes.normals.value.push(cone.normal2.y);
-            coneAttributes.normals.value.push(cone.normal2.z);
-            coneAttributes.uv.value.push(uvs[2].x);
-            coneAttributes.uv.value.push(uvs[2].y);
-            coneAttributes.indices.value.push(ix21);
-            coneAttributes.label.value.push(label);
-            ix21 += 1;
-
-            // Triangle #2
-            // Parent
-            nodeColor = cone.parent.color;
-            if (color) {
-              nodeColor = new THREE.Color(color);
-            }
-
-            // vertex 1
-            coneAttributes.vertices.value.push(cone.parent.vertex.x);
-            coneAttributes.vertices.value.push(cone.parent.vertex.y);
-            coneAttributes.vertices.value.push(cone.parent.vertex.z);
-            coneAttributes.radius.value.push(parentRadius);
-            coneAttributes.normals.value.push(cone.normal1.x);
-            coneAttributes.normals.value.push(cone.normal1.y);
-            coneAttributes.normals.value.push(cone.normal1.z);
-            coneAttributes.uv.value.push(uvs[0].x);
-            coneAttributes.uv.value.push(uvs[0].y);
-            coneAttributes.indices.value.push(ix21);
-            coneAttributes.label.value.push(label);
-            ix21 += 1;
-
-            // vertex 2
-            coneAttributes.vertices.value.push(cone.parent.vertex.x);
-            coneAttributes.vertices.value.push(cone.parent.vertex.y);
-            coneAttributes.vertices.value.push(cone.parent.vertex.z);
-            coneAttributes.radius.value.push(parentRadius);
-            coneAttributes.normals.value.push(cone.normal2.x);
-            coneAttributes.normals.value.push(cone.normal2.y);
-            coneAttributes.normals.value.push(cone.normal2.z);
-            coneAttributes.uv.value.push(uvs[1].x);
-            coneAttributes.uv.value.push(uvs[1].y);
-            coneAttributes.indices.value.push(ix21);
-            coneAttributes.label.value.push(label);
-            ix21 += 1;
-
-            // vertex 3
-            coneAttributes.vertices.value.push(cone.child.vertex.x);
-            coneAttributes.vertices.value.push(cone.child.vertex.y);
-            coneAttributes.vertices.value.push(cone.child.vertex.z);
-            coneAttributes.radius.value.push(childRadius);
-            coneAttributes.normals.value.push(cone.normal1.x);
-            coneAttributes.normals.value.push(cone.normal1.y);
-            coneAttributes.normals.value.push(cone.normal1.z);
-            coneAttributes.uv.value.push(uvs[2].x);
-            coneAttributes.uv.value.push(uvs[2].y);
-            coneAttributes.indices.value.push(ix21);
-            coneAttributes.label.value.push(label);
-            ix21 += 1;
-          }
-        });
-        coneGeom.setIndex(
-          new THREE.Uint32BufferAttribute(coneAttributes.indices.value, 1)
-        );
-        coneGeom.setAttribute(
-          "position",
-          new THREE.Float32BufferAttribute(coneAttributes.vertices.value, 3)
-        );
-        coneGeom.setAttribute(
-          "radius",
-          new THREE.Float32BufferAttribute(coneAttributes.radius.value, 1)
-        );
-        coneGeom.setAttribute(
-          "normal",
-          new THREE.Float32BufferAttribute(coneAttributes.normals.value, 3)
-        );
-        coneGeom.setAttribute(
-          "uv",
-          new THREE.Float32BufferAttribute(coneAttributes.uv.value, 2)
-        );
-        coneGeom.setAttribute(
-          "label",
-          new THREE.Float32BufferAttribute(coneAttributes.label.value, 1)
-        );
-
-        const coneMaterial = new THREE.ShaderMaterial({
-          uniforms: coneUniforms,
-          vertexShader: vertexShaderCone,
-          fragmentShader: fragmentShaderCone,
-          transparent: true,
-          depthTest: true,
-          side: THREE.DoubleSide,
-          alphaTest: 0.5, // if having transparency issues, try including: alphaTest: 0.5,
-        });
-
-        coneMaterial.extensions.fragDepth = true;
-
-        const coneMesh = new THREE.Mesh(coneGeom, coneMaterial);
-        coneMesh.name = "skeleton-edge";
-
-        coneMaterial.onBeforeCompile = (shader) => {
-          // console.log( shader )
-          shader.uniforms.alpha = { value: 0 };
-          shader.vertexShader = `uniform float alpha;\n${shader.vertexShader}`;
-          shader.vertexShader = shader.vertexShader.replace(
-            "#include <begin_vertex>",
-            ["vAlpha = alpha"].join("\n")
-          );
-          materialShader = shader;
-
-          materialShader.uniforms.alpha.value = 0.9;
-
-          coneMesh.userData = { materialShader };
-        };
-
-        neuron.add(coneMesh);
-      }
+      neuron.add(coneMesh);
     }
     return [neuron, normalized_motif_path_position];
   }
@@ -1049,25 +842,14 @@ export default class SharkViewer {
 
   // Sets up three.js scene
   init() {
-    if (this.effect === "noeffect") this.effect = false;
-
-    // set up colors and materials based on color array
+    // // set up colors and materials based on color array
     this.three_colors = [];
     Object.keys(this.colors).forEach((color) => {
       this.three_colors.push(new THREE.Color(this.colors[color]));
     });
-    this.three_materials = [];
-    Object.keys(this.colors).forEach((color) => {
-      this.three_materials.push(
-        new THREE.MeshBasicMaterial({
-          color: this.colors[color],
-          wireframe: false,
-        })
-      );
-    });
 
     // setup render
-    this.renderer = new THREE.WebGL1Renderer({
+    this.renderer = new THREE.WebGLRenderer({
       antialias: true, // to get smoother output
     });
     this.renderer.setClearColor(this.backgroundColor, 1);
@@ -1083,8 +865,8 @@ export default class SharkViewer {
     // put a camera in the scene
     this.fov = 45;
     const cameraPosition = this.maxVolumeSize;
-    const farClipping = cameraPosition * 2;
-    const nearClipping = 10;
+    const farClipping = 120000;
+    const nearClipping = 1;
     this.camera = new THREE.PerspectiveCamera(
       this.fov,
       this.WIDTH / this.HEIGHT,
@@ -1092,7 +874,7 @@ export default class SharkViewer {
       farClipping
     );
 
-    this.camera.position.z = cameraPosition;
+    this.camera.position.z = farClipping;
 
     if (this.showAxes) {
       this.addAxes();
@@ -1145,6 +927,132 @@ export default class SharkViewer {
       this.onClick.bind(this),
       true
     );
+
+    this.initPostprocessing();
+
+    this.effectController.enabled = false;
+    this.effectController.jsDepthCalculation = false;
+    this.effectController.shaderFocus = false;
+
+    this.effectController.fstop = 2.2;
+    this.effectController.maxblur = 0.5;
+
+    this.effectController.showFocus = false;
+    this.effectController.focalDepth = 4;
+    this.effectController.manualdof = false;
+    this.effectController.vignetting = true;
+    this.effectController.depthblur = false;
+
+    this.effectController.threshold = 0.8;
+    this.effectController.gain = 2.0;
+    this.effectController.bias = 0.5;
+    this.effectController.fringe = 0.7;
+
+    this.effectController.focalLength = 35;
+    this.effectController.noise = false;
+    this.effectController.pentagon = false;
+
+    this.effectController.dithering = 0.0001;
+
+    if (this.show_dof_debug_UI) {
+      const gui = new GUI();
+
+      gui
+        .add(this.effectController, "enabled")
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "jsDepthCalculation")
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "shaderFocus")
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "focalDepth", 0.0, 6.0, 0.05)
+        .listen()
+        .onChange(this.matChanger.bind(this));
+
+      gui
+        .add(this.effectController, "fstop", 0.1, 22, 0.001)
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "maxblur", 0.0, 2.0, 0.025)
+        .onChange(this.matChanger.bind(this));
+
+      gui
+        .add(this.effectController, "showFocus")
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "manualdof")
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "vignetting")
+        .onChange(this.matChanger.bind(this));
+
+      gui
+        .add(this.effectController, "depthblur")
+        .onChange(this.matChanger.bind(this));
+
+      gui
+        .add(this.effectController, "threshold", 0, 1, 0.001)
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "gain", 0, 100, 0.001)
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "bias", 0, 3, 0.001)
+        .onChange(this.matChanger.bind(this));
+      gui
+        .add(this.effectController, "fringe", 0, 5, 0.001)
+        .onChange(this.matChanger.bind(this));
+
+      gui
+        .add(this.effectController, "focalLength", 16, 80, 0.001)
+        .onChange(this.matChanger.bind(this));
+
+      gui
+        .add(this.effectController, "noise")
+        .onChange(this.matChanger.bind(this));
+
+      gui
+        .add(this.effectController, "dithering", 0, 0.001, 0.0001)
+        .onChange(this.matChanger.bind(this));
+
+      gui
+        .add(this.effectController, "pentagon")
+        .onChange(this.matChanger.bind(this));
+
+      gui
+        .add(this.shaderSettings, "rings", 1, 8)
+        .step(1)
+        .onChange(this.shaderUpdate.bind(this));
+      gui
+        .add(this.shaderSettings, "samples", 1, 13)
+        .step(1)
+        .onChange(this.shaderUpdate.bind(this));
+    }
+
+    this.matChanger();
+    this.shaderUpdate();
+  }
+
+  shaderUpdate() {
+    this.postprocessing.materialBokeh.defines.RINGS = this.shaderSettings.rings;
+    this.postprocessing.materialBokeh.defines.SAMPLES =
+      this.shaderSettings.samples;
+    this.postprocessing.materialBokeh.needsUpdate = true;
+  }
+
+  matChanger() {
+    console.log("update params");
+    for (const e in this.effectController) {
+      if (e in this.postprocessing.bokeh_uniforms) {
+        this.postprocessing.bokeh_uniforms[e].value = this.effectController[e];
+      }
+    }
+    this.postprocessing.enabled = this.effectController.enabled;
+    this.postprocessing.bokeh_uniforms["znear"].value = this.camera.near;
+    this.postprocessing.bokeh_uniforms["zfar"].value = this.camera.far;
+    this.camera.setFocalLength(this.effectController.focalLength);
   }
 
   cameraCoords() {
@@ -1186,6 +1094,21 @@ export default class SharkViewer {
       this.camera.position.set(position.x, position.y, position.z);
       this.camera.up.set(0, 1, 0);
     }
+  }
+
+  updateDofEnabled(enabled) {
+    this.effectController.enabled = enabled;
+    this.matChanger();
+  }
+
+  updateDofFocus(focus) {
+    this.effectController.focalDepth = focus;
+    this.matChanger();
+  }
+
+  updateDofBlur(blur) {
+    this.effectController.maxblur = blur;
+    this.matChanger();
   }
 
   // TODO: alt click should target meshes and center the orbit controls
@@ -1246,40 +1169,45 @@ export default class SharkViewer {
 
   // animation loop
   animate(timestamp = null) {
-    if (!this.last_anim_timestamp) {
-      this.last_anim_timestamp = timestamp;
-      if (this.animated) {
-        this.render();
-      }
-    } else if (timestamp - this.last_anim_timestamp > 50) {
-      this.last_anim_timestamp = timestamp;
-      if (this.animated) {
-        this.render();
-      }
-      this.trackControls.update();
-      if (this.showAxes) {
-        this.axesCamera.position.copy(this.camera.position);
-        this.axesCamera.position.sub(this.trackControls.target);
-        this.axesCamera.position.setLength(300);
-        this.axesCamera.lookAt(this.axesScene.position);
-      }
-    }
-    window.requestAnimationFrame(this.animate.bind(this));
+    requestAnimationFrame(this.animate.bind(this));
+    this.render();
   }
 
   // render the scene
   render() {
-    // capture mouse over events
-    this.renderer.clear();
-    this.renderer.render(this.scene, this.camera);
+    if (this.postprocessing.enabled) {
+      this.renderer.clear();
 
-    if (this.onTop) {
-      this.renderer.clearDepth();
-    }
+      this.renderer.setRenderTarget(this.postprocessing.rtTextureColor);
+      this.renderer.clear();
+      this.renderer.render(this.scene, this.camera);
 
-    this.renderer.render(this.sceneOnTopable, this.camera);
-    if (this.showAxes) {
-      this.axesRenderer.render(this.axesScene, this.axesCamera);
+      this.scene.children.forEach((child, i) => {
+        if (child.isNeuron) {
+          this.scene.overrideMaterial = child.particleMaterialDepth;
+          this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
+          //this.renderer.setRenderTarget(null);
+          this.renderer.clear();
+          this.renderer.render(this.scene, this.camera);
+          if (this.show_cones) {
+            this.scene.overrideMaterial = child.coneMaterialDepth;
+            this.renderer.setRenderTarget(this.postprocessing.rtTextureDepth);
+            this.renderer.clear();
+            this.renderer.render(this.scene, this.camera);
+          }
+          this.scene.overrideMaterial = null;
+        }
+      });
+      this.renderer.setRenderTarget(null);
+      this.renderer.render(
+        this.postprocessing.scene,
+        this.postprocessing.camera
+      );
+    } else {
+      this.scene.overrideMaterial = null;
+      this.renderer.setRenderTarget(null);
+      this.renderer.clear();
+      this.renderer.render(this.scene, this.camera);
     }
   }
 
@@ -1321,11 +1249,8 @@ export default class SharkViewer {
     }
 
     neuron.name = filename;
-    // store neuron status and bounding sphere for later use
-    // when resetting the view.
     neuron.isNeuron = true;
     neuron.boundingSphere = boundingSphere;
-    const scene = onTopable ? this.sceneOnTopable : this.scene;
     return [neuron, motif_path];
   }
 
@@ -1347,87 +1272,6 @@ export default class SharkViewer {
     const neuron = scene.getObjectByName(id);
     if (neuron) {
       neuron.visible = visible;
-    }
-  }
-
-  // TODO: get this to work with the particle mode
-
-  setNeuronDisplayLevel(id, opacity) {
-    if (this.mode !== "particle") {
-      const neuron = this.scene.getObjectByName(id);
-
-      if (neuron) {
-        neuron.children.forEach((child) => {
-          if (child.userData.materialShader) {
-            child.userData.materialShader.uniforms.alpha.value = opacity;
-          }
-        });
-      }
-    }
-  }
-
-  // loadCompartment(id, color, geometryData, updateCamera = true) {
-  //   const loader = new THREE.OBJLoader();
-  //   let parsed = loader.parse(geometryData);
-  //   parsed = applySemiTransparentShader(parsed, color);
-  //   parsed.name = id;
-  //
-  //   this.scene.add(parsed);
-  //   if (updateCamera) {
-  //     this.centerCameraAroundCompartment(parsed);
-  //   }
-  //   this.trackControls.update();
-  //   this.render();
-  // }
-
-  // loadCompartmentFromURL(id, color, URL, updateCamera = true) {
-  //   const loader = new THREE.OBJLoader();
-  //
-  //   loader.load(URL, (object) => {
-  //     const exists = this.scene.getObjectByName(id);
-  //     if (!exists) {
-  //       const shadedObject = applySemiTransparentShader(object, color);
-  //       shadedObject.name = id;
-  //       this.scene.add(object);
-  //       if (updateCamera) {
-  //         this.centerCameraAroundCompartment(shadedObject);
-  //       }
-  //     }
-  //   });
-  // }
-
-  compartmentLoaded(id) {
-    return this.scene.getObjectByName(id) !== undefined;
-  }
-
-  /**
-   * Given a compartment object, place the camera focus on it.
-   * @param {object} compartment - Three object representing the compartment
-   * @return null
-   */
-  centerCameraAroundCompartment(compartment) {
-    const boundingBox = new THREE.Box3().setFromObject(compartment);
-    this.camera.position.set(
-      boundingBox.min.x - 10,
-      boundingBox.min.y - 10,
-      boundingBox.min.z - 10
-    );
-    this.trackControls.update();
-    const boxCenter = boundingBox.getCenter();
-    this.trackControls.target = boxCenter;
-    this.render();
-  }
-
-  unloadCompartment(id) {
-    const selectedObj = this.scene.getObjectByName(id);
-    this.scene.remove(selectedObj);
-  }
-
-  setCompartmentVisible(id, visible) {
-    const compartment = this.scene.getObjectByName(id);
-
-    if (compartment) {
-      compartment.visible = visible;
     }
   }
 

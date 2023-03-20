@@ -8,6 +8,10 @@ import { AppContext } from "../contexts/GlobalContext";
 import { useContext, useEffect } from "react";
 import CustomizedHook from "./ROIAutocomplete";
 import axios from "axios";
+import Box from "@mui/material/Box";
+import Slider from "@mui/material/Slider";
+import Typography from "@mui/material/Typography";
+import Divider from "@mui/material/Divider";
 
 export default function SettingsPanel(props) {
   let context = useContext(AppContext);
@@ -17,6 +21,21 @@ export default function SettingsPanel(props) {
     console.log("handleGreyOutCheckBoxChanged");
     context.setGreyOutNonMotifBranches(event.target.checked);
   }
+
+  const handleDofEnabledChange = (event, value) => {
+    console.log("handleDofEnabledChange: ", value);
+    context.setDofEnabled(value);
+  };
+
+  const handleFocusChange = (event, value) => {
+    console.log("handleFocusChange: ", value);
+    context.setDofFocus(value);
+  };
+
+  const handleMaxBlurChange = (event, value) => {
+    console.log("handleMaxBlurChange: ", value);
+    context.setDofBlur(value);
+  };
 
   function handleDrawArrowsOnLinesCheckBoxChanged(event) {
     console.log("handleDrawArrowsOnLinesCheckBoxChanged");
@@ -40,7 +59,6 @@ export default function SettingsPanel(props) {
 
   return (
     <div>
-      <CustomizedHook options={roiNames}></CustomizedHook>
       <TextField
         id="outlined-basic"
         label="Auth Token"
@@ -50,6 +68,10 @@ export default function SettingsPanel(props) {
         onChange={setAuthToken}
         style={{ marginTop: "15px" }}
       />
+      <Divider style={{ marginTop: "15px", marginBottom: "15px" }} />
+
+      <Typography gutterBottom>Rendering Settings</Typography>
+      <CustomizedHook options={roiNames}></CustomizedHook>
       <FormGroup>
         <FormControlLabel
           control={
@@ -74,6 +96,35 @@ export default function SettingsPanel(props) {
           label="Draw arrows on lines in exploded view"
         />
       </FormGroup>
+      <Box>
+        <FormGroup>
+          <FormControlLabel
+            control={<Checkbox defaultChecked={context.dofEnabled} />}
+            label="DOF enabled"
+            onChange={handleDofEnabledChange}
+          />
+        </FormGroup>
+        <Typography gutterBottom>DOF focus</Typography>
+        <Slider
+          defaultValue={3}
+          min={0}
+          max={20}
+          step={0.05}
+          aria-label="Default"
+          valueLabelDisplay="auto"
+          onChange={handleFocusChange}
+        />
+        <Typography gutterBottom>DOF maxBlur</Typography>
+        <Slider
+          defaultValue={0.5}
+          min={0.0}
+          max={1.5}
+          step={0.01}
+          aria-label="Default"
+          valueLabelDisplay="auto"
+          onChange={handleMaxBlurChange}
+        />
+      </Box>
     </div>
   );
 }
