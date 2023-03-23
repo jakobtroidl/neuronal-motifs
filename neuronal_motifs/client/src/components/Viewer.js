@@ -661,14 +661,12 @@ function Viewer() {
             ...data.payload,
           };
           let motif = { ...loaded_motif };
-
+          let tmp_labels = { ...context.currentNeuronLabels };
           loaded_motif.neurons.forEach((neuron, i) => {
             motif.neurons[i] = { ...neuron, ...context.motifToAdd.neurons[i] };
-
-            let tmp_labels = { ...context.currentNeuronLabels };
             tmp_labels[neuron.id] = neuron.labels;
-            context.setCurrentNeuronLabels(tmp_labels);
           });
+          context.setCurrentNeuronLabels(tmp_labels);
           context.setFocusedMotif(motif);
           setMotif(motif);
           context.setSelectedMotifs([...context.selectedMotifs, motif]);
