@@ -161,7 +161,6 @@ function colorMotif(sharkViewerInstance, motif, colors) {
   motif.neurons.forEach((neuron, i) => {
     let neuronObject = scene.getObjectByName(neuron.id);
     if (neuronObject) {
-      console.log(colors[i]);
       sharkViewerInstance.setColor(neuronObject, colors[i]);
     }
   });
@@ -183,7 +182,7 @@ function restoreColors(sharkViewerInstance) {
   });
 }
 
-function resetSynapsesColor(sharkViewerInstance, motif) {
+function resetSynapsesColor(sharkViewerInstance) {
   let scene = sharkViewerInstance.scene;
   let synapsesObject = scene.getObjectByName("synapse-parent");
   if (synapsesObject) {
@@ -241,6 +240,67 @@ function Viewer() {
 
   const [parentSynapseObject, setParentSynapseObject] = useState();
 
+  function isSynapseForFocusedMotif(synapse) {
+    let neuronName = "";
+    if (synapse.pre === synapse.snapToNeuron) {
+      neuronName = synapse.post;
+    } else if (synapse.post === synapse.snapToNeuron) {
+      neuronName = synapse.pre;
+    } else {
+      console.log("==============", synapse);
+    }
+    if (neuronName !== "") {
+      return context.focusedMotif.neurons.some((n) => n.id === neuronName);
+    } else {
+      return false;
+    }
+  }
+
+  function colorSynapses(sharkViewerInstance) {
+    let scene = sharkViewerInstance.scene;
+    let synapsesObject = scene.getObjectByName("synapse-parent");
+    if (synapsesObject) {
+      synapsesObject.traverse((child) => {
+        if (
+          typeof child.name === "string" &&
+          child.name.startsWith("syn-") &&
+          child.neuron_ids.startsWith("syn-")
+        ) {
+          let level = getAbstractionLevel();
+          let motif_path_threshold =
+            sharkViewerInstance.getMotifPathThreshold();
+          if (level > motif_path_threshold) {
+            if (isSynapseForFocusedMotif(child)) {
+              if (child.oldMaterial.color.equals(Color.grey)) {
+                let neuronName = "";
+                if (child.pre === child.snapToNeuron) {
+                  neuronName = child.post;
+                } else if (child.post === child.snapToNeuron) {
+                  neuronName = child.pre;
+                }
+                let [neuron, idx] = getNeuronListId(neurons, neuronName);
+                child.material = new THREE.MeshPhongMaterial({
+                  color: neuron.color,
+                });
+                child.oldMaterial = child.material.clone();
+              } else {
+                child.material = child.oldMaterial;
+              }
+            } else {
+              // synapses are not from focused motif
+              child.material = new THREE.MeshPhongMaterial({
+                color: Color.grey,
+              });
+              child.oldMaterial = child.material.clone();
+            }
+            child.material.needsUpdate = true;
+            child.highlighted = false;
+          }
+        }
+      });
+    }
+  }
+
   function setSynapseColorToConnectingNeuron(scene) {
     let synapsesObject = scene.getObjectByName("synapse-parent");
     if (synapsesObject) {
@@ -249,10 +309,10 @@ function Viewer() {
           let color;
           if (child.pre === child.snapToNeuron) {
             let [neuron, idx] = getNeuronListId(neurons, child.post);
-            color = context.neuronColors[idx];
+            color = neuron.color;
           } else if (child.post === child.snapToNeuron) {
             let [neuron, idx] = getNeuronListId(neurons, child.pre);
-            color = context.neuronColors[idx];
+            color = neuron.color;
           } else {
             color = Color.orange;
           }
@@ -416,11 +476,7 @@ function Viewer() {
         mesh.material.needsUpdate = true;
         mesh.highlighted = true;
       } else {
-        if (mesh.oldMaterial.color.equals(Color.red)) {
-          mesh.material = new THREE.MeshPhongMaterial({ color: color.orange });
-        } else {
-          mesh.material = mesh.oldMaterial;
-        }
+        mesh.material = mesh.oldMaterial;
         mesh.material.needsUpdate = true;
         mesh.highlighted = false;
       }
@@ -440,7 +496,7 @@ function Viewer() {
   function handleKeyPress(event) {
     if (event.key === "c") {
       console.log("c was pressed");
-      resetSynapsesColor(sharkViewerInstance, context.focusedMotif);
+      resetSynapsesColor(sharkViewerInstance);
       unselectEdges();
       setLineVisibility(sharkViewerInstance.scene, 0.0, false);
       setHighlightedConnection({ pre: null, post: null });
@@ -489,7 +545,8 @@ function Viewer() {
 
   function colorFocusedMotif(sharkViewerInstance) {
     colorMotif(sharkViewerInstance, context.focusedMotif, context.neuronColors);
-    resetSynapsesColor(sharkViewerInstance, context.focusedMotif);
+    resetSynapsesColor(sharkViewerInstance);
+    colorSynapses(sharkViewerInstance);
   }
 
   useEffect(() => {
@@ -522,7 +579,12 @@ function Viewer() {
             child.material = new THREE.MeshPhongMaterial({ color: Color.red });
             child.material.needsUpdate = true;
           } else if (!highlightSynapse.highlight && child.oldMaterial) {
-            child.material = child.oldMaterial;
+            // child.material = child.oldMaterial;
+            child.material = isSynapseForFocusedMotif(child)
+              ? child.oldMaterial
+              : new THREE.MeshPhongMaterial({
+                  color: Color.grey,
+                });
             child.material.needsUpdate = true;
           }
         }
@@ -790,6 +852,7 @@ function Viewer() {
       ) {
         setDuplicateSynapsesToVisible(scene);
         setSynapseColorToConnectingNeuron(scene);
+        colorSynapses(sharkViewerInstance);
       } else if (
         level < motif_path_threshold &&
         prevSliderValue >= motif_path_threshold
@@ -1266,7 +1329,12 @@ function Viewer() {
             // child.material = new THREE.MeshPhongMaterial({
             //   color: Color.orange,
             // });
-            child.material = child.oldMaterial;
+            // child.material = child.oldMaterial;
+            child.material = isSynapseForFocusedMotif(child)
+              ? child.oldMaterial
+              : new THREE.MeshPhongMaterial({
+                  color: Color.grey,
+                });
             child.material.needsUpdate = true;
             child.highlighted = false;
           }
@@ -1280,7 +1348,12 @@ function Viewer() {
           child.neuron_ids.startsWith("syn-")
         ) {
           //child.material = new THREE.MeshPhongMaterial({ color: Color.orange });
-          child.material = child.oldMaterial;
+          // child.material = child.oldMaterial;
+          child.material = isSynapseForFocusedMotif(child)
+            ? child.oldMaterial
+            : new THREE.MeshPhongMaterial({
+                color: Color.grey,
+              });
           child.highlighted = false;
         }
       });
