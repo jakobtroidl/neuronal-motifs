@@ -1127,6 +1127,17 @@ function Viewer() {
         deleteNeuron(scene, neuron);
       });
 
+      const neuronLabels = { ...context.currentNeuronLabels };
+      context.motifToDelete.neurons.forEach((neuron) => {
+        if (
+          neuron.id in neuronLabels &&
+          typeof neuronLabels[neuron.id] !== "undefined"
+        ) {
+          delete neuronLabels[neuron.id];
+        }
+      });
+      context.setCurrentNeuronLabels({ ...neuronLabels });
+
       context.motifToDelete.graph.links.forEach((link) => {
         deleteSynapse(scene, link.source, link.target);
       });
