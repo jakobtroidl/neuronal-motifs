@@ -1119,6 +1119,19 @@ function Viewer() {
     }
   }
 
+  function minimumArrays(...arrays) {
+    const minLength = Math.min(...arrays.map((array) => array.length));
+    const result = new Array(minLength).fill(Infinity);
+
+    for (let i = 0; i < minLength; i++) {
+      for (let j = 0; j < arrays.length; j++) {
+        result[i] = Math.min(result[i], arrays[j][i]);
+      }
+    }
+
+    return result;
+  }
+
   useEffect(() => {
     if (context.motifToDelete && sharkViewerInstance) {
       let scene = sharkViewerInstance.scene;
@@ -1127,13 +1140,26 @@ function Viewer() {
         deleteNeuron(scene, neuron);
       });
 
+      // delete neuron labels
       const neuronLabels = { ...context.currentNeuronLabels };
       context.motifToDelete.neurons.forEach((neuron) => {
-        if (
-          neuron.id in neuronLabels &&
-          typeof neuronLabels[neuron.id] !== "undefined"
-        ) {
-          delete neuronLabels[neuron.id];
+        if (neuron.id in neuronLabels) {
+          if (
+            context.selectedMotifs.every((motif) =>
+              motif.neurons.some((dict) => dict.id === neuron.id)
+            ) // if neuron exists in common
+          ) {
+            const remaindedMotifs = context.selectedMotifs.filter(
+              (m) => m.name !== context.motifToDelete.name
+            );
+            const remaindedMotifsLabels = remaindedMotifs.map(
+              (m) =>
+                m.neurons.filter((n) => n.id === neuron.id)[0].original_labels
+            );
+            neuronLabels[neuron.id] = minimumArrays(...remaindedMotifsLabels);
+          } else {
+            delete neuronLabels[neuron.id];
+          }
         }
       });
       context.setCurrentNeuronLabels({ ...neuronLabels });

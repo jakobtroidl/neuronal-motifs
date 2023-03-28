@@ -84,7 +84,8 @@ class Neuron:
             'abstraction_center': self.compute_abstraction_root(),
             'min_skel_label': self.get_min_skeleton_label(),
             'max_skel_label': self.get_max_skeleton_label(),
-            'labels': self.labels
+            'labels': self.labels,
+            'original_labels': self.original_labels
         }
 
         return neuron
@@ -254,9 +255,11 @@ class Neuron:
             minimum = np.minimum(prev_labels, labels)
             self.skeleton.nodes['abstraction_label'] = minimum
             self.labels = minimum.tolist()
+            self.original_labels = labels.tolist()
         else:
             self.skeleton.nodes['abstraction_label'] = labels
             self.labels = labels.tolist()
+            self.original_labels = labels.tolist()
 
     def compute_labels_to_abstraction_center_optimized(self, graph, labels, motif_nodes):
         abstraction_root = self.compute_abstraction_root(to="node")
