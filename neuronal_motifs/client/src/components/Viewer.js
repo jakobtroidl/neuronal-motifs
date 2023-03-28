@@ -182,7 +182,7 @@ function restoreColors(sharkViewerInstance) {
   });
 }
 
-function resetSynapsesColor(sharkViewerInstance, motif) {
+function resetSynapsesColor(sharkViewerInstance) {
   let scene = sharkViewerInstance.scene;
   let synapsesObject = scene.getObjectByName("synapse-parent");
   if (synapsesObject) {
@@ -213,7 +213,7 @@ function Viewer() {
   let line_clusters_identifier = "line_clusters";
   let roi_identifier = "rois";
 
-  const [motif, setMotif] = React.useState();
+  const [motif, setMotif] = useState();
   const [sharkViewerInstance, setSharkViewerInstance] = useState();
   const [prevSliderValue, setPrevSliderValue] = useState();
   const [displayTooltip, setDisplayTooltip] = useState(false); // for synapse selecting & highlighting
@@ -240,6 +240,67 @@ function Viewer() {
 
   const [parentSynapseObject, setParentSynapseObject] = useState();
 
+  function isSynapseForFocusedMotif(synapse) {
+    let neuronName = "";
+    if (synapse.pre === synapse.snapToNeuron) {
+      neuronName = synapse.post;
+    } else if (synapse.post === synapse.snapToNeuron) {
+      neuronName = synapse.pre;
+    } else {
+      console.log("==============", synapse);
+    }
+    if (neuronName !== "") {
+      return context.focusedMotif.neurons.some((n) => n.id === neuronName);
+    } else {
+      return false;
+    }
+  }
+
+  function colorSynapses(sharkViewerInstance) {
+    let scene = sharkViewerInstance.scene;
+    let synapsesObject = scene.getObjectByName("synapse-parent");
+    if (synapsesObject) {
+      synapsesObject.traverse((child) => {
+        if (
+          typeof child.name === "string" &&
+          child.name.startsWith("syn-") &&
+          child.neuron_ids.startsWith("syn-")
+        ) {
+          let level = getAbstractionLevel();
+          let motif_path_threshold =
+            sharkViewerInstance.getMotifPathThreshold();
+          if (level > motif_path_threshold) {
+            if (isSynapseForFocusedMotif(child)) {
+              if (child.oldMaterial.color.equals(Color.grey)) {
+                let neuronName = "";
+                if (child.pre === child.snapToNeuron) {
+                  neuronName = child.post;
+                } else if (child.post === child.snapToNeuron) {
+                  neuronName = child.pre;
+                }
+                let [neuron, idx] = getNeuronListId(neurons, neuronName);
+                child.material = new THREE.MeshPhongMaterial({
+                  color: neuron.color,
+                });
+                child.oldMaterial = child.material.clone();
+              } else {
+                child.material = child.oldMaterial;
+              }
+            } else {
+              // synapses are not from focused motif
+              child.material = new THREE.MeshPhongMaterial({
+                color: Color.grey,
+              });
+              child.oldMaterial = child.material.clone();
+            }
+            child.material.needsUpdate = true;
+            child.highlighted = false;
+          }
+        }
+      });
+    }
+  }
+
   function setSynapseColorToConnectingNeuron(scene) {
     let synapsesObject = scene.getObjectByName("synapse-parent");
     if (synapsesObject) {
@@ -248,10 +309,10 @@ function Viewer() {
           let color;
           if (child.pre === child.snapToNeuron) {
             let [neuron, idx] = getNeuronListId(neurons, child.post);
-            color = context.neuronColors[idx];
+            color = neuron.color;
           } else if (child.post === child.snapToNeuron) {
             let [neuron, idx] = getNeuronListId(neurons, child.pre);
-            color = context.neuronColors[idx];
+            color = neuron.color;
           } else {
             color = Color.orange;
           }
@@ -403,8 +464,6 @@ function Viewer() {
       });
       document.body.style.cursor = "pointer";
 
-      mesh.oldMaterial = mesh.material.clone();
-
       mesh.material = new THREE.MeshPhongMaterial({ color: Color.pink });
       mesh.material.needsUpdate = true;
     });
@@ -437,7 +496,7 @@ function Viewer() {
   function handleKeyPress(event) {
     if (event.key === "c") {
       console.log("c was pressed");
-      resetSynapsesColor(sharkViewerInstance, context.focusedMotif);
+      resetSynapsesColor(sharkViewerInstance);
       unselectEdges();
       setLineVisibility(sharkViewerInstance.scene, 0.0, false);
       setHighlightedConnection({ pre: null, post: null });
@@ -486,7 +545,8 @@ function Viewer() {
 
   function colorFocusedMotif(sharkViewerInstance) {
     colorMotif(sharkViewerInstance, context.focusedMotif, context.neuronColors);
-    resetSynapsesColor(sharkViewerInstance, context.focusedMotif);
+    resetSynapsesColor(sharkViewerInstance);
+    colorSynapses(sharkViewerInstance);
   }
 
   useEffect(() => {
@@ -537,7 +597,12 @@ function Viewer() {
             child.material = new THREE.MeshPhongMaterial({ color: Color.red });
             child.material.needsUpdate = true;
           } else if (!highlightSynapse.highlight && child.oldMaterial) {
-            child.material = child.oldMaterial;
+            // child.material = child.oldMaterial;
+            child.material = isSynapseForFocusedMotif(child)
+              ? child.oldMaterial
+              : new THREE.MeshPhongMaterial({
+                  color: Color.grey,
+                });
             child.material.needsUpdate = true;
           }
         }
@@ -676,14 +741,12 @@ function Viewer() {
             ...data.payload,
           };
           let motif = { ...loaded_motif };
-
+          let tmp_labels = { ...context.currentNeuronLabels };
           loaded_motif.neurons.forEach((neuron, i) => {
             motif.neurons[i] = { ...neuron, ...context.motifToAdd.neurons[i] };
-
-            let tmp_labels = { ...context.currentNeuronLabels };
             tmp_labels[neuron.id] = neuron.labels;
-            context.setCurrentNeuronLabels(tmp_labels);
           });
+          context.setCurrentNeuronLabels(tmp_labels);
           context.setFocusedMotif(motif);
           setMotif(motif);
           context.setSelectedMotifs([...context.selectedMotifs, motif]);
@@ -779,9 +842,13 @@ function Viewer() {
     }
   }, [context.greyOutNonMotifBranches]);
 
+  useEffect(() => {
+    context.setAbstractionLevel(context.abstractionLevel + 0.001);
+  }, [neurons]);
+
   // Updates the motifs, runs when data, viewer, or abstraction state change
   useEffect(() => {
-    if (motif && sharkViewerInstance) {
+    if (context.focusedMotif && sharkViewerInstance) {
       let scene = sharkViewerInstance.scene;
       let level = getAbstractionLevel();
       let abstraction_boundary = getAbstractionBoundary(sharkViewerInstance);
@@ -803,6 +870,7 @@ function Viewer() {
       ) {
         setDuplicateSynapsesToVisible(scene);
         setSynapseColorToConnectingNeuron(scene);
+        colorSynapses(sharkViewerInstance);
       } else if (
         level < motif_path_threshold &&
         prevSliderValue >= motif_path_threshold
@@ -832,11 +900,97 @@ function Viewer() {
       }
 
       let allLines = [];
-      motif.syn_clusters.forEach((connection, i) => {
+      context.focusedMotif.syn_clusters.forEach((connection, i) => {
         neurons.forEach((neuron, i) => {
           moveObject(neuron, directions[i], explosionProgression);
         });
 
+        if (level > motif_path_threshold) {
+          let [pre_neuron, pre_neuron_number] = getNeuronListId(
+            neurons,
+            connection.pre
+          );
+          let [post_neuron, post_neuron_number] = getNeuronListId(
+            neurons,
+            connection.post
+          );
+
+          // if (pre_neuron_number !== -1 && post_neuron_number !== -1) {
+          let pre_loc_transformed = transformPoints(
+            connection.pre_loc,
+            directions[pre_neuron_number],
+            explosionProgression
+          );
+          let post_loc_transformed = transformPoints(
+            connection.post_loc,
+            directions[post_neuron_number],
+            explosionProgression
+          );
+
+          let isVisible = false;
+          if (
+            highlightedConnection.pre === connection.pre &&
+            highlightedConnection.post === connection.post
+          ) {
+            isVisible = true;
+          }
+
+          let [lines, arrows] = hierarchicalBundling(
+            pre_loc_transformed,
+            post_loc_transformed,
+            connection.clusters_per_synapse,
+            connection.synapses_per_cluster,
+            connection.pre,
+            connection.post,
+            isVisible,
+            lineBundlingStrength
+          );
+
+          if (context.drawArrowsOnLines) {
+            allLines = allLines.concat(lines, arrows);
+          } else {
+            allLines = allLines.concat(lines);
+          }
+        }
+        // }
+      });
+
+      // remove old lines
+      if (level > motif_path_threshold) {
+        // remove old lines
+        deleteChild(scene, line_clusters_identifier);
+        // add empty object to hold lines
+        let line_clusters = new THREE.Object3D();
+        line_clusters.name = line_clusters_identifier;
+        line_clusters.children = allLines; // add new lines to scene
+        scene.add(line_clusters);
+      } else {
+        // remove old lines
+        deleteChild(scene, line_clusters_identifier);
+      }
+
+      setPrevSliderValue(level);
+    }
+  }, [context.abstractionLevel, context.drawArrowsOnLines]);
+
+  useEffect(() => {
+    if (sharkViewerInstance) {
+      let scene = sharkViewerInstance.scene;
+      let level = getAbstractionLevel();
+      let directions = getTranslationVectors(neurons.length);
+      let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
+
+      let explosionProgression =
+        (level - motif_path_threshold) / context.explosionRange;
+      explosionProgression = Math.max(0.0, Math.min(explosionProgression, 1.0)); // lamp between 0 and 1
+
+      let lineBundlingStrength =
+        (1.0 / (1.0 - motif_path_threshold - context.explosionRange)) *
+        (level - motif_path_threshold - context.explosionRange);
+      lineBundlingStrength = Math.max(0.0, Math.min(lineBundlingStrength, 1.0)); // lamp between 0 and 1
+
+      let allLines = [];
+      context.focusedMotif.syn_clusters.forEach((connection, i) => {
         if (level > motif_path_threshold) {
           let [pre_neuron, pre_neuron_number] = getNeuronListId(
             neurons,
@@ -898,10 +1052,8 @@ function Viewer() {
         // remove old lines
         deleteChild(scene, line_clusters_identifier);
       }
-
-      setPrevSliderValue(level);
     }
-  }, [context.abstractionLevel, context.drawArrowsOnLines]);
+  }, [highlightedConnection]);
 
   function deleteChild(parent, childName) {
     let child = parent.getObjectByName(childName);
@@ -985,6 +1137,19 @@ function Viewer() {
     }
   }
 
+  function minimumArrays(...arrays) {
+    const minLength = Math.min(...arrays.map((array) => array.length));
+    const result = new Array(minLength).fill(Infinity);
+
+    for (let i = 0; i < minLength; i++) {
+      for (let j = 0; j < arrays.length; j++) {
+        result[i] = Math.min(result[i], arrays[j][i]);
+      }
+    }
+
+    return result;
+  }
+
   useEffect(() => {
     if (context.motifToDelete && sharkViewerInstance) {
       let scene = sharkViewerInstance.scene;
@@ -992,6 +1157,30 @@ function Viewer() {
       context.motifToDelete.neurons.forEach((neuron) => {
         deleteNeuron(scene, neuron);
       });
+
+      // delete neuron labels
+      const neuronLabels = { ...context.currentNeuronLabels };
+      context.motifToDelete.neurons.forEach((neuron) => {
+        if (neuron.id in neuronLabels) {
+          if (
+            context.selectedMotifs.every((motif) =>
+              motif.neurons.some((dict) => dict.id === neuron.id)
+            ) // if neuron exists in common
+          ) {
+            const remaindedMotifs = context.selectedMotifs.filter(
+              (m) => m.name !== context.motifToDelete.name
+            );
+            const remaindedMotifsLabels = remaindedMotifs.map(
+              (m) =>
+                m.neurons.filter((n) => n.id === neuron.id)[0].original_labels
+            );
+            neuronLabels[neuron.id] = minimumArrays(...remaindedMotifsLabels);
+          } else {
+            delete neuronLabels[neuron.id];
+          }
+        }
+      });
+      context.setCurrentNeuronLabels({ ...neuronLabels });
 
       context.motifToDelete.graph.links.forEach((link) => {
         deleteSynapse(scene, link.source, link.target);
@@ -1049,26 +1238,27 @@ function Viewer() {
       let motif_path_threshold = sharkViewerInstance.getMotifPathThreshold();
 
       let neuron_translate = new THREE.Vector3(0, 0, 0);
-      if (level > motif_path_threshold) {
-        let old_directions = getTranslationVectors(neurons.length);
-        let new_directions = getTranslationVectors(neurons.length + 1);
-
-        neurons.forEach((neuron, i) => {
-          console.log("translate neuron", neuron);
-          neuron.translateX(factor * -old_directions[i][0]);
-          neuron.translateY(factor * -old_directions[i][1]);
-          neuron.translateZ(factor * -old_directions[i][2]);
-
-          neuron.translateX(factor * new_directions[i][0]);
-          neuron.translateY(factor * new_directions[i][1]);
-          neuron.translateZ(factor * new_directions[i][2]);
-        });
-        neuron_translate = new THREE.Vector3(
-          factor * new_directions[neurons.length][0],
-          factor * new_directions[neurons.length][1],
-          factor * new_directions[neurons.length][2]
-        );
-      }
+      // if (level > motif_path_threshold) {
+      //   let old_directions = getTranslationVectors(neurons.length);
+      //   let new_directions = getTranslationVectors(neurons.length + 1);
+      //
+      //   neurons.forEach((neuron, i) => {
+      //     console.log("translate neuron", neuron);
+      //     neuron.translateX(factor * -old_directions[i][0]);
+      //     neuron.translateY(factor * -old_directions[i][1]);
+      //     neuron.translateZ(factor * -old_directions[i][2]);
+      //
+      //     neuron.translateX(factor * new_directions[i][0]);
+      //     neuron.translateY(factor * new_directions[i][1]);
+      //     neuron.translateZ(factor * new_directions[i][2]);
+      //   });
+      //   neuron_translate = new THREE.Vector3(
+      //     factor * new_directions[neurons.length][0],
+      //     factor * new_directions[neurons.length][1],
+      //     factor * new_directions[neurons.length][2]
+      //   );
+      //   console.log(neuron_translate);
+      // }
 
       let updateCamera = true;
       if (context.selectedMotifs.length > 0) {
@@ -1194,7 +1384,12 @@ function Viewer() {
             // child.material = new THREE.MeshPhongMaterial({
             //   color: Color.orange,
             // });
-            child.material = child.oldMaterial;
+            // child.material = child.oldMaterial;
+            child.material = isSynapseForFocusedMotif(child)
+              ? child.oldMaterial
+              : new THREE.MeshPhongMaterial({
+                  color: Color.grey,
+                });
             child.material.needsUpdate = true;
             child.highlighted = false;
           }
@@ -1208,7 +1403,12 @@ function Viewer() {
           child.neuron_ids.startsWith("syn-")
         ) {
           //child.material = new THREE.MeshPhongMaterial({ color: Color.orange });
-          child.material = child.oldMaterial;
+          // child.material = child.oldMaterial;
+          child.material = isSynapseForFocusedMotif(child)
+            ? child.oldMaterial
+            : new THREE.MeshPhongMaterial({
+                color: Color.grey,
+              });
           child.highlighted = false;
         }
       });
