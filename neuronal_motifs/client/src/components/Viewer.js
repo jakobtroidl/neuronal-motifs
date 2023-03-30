@@ -847,8 +847,9 @@ function Viewer() {
       }
 
       if (
-        level >= motif_path_threshold &&
-        prevSliderValue < motif_path_threshold
+        level >= motif_path_threshold
+        // &&
+        // prevSliderValue < motif_path_threshold
       ) {
         setDuplicateSynapsesToVisible(scene);
         setSynapseColorToConnectingNeuron(scene);
@@ -1094,7 +1095,8 @@ function Viewer() {
           typeof child.name === "string" &&
           child.name.startsWith("syn-") &&
           child.pre === pre_id &&
-          child.post === post_id
+          child.post === post_id &&
+          _.isEqual(child.motifs[0], context.motifToDelete)
         ) {
           syn_to_delete.push(child);
         }
