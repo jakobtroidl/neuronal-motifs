@@ -82,10 +82,11 @@ class Neuron:
             'mesh': 'TODO',
             'skeleton_swc': swc_object['swc'],
             'abstraction_center': self.compute_abstraction_root(),
-            'min_skel_label': self.get_min_skeleton_label(),
-            'max_skel_label': self.get_max_skeleton_label(),
+            # 'min_skel_label': self.get_min_skeleton_label(),
+            # 'max_skel_label': self.get_max_skeleton_label(),
             'labels': self.labels,
-            'original_labels': self.original_labels
+            'original_labels': self.original_labels,
+            'prev_labels': self.prev_labels
         }
 
         return neuron
@@ -250,16 +251,25 @@ class Neuron:
         if len(negative_labels) > 0:
             max_negative = np.amax(negative_labels)  # get max negative value
             labels[labels < 0] = labels[labels < 0] + abs(max_negative)  # normalize
+        self.skeleton.nodes['abstraction_label'] = labels
 
         if prev_labels is not None:
             minimum = np.minimum(prev_labels, labels)
             self.skeleton.nodes['abstraction_label'] = minimum
             self.labels = minimum.tolist()
             self.original_labels = labels.tolist()
+            self.prev_labels = prev_labels
+        #
         else:
             self.skeleton.nodes['abstraction_label'] = labels
             self.labels = labels.tolist()
             self.original_labels = labels.tolist()
+            self.prev_labels = prev_labels
+        # self.skeleton.nodes['abstraction_label'] = labels
+        # self.labels = labels.tolist()
+        # self.labels = minimum.tolist()
+        # self.original_labels = labels.tolist()
+        # self.prev_labels = prev_labels
 
     def compute_labels_to_abstraction_center_optimized(self, graph, labels, motif_nodes):
         abstraction_root = self.compute_abstraction_root(to="node")

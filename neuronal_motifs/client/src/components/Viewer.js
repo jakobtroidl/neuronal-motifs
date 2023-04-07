@@ -65,11 +65,13 @@ function addNeurons(
       parsedSwc,
       updateCamera
     );
+    console.log(neuronObject);
 
     context.setMotifPathPosition(motif_path);
 
     neuronObject.motifs = [motif];
     if (oldNeuron) {
+      console.log(neuronObject.motifs, oldNeuron.motifs);
       neuronObject.motifs = neuronObject.motifs.concat(oldNeuron.motifs);
       scene.remove(oldNeuron);
     }
@@ -86,6 +88,7 @@ function addNeurons(
 
     scene.add(neuronObject);
   });
+  console.log(scene);
 }
 
 function getAbstractionCenterName(neuron) {
@@ -685,7 +688,9 @@ function Viewer() {
       };
       updateLoop();
       sharkViewerInstance.animate();
+      console.log("changes");
     }
+    console.log("shark changes");
     setPrevSliderValue(0);
   }, [sharkViewerInstance]);
 
@@ -704,6 +709,7 @@ function Viewer() {
       ws.onopen = function (e) {
         console.log("[open] Connection established", new Date().getSeconds());
         console.log("Sending to server", new Date().getSeconds());
+        console.log("label", context.currentNeuronLabels);
         ws.send(
           JSON.stringify({
             bodyIDs: bodyIdsJSON,
@@ -726,8 +732,31 @@ function Viewer() {
           let tmp_labels = { ...context.currentNeuronLabels };
           loaded_motif.neurons.forEach((neuron, i) => {
             motif.neurons[i] = { ...neuron, ...context.motifToAdd.neurons[i] };
-            tmp_labels[neuron.id] = neuron.labels;
+            if (neuron.prev_labels !== null) {
+              let minimum = minimumArrays(
+                ...[neuron.prev_labels, neuron.original_labels]
+              );
+              tmp_labels[neuron.id] = minimum;
+              motif.neurons[i].labels = minimum;
+              motif.neurons[i].max_skel_label = parseInt(Math.max(...minimum));
+              motif.neurons[i].min_skel_label = parseInt(Math.min(...minimum));
+            } else {
+              tmp_labels[neuron.id] = neuron.labels;
+              motif.neurons[i].labels = neuron.labels;
+              motif.neurons[i].max_skel_label = parseInt(
+                Math.max(...neuron.labels)
+              );
+              motif.neurons[i].min_skel_label = parseInt(
+                Math.min(...neuron.labels)
+              );
+            }
           });
+          console.log(
+            "labels on",
+            context.currentNeuronLabels,
+            loaded_motif,
+            motif
+          );
           context.setCurrentNeuronLabels(tmp_labels);
           context.setFocusedMotif(motif);
           setMotif(motif);
@@ -898,44 +927,44 @@ function Viewer() {
             connection.post
           );
 
-          // if (pre_neuron_number !== -1 && post_neuron_number !== -1) {
-          let pre_loc_transformed = transformPoints(
-            connection.pre_loc,
-            directions[pre_neuron_number],
-            explosionProgression
-          );
-          let post_loc_transformed = transformPoints(
-            connection.post_loc,
-            directions[post_neuron_number],
-            explosionProgression
-          );
+          if (pre_neuron_number !== -1 && post_neuron_number !== -1) {
+            let pre_loc_transformed = transformPoints(
+              connection.pre_loc,
+              directions[pre_neuron_number],
+              explosionProgression
+            );
+            let post_loc_transformed = transformPoints(
+              connection.post_loc,
+              directions[post_neuron_number],
+              explosionProgression
+            );
 
-          let isVisible = false;
-          if (
-            highlightedConnection.pre === connection.pre &&
-            highlightedConnection.post === connection.post
-          ) {
-            isVisible = true;
-          }
+            let isVisible = false;
+            if (
+              highlightedConnection.pre === connection.pre &&
+              highlightedConnection.post === connection.post
+            ) {
+              isVisible = true;
+            }
 
-          let [lines, arrows] = hierarchicalBundling(
-            pre_loc_transformed,
-            post_loc_transformed,
-            connection.clusters_per_synapse,
-            connection.synapses_per_cluster,
-            connection.pre,
-            connection.post,
-            isVisible,
-            lineBundlingStrength
-          );
+            let [lines, arrows] = hierarchicalBundling(
+              pre_loc_transformed,
+              post_loc_transformed,
+              connection.clusters_per_synapse,
+              connection.synapses_per_cluster,
+              connection.pre,
+              connection.post,
+              isVisible,
+              lineBundlingStrength
+            );
 
-          if (context.drawArrowsOnLines) {
-            allLines = allLines.concat(lines, arrows);
-          } else {
-            allLines = allLines.concat(lines);
+            if (context.drawArrowsOnLines) {
+              allLines = allLines.concat(lines, arrows);
+            } else {
+              allLines = allLines.concat(lines);
+            }
           }
         }
-        // }
       });
 
       // remove old lines
@@ -1146,25 +1175,11 @@ function Viewer() {
       const neuronLabels = { ...context.currentNeuronLabels };
       context.motifToDelete.neurons.forEach((neuron) => {
         if (neuron.id in neuronLabels) {
-          if (
-            context.selectedMotifs.every((motif) =>
-              motif.neurons.some((dict) => dict.id === neuron.id)
-            ) // if neuron exists in common
-          ) {
-            const remaindedMotifs = context.selectedMotifs.filter(
-              (m) => m.name !== context.motifToDelete.name
-            );
-            const remaindedMotifsLabels = remaindedMotifs.map(
-              (m) =>
-                m.neurons.filter((n) => n.id === neuron.id)[0].original_labels
-            );
-            neuronLabels[neuron.id] = minimumArrays(...remaindedMotifsLabels);
-          } else {
-            delete neuronLabels[neuron.id];
-          }
+          delete neuronLabels[neuron.id];
         }
       });
       context.setCurrentNeuronLabels({ ...neuronLabels });
+      console.log(neuronLabels);
 
       context.motifToDelete.graph.links.forEach((link) => {
         deleteSynapse(scene, link.source, link.target);
@@ -1177,6 +1192,140 @@ function Viewer() {
       context.setMotifToDelete(null);
     }
   }, [context.motifToDelete]);
+
+  useEffect(() => {
+    if (context.selectedMotifs.length > 0 && !context.motifToDelete) {
+      // console.log(context.selectedMotifs, context.currentNeuronLabels);
+      // console.log(
+      //   context.selectedMotifs.length,
+      //   neurons.length,
+      //   Object.keys(context.currentNeuronLabels).length
+      // );
+      let neuronLabels = { ...context.currentNeuronLabels };
+      let _neuronIds = [];
+      context.selectedMotifs.forEach((motif) =>
+        motif.neurons.map((n) => {
+          if (!_neuronIds.includes(n.id)) {
+            _neuronIds.push(n.id);
+          }
+        })
+      );
+      // // console.log(_neuronIds);
+      if (_neuronIds.length > Object.keys(neuronLabels).length) {
+        _neuronIds.map((neuronId) => {
+          // console.log(neuronId);
+          let motifsLabels = [];
+          console.log(context.selectedMotifs);
+          context.selectedMotifs.forEach((m) => {
+            m.neurons.map((n) => {
+              // console.log(m, n);
+              if (n.id === neuronId) {
+                // console.log(n.original_labels);
+                return motifsLabels.push(n.original_labels);
+              } else {
+                // console.log(n);
+              }
+            });
+          });
+          console.log(motifsLabels);
+          if (motifsLabels.length > 0) {
+            neuronLabels[neuronId] = minimumArrays(...motifsLabels);
+            // neuronLabels[neuronId] = motifsLabels;
+            // console.log(neuronId, minimumArrays(...motifsLabels));
+          }
+        });
+        console.log("delete", neuronLabels);
+
+        // console.log(_neuronIds, context.selectedMotifs, neuronLabels);
+        let scene = sharkViewerInstance.scene;
+        console.log(scene);
+        _neuronIds.map((neuronId) => {
+          let oldNeuron = scene.getObjectByName(Number(neuronId));
+          if (oldNeuron) {
+            let selectedMotifs = [...context.selectedMotifs];
+            selectedMotifs = new Set(selectedMotifs.map(JSON.stringify));
+            const filteredMotifs = oldNeuron.motifs.filter((item) =>
+              selectedMotifs.has(JSON.stringify(item))
+            );
+            console.log(filteredMotifs, context.selectedMotifs);
+            console.log(filteredMotifs[filteredMotifs.length - 1]);
+            let [neuron, i] = filteredMotifs[filteredMotifs.length - 1].neurons
+              .map((n, index) => {
+                if (n.id === Number(neuronId)) {
+                  return [n, index];
+                }
+                return undefined;
+              })
+              .filter(Boolean)[0];
+            console.log(neuron, i);
+            if (neuron) {
+              console.log(oldNeuron, neuron);
+              let updateCamera = false;
+              console.log(
+                neuron.labels,
+                neuron.min_skel_label,
+                neuron.max_skel_label
+              );
+              let parsedSwc = swcParser(neuron.skeleton_swc);
+              let color = context.neuronColors[i];
+              let [neuronObject, motif_path] = sharkViewerInstance.loadNeuron(
+                neuronId,
+                color,
+                parsedSwc,
+                updateCamera
+              );
+              console.log(neuronObject);
+              context.setMotifPathPosition(motif_path);
+
+              let translate = new THREE.Vector3(0, 0, 0);
+              neuronObject.translateX(translate.x);
+              neuronObject.translateY(translate.y);
+              neuronObject.translateZ(translate.z);
+              neuronObject.origin = new THREE.Vector3(
+                translate.x,
+                translate.y,
+                translate.z
+              );
+              neuronObject.meta = { ...neuron };
+              // neuronObject.meta = {};
+              neuronObject.meta.labels = neuronLabels[neuronId];
+
+              neuronObject.meta.labels = neuronLabels[neuronId];
+              neuronObject.meta.max_skel_label = parseInt(
+                Math.max(...neuronLabels[neuronId])
+              );
+              neuronObject.meta.min_skel_label = parseInt(
+                Math.min(...neuronLabels[neuronId])
+              );
+              filteredMotifs.forEach((m) => {
+                let neu = m.neurons.find((n) => n.id === neuronId);
+                neu.labels = neuronLabels[neuronId];
+                neu.max_skel_label = parseInt(
+                  Math.max(...neuronLabels[neuronId])
+                );
+                neu.min_skel_label = parseInt(
+                  Math.min(...neuronLabels[neuronId])
+                );
+              });
+              neuronObject.motifs = filteredMotifs;
+              neuronObject.name = Number(neuronId);
+              neuronObject.position.copy(oldNeuron.position);
+              console.log(neuronObject);
+              scene.remove(oldNeuron);
+              scene.add(neuronObject);
+            }
+          }
+        });
+        console.log("update neurons");
+        updateNeurons(scene);
+        context.setCurrentNeuronLabels({ ...neuronLabels });
+
+        console.log(neurons);
+        let abstraction_boundary = getAbstractionBoundary(sharkViewerInstance);
+        console.log(scene);
+      }
+    }
+  }, [context.currentNeuronLabels]);
 
   function updateNeurons(scene) {
     setNeurons(

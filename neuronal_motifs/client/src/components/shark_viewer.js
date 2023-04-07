@@ -691,11 +691,18 @@ export default class SharkViewer {
         particleScale: { type: "f", value: particleScale },
         sphereTexture: { type: "t", value: sphereImg },
         abstraction_threshold: { type: "f", value: threshold },
-        grey_out: { type: "i", value: 0 },
+        grey_out: { stype: "i", value: 0 },
         color: { value: new THREE.Color(neuron.color) },
       };
 
       const indexLookup = {};
+      let labels = [];
+      Object.keys(swcJSON).forEach((node) => labels.push(swcJSON[node].type));
+      console.log(
+        labels,
+        parseInt(Math.max(...labels)),
+        parseInt(Math.min(...labels))
+      );
 
       Object.keys(swcJSON).forEach((node) => {
         let nodeColor = this.nodeColor(swcJSON[node]);
@@ -730,10 +737,11 @@ export default class SharkViewer {
         customAttributes.vertices.value.push(particleVertex.y);
         customAttributes.vertices.value.push(particleVertex.z);
         customAttributes.label.value.push(label);
-
         indexLookup[customAttributes.radius.value.length - 1] =
           swcJSON[node].sampleNumber;
       });
+      console.log(this.minLabel, this.maxLabel);
+
       geometry.setAttribute(
         "position",
         new THREE.Float32BufferAttribute(customAttributes.vertices.value, 3)
@@ -746,6 +754,7 @@ export default class SharkViewer {
         "typeColor",
         new THREE.Float32BufferAttribute(customAttributes.typeColor.value, 3)
       );
+      console.log(customAttributes.label.value);
       geometry.setAttribute(
         "label",
         new THREE.Float32BufferAttribute(customAttributes.label.value, 1)
