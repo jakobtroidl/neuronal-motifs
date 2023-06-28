@@ -572,7 +572,7 @@ function Viewer() {
         await axios.get(
           `${process.env.REACT_APP_API_PROTOCOL}://${process.env.REACT_APP_API_URL}/roi/names=${roisJSON}&&token=${token}`,
           {
-            withCredentials: true,
+            withCredentials: false,
           }
         )
       ).data;
