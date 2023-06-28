@@ -55,8 +55,8 @@ def treeneuron_to_swc_string(neuron_skeleton):
     out = swc_string.decode("utf-8")
     map_new_to_old = {int(x): int(y) for x, y in map_old_to_new.items()}
 
-    return {'swc': out, 'map': map_new_to_old}
-
+    # return {'swc': out, 'map': map_new_to_old}
+    return {'swc': out}
 
 def nodes_and_edges_to_networkx(motif):
     '''
