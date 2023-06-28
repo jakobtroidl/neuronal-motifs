@@ -30,7 +30,7 @@ export default function SettingsPanel(props) {
         await axios.get(
           `${process.env.REACT_APP_API_PROTOCOL}://${process.env.REACT_APP_API_URL}/all_rois/token=${token}`,
           {
-            withCredentials: true,
+            withCredentials: false,
           }
         )
       ).data;
