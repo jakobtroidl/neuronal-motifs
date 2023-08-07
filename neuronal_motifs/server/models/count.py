@@ -52,7 +52,7 @@ def get_absolute(motif):
     graph = nodes_and_edges_to_networkx(motif)
     # get number of nodes in graph
     num_nodes = len(graph.nodes())
-    if not (3 <= num_nodes <= 5):  # currently only supports 2 or 3 node motifs
+    if not (3 <= num_nodes <= 5):  # currently only supports 3 to 5 node motifs
         return 0
 
     # relative path to motif-size-003.pickle
