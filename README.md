@@ -52,8 +52,8 @@ If you find our work helpful, please consider citing it.
 ```bibtex
 @article {troidl2023vimo,
 	author = {Troidl, Jakob and Warchol, Simon and Choi, Jinhan and Matelsky, Jordan
-    and Dhanysai, Nagaraju and Wang, Xueying and Wester, Brock and Wei, Donglai
-    and Lichtman, Jeff W and Pfister, Hanspeter and Beyer, Johanna},
+    	and Dhanysai, Nagaraju and Wang, Xueying and Wester, Brock and Wei, Donglai
+    	and Lichtman, Jeff W and Pfister, Hanspeter and Beyer, Johanna},
 	title = {Vimo: Visual Analysis of Neuronal Connectivity Motifs},
 	year = {2023},
 	doi = {10.1101/2022.12.09.519772},
