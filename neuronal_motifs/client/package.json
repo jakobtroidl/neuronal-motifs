@@ -19,7 +19,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@turf/centroid": "^6.5.0",
     "@turf/turf": "^6.5.0",
-    "axios": "^0.26.0",
+    "axios": "^1.6.3",
     "cytoscape": "^3.23.0",
     "cytoscape-cose-bilkent": "^4.1.0",
     "cytoscape-fcose": "^2.1.0",
