@@ -24,7 +24,7 @@
     "cytoscape-cose-bilkent": "^4.1.0",
     "cytoscape-fcose": "^2.1.0",
     "font-awesome": "^4.7.0",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "material-ui-confirm": "^3.0.4",
     "mathjs": "^10.4.0",
     "paper": "^0.12.15",
